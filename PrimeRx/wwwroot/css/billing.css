@@ -1,0 +1,195 @@
+/* Billing page — high-contrast dark theme overrides */
+
+.billing-page .page-subtitle {
+  color: #cbd5e1;
+}
+
+.billing-page .billing-label,
+.billing-page .form-label {
+  color: #e2e8f0 !important;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Medicine search (Tom Select) */
+.billing-page .ts-wrapper {
+  width: 100%;
+}
+
+.billing-page .ts-wrapper.single .ts-control {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  min-height: 46px;
+  padding: 0.4rem 0.85rem !important;
+  box-shadow: none !important;
+}
+
+.billing-page .ts-wrapper.dropdown-active .ts-control {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
+}
+
+.billing-page .ts-control input {
+  color: #fff !important;
+  font-size: 1rem !important;
+}
+
+.billing-page .ts-control input::placeholder {
+  color: #cbd5e1 !important;
+  opacity: 1 !important;
+}
+
+.billing-page .ts-dropdown {
+  background: #0f2744 !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 10px !important;
+  color: #fff !important;
+  z-index: 1050;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45) !important;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.billing-page .ts-dropdown-content {
+  max-height: 300px;
+}
+
+.billing-page .ts-dropdown .option {
+  padding: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.billing-page .ts-dropdown .option:last-child {
+  border-bottom: none;
+}
+
+.billing-page .ts-dropdown .option.active {
+  background: rgba(14, 165, 233, 0.28) !important;
+}
+
+.billing-page .med-option {
+  padding: 0.7rem 0.9rem;
+}
+
+.billing-page .med-option-title {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.billing-page .med-option-generic {
+  color: #7dd3fc;
+  font-weight: 500;
+  font-size: 0.88rem;
+}
+
+.billing-page .med-option-meta {
+  color: #94a3b8;
+  font-size: 0.84rem;
+  margin-top: 0.2rem;
+}
+
+.billing-page .med-no-results {
+  padding: 1rem;
+  color: #cbd5e1;
+  text-align: center;
+}
+
+/* Bill items table */
+.billing-page #itemsTable {
+  --bs-table-bg: transparent;
+  --bs-table-color: #e2e8f0;
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
+  --bs-table-hover-color: #fff;
+  margin-bottom: 0;
+}
+
+.billing-page #itemsTable thead th {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #e2e8f0 !important;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  padding: 0.85rem 1rem;
+}
+
+.billing-page #itemsTable tbody td {
+  background: transparent !important;
+  color: #e2e8f0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 0.85rem 1rem;
+  vertical-align: middle;
+}
+
+.billing-page #itemsTable tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: #fff !important;
+}
+
+.billing-page #itemsTable .line-total {
+  color: #7dd3fc;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.billing-page #itemsTable tbody small {
+  color: #94a3b8 !important;
+}
+
+.billing-page .billing-empty-msg {
+  text-align: center;
+  padding: 2.5rem 1rem !important;
+  color: #94a3b8 !important;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.billing-page #itemsTable .form-control-sm {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+/* Sidebar totals */
+.billing-page .billing-divider {
+  border-color: rgba(255, 255, 255, 0.15);
+  opacity: 1;
+}
+
+.billing-page .billing-total-row {
+  display: flex;
+  justify-content: space-between;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  padding: 0.2rem 0;
+}
+
+.billing-page .billing-total-row span:last-child {
+  color: #fff;
+  font-weight: 600;
+}
+
+.billing-page .billing-total-final {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.billing-page .billing-total-final span:last-child {
+  color: #7dd3fc;
+  font-size: 1.35rem;
+}
+
+.billing-page .panel-header {
+  color: #fff;
+  font-weight: 600;
+}

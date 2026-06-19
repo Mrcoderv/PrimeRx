@@ -20,9 +20,9 @@ artifacts/
 **/serviceDependencies.local.json.user
 
 ## Local dev database (publish bundle includes its own)
-WebApplication1/Data/primerx.db
-WebApplication1/Data/*.db-shm
-WebApplication1/Data/*.db-wal
+PrimeRx/Data/primerx.db
+PrimeRx/Data/*.db-shm
+PrimeRx/Data/*.db-wal
 
 ## Old framework-dependent publish output (use publish/win-x64 only)
 publish/*

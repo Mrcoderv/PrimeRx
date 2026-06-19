@@ -1,0 +1,205 @@
+@page
+@model PrimeRx.Pages.Admin.Settings.IndexModel
+@{
+    ViewData["Title"] = "Settings";
+    var tab = Model.Tab ?? "company";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Pharmacy Settings</h1>
+        <p class="page-subtitle">Company profile, tax configuration, and bill design</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success">@Model.Message</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="panel-card">
+            <ul class="nav nav-tabs settings-tabs px-3 pt-3" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link @(tab == "company" ? "active" : "")" data-bs-toggle="tab" data-bs-target="#tab-company" type="button">
+                        <i class="bi bi-building me-1"></i>Company
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(tab == "tax" ? "active" : "")" data-bs-toggle="tab" data-bs-target="#tab-tax" type="button">
+                        <i class="bi bi-percent me-1"></i>Tax
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link @(tab == "bill" ? "active" : "")" data-bs-toggle="tab" data-bs-target="#tab-bill" type="button">
+                        <i class="bi bi-receipt me-1"></i>Bill Design
+                    </button>
+                </li>
+            </ul>
+
+            <form method="post" class="panel-body">
+                <input type="hidden" asp-for="Settings.Id" />
+                <input type="hidden" asp-for="Tab" id="activeTab" value="@tab" />
+
+                <div class="tab-content">
+                    <div class="tab-pane fade @(tab == "company" ? "show active" : "")" id="tab-company">
+                        <h6 class="settings-section-title">Business Information</h6>
+                        <div class="mb-3">
+                            <label asp-for="Settings.Name" class="form-label">Pharmacy Name</label>
+                            <input asp-for="Settings.Name" class="form-control" id="previewName" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Settings.Address" class="form-label">Address</label>
+                            <textarea asp-for="Settings.Address" class="form-control" rows="2" id="previewAddress"></textarea>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Settings.Phone" class="form-label">Phone</label>
+                                <input asp-for="Settings.Phone" class="form-control" id="previewPhone" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Settings.PAN" class="form-label">PAN</label>
+                                <input asp-for="Settings.PAN" class="form-control" id="previewPan" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Settings.GSTIN" class="form-label">GSTIN</label>
+                                <input asp-for="Settings.GSTIN" class="form-control" id="previewGstin" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade @(tab == "tax" ? "show active" : "")" id="tab-tax">
+                        <h6 class="settings-section-title">Tax Configuration</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Settings.TaxLabel" class="form-label">Tax Label</label>
+                                <input asp-for="Settings.TaxLabel" class="form-control" placeholder="GST / VAT" id="previewTaxLabel" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Settings.TaxRate" class="form-label">Tax Rate (%)</label>
+                                <input asp-for="Settings.TaxRate" class="form-control" type="number" step="0.01" min="0" max="100" id="previewTaxRate" />
+                            </div>
+                        </div>
+                        <div class="form-check mt-3">
+                            <input asp-for="Settings.TaxInclusive" class="form-check-input" id="previewTaxInclusive" />
+                            <label asp-for="Settings.TaxInclusive" class="form-check-label">Prices are tax-inclusive (do not add tax on top)</label>
+                        </div>
+                        <p class="text-muted-small mt-2">When tax-inclusive is off, tax is calculated on the bill subtotal after discounts.</p>
+                    </div>
+
+                    <div class="tab-pane fade @(tab == "bill" ? "show active" : "")" id="tab-bill">
+                        <h6 class="settings-section-title">Invoice Appearance</h6>
+                        <div class="mb-3">
+                            <label asp-for="Settings.BillTitle" class="form-label">Invoice Title</label>
+                            <input asp-for="Settings.BillTitle" class="form-control" id="previewBillTitle" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Settings.BillPrimaryColor" class="form-label">Header Color</label>
+                            <input asp-for="Settings.BillPrimaryColor" class="form-control form-control-color w-100" type="color" id="previewColor" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Settings.BillFooterText" class="form-label">Footer Message</label>
+                            <textarea asp-for="Settings.BillFooterText" class="form-control" rows="2" id="previewFooter" placeholder="Thank you for your purchase!"></textarea>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input asp-for="Settings.ShowPanOnBill" class="form-check-input" id="previewShowPan" />
+                            <label asp-for="Settings.ShowPanOnBill" class="form-check-label">Show PAN on bill</label>
+                        </div>
+                        <div class="form-check">
+                            <input asp-for="Settings.ShowGstinOnBill" class="form-check-input" id="previewShowGstin" />
+                            <label asp-for="Settings.ShowGstinOnBill" class="form-check-label">Show GSTIN on bill</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top border-secondary-subtle">
+                    <button type="submit" class="btn btn-accent"><i class="bi bi-check-lg me-1"></i>Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="panel-card">
+            <div class="panel-header"><h5><i class="bi bi-eye me-2"></i>Bill Preview</h5></div>
+            <div class="panel-body">
+                <div class="bill-preview" id="billPreview">
+                    <div class="bill-preview-header" id="previewHeaderBar">
+                        <div class="bill-preview-title" id="pvTitle">@Model.Settings.BillTitle</div>
+                        <div class="bill-preview-name" id="pvName">@Model.Settings.Name</div>
+                        <div class="bill-preview-meta" id="pvAddress">@Model.Settings.Address</div>
+                        <div class="bill-preview-meta" id="pvPhone">@Model.Settings.Phone</div>
+                        <div class="bill-preview-meta" id="pvPan">PAN: @Model.Settings.PAN</div>
+                        <div class="bill-preview-meta" id="pvGstin">GSTIN: @Model.Settings.GSTIN</div>
+                    </div>
+                    <div class="bill-preview-body">
+                        <div class="d-flex justify-content-between small mb-2">
+                            <span>Bill #: SAMPLE-001</span>
+                            <span>@DateTime.Now.ToString("dd-MM-yyyy")</span>
+                        </div>
+                        <table class="bill-preview-table">
+                            <thead><tr><th>Item</th><th>Qty</th><th>Amt</th></tr></thead>
+                            <tbody>
+                                <tr><td>Paracetamol 500mg</td><td>2</td><td>50.00</td></tr>
+                                <tr><td>Cetirizine 10mg</td><td>1</td><td>18.00</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="bill-preview-totals">
+                            <div>Subtotal: <span>68.00</span></div>
+                            <div id="pvTaxLine">GST (0%): <span>0.00</span></div>
+                            <div class="total">Total: <span id="pvTotal">68.00</span></div>
+                        </div>
+                    </div>
+                    <div class="bill-preview-footer" id="pvFooter">@(Model.Settings.BillFooterText ?? "Thank you for your purchase!")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(btn => {
+            btn.addEventListener('shown.bs.tab', e => {
+                const target = e.target.getAttribute('data-bs-target');
+                document.getElementById('activeTab').value =
+                    target === '#tab-tax' ? 'tax' : target === '#tab-bill' ? 'bill' : 'company';
+            });
+        });
+
+        const fields = ['previewName','previewAddress','previewPhone','previewPan','previewGstin',
+            'previewBillTitle','previewColor','previewFooter','previewTaxLabel','previewTaxRate',
+            'previewShowPan','previewShowGstin','previewTaxInclusive'];
+
+        function updatePreview() {
+            const color = document.getElementById('previewColor')?.value || '#2563eb';
+            document.getElementById('previewHeaderBar').style.borderColor = color;
+            document.getElementById('pvTitle').style.color = color;
+            document.getElementById('pvTitle').textContent = document.getElementById('previewBillTitle')?.value || 'Tax Invoice';
+            document.getElementById('pvName').textContent = document.getElementById('previewName')?.value || 'Pharmacy Name';
+            document.getElementById('pvAddress').textContent = document.getElementById('previewAddress')?.value || '';
+            document.getElementById('pvPhone').textContent = document.getElementById('previewPhone')?.value ? 'Phone: ' + document.getElementById('previewPhone').value : '';
+            document.getElementById('pvPan').textContent = document.getElementById('previewShowPan')?.checked && document.getElementById('previewPan')?.value
+                ? 'PAN: ' + document.getElementById('previewPan').value : '';
+            document.getElementById('pvGstin').textContent = document.getElementById('previewShowGstin')?.checked && document.getElementById('previewGstin')?.value
+                ? 'GSTIN: ' + document.getElementById('previewGstin').value : '';
+            document.getElementById('pvFooter').textContent = document.getElementById('previewFooter')?.value || 'Thank you for your purchase!';
+
+            const rate = parseFloat(document.getElementById('previewTaxRate')?.value) || 0;
+            const label = document.getElementById('previewTaxLabel')?.value || 'GST';
+            const inclusive = document.getElementById('previewTaxInclusive')?.checked;
+            const subtotal = 68;
+            let tax = 0, total = subtotal;
+            if (rate > 0 && !inclusive) { tax = subtotal * rate / 100; total = subtotal + tax; }
+            document.getElementById('pvTaxLine').innerHTML = `${label} (${rate}%): <span>${tax.toFixed(2)}</span>`;
+            document.getElementById('pvTotal').textContent = total.toFixed(2);
+        }
+
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.addEventListener('input', updatePreview); el.addEventListener('change', updatePreview); }
+        });
+        updatePreview();
+    </script>
+}

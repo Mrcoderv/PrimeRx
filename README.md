@@ -34,7 +34,7 @@ A **self-contained Windows x64** release is included — no .NET installation re
 ```powershell
 cd publish\win-x64
 $env:ASPNETCORE_URLS="http://localhost:5000"
-.\WebApplication1.exe
+.\PrimeRx.exe
 ```
 
 Open **http://localhost:5000** in your browser.
@@ -59,7 +59,7 @@ Open **http://localhost:5000** in your browser.
 ### Run from source
 
 ```powershell
-cd WebApplication1
+cd PrimeRx
 dotnet restore
 dotnet run
 ```
@@ -81,7 +81,7 @@ Migrations run automatically on startup.
 ### Create a new self-contained publish
 
 ```powershell
-dotnet publish WebApplication1\WebApplication1.csproj `
+dotnet publish PrimeRx\PrimeRx.csproj `
   -c Release -r win-x64 --self-contained true `
   -o publish\win-x64
 ```
@@ -92,7 +92,7 @@ dotnet publish WebApplication1\WebApplication1.csproj `
 
 ```
 PrimeRx/
-├── WebApplication1/          # ASP.NET Core Razor Pages application
+├── PrimeRx/          # ASP.NET Core Razor Pages application
 │   ├── Data/                   # DbContext, migrations, seeders
 │   ├── Models/                 # Domain entities & view models
 │   ├── Services/               # Billing, inventory, reports, dashboard
@@ -101,8 +101,11 @@ PrimeRx/
 │   ├── ViewComponents/         # Company header banner
 │   └── wwwroot/                # CSS, JavaScript, static assets
 ├── publish/win-x64/            # Ready-to-run self-contained release
+├── CODE_MAP.md                 # Full code map: methods, classes, workflows
 └── README.md
 ```
+
+> **Developer reference:** See [CODE_MAP.md](CODE_MAP.md) for a complete listing of every service method, page handler, model, and workflow.
 
 ---
 
@@ -144,7 +147,7 @@ PrimeRx/
 
 ## Deployment Notes
 
-- Run `WebApplication1.exe` from the `publish\win-x64` folder
+- Run `PrimeRx.exe` from the `publish\win-x64` folder
 - Keep the entire folder together (runtime + `wwwroot` + `Data` are required)
 - For production, set a fixed port and consider running as a Windows Service or behind IIS
 - Back up `Data\primerx.db` daily

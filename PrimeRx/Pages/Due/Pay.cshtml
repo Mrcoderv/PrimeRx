@@ -1,0 +1,89 @@
+@page "{id:int}"
+@model PrimeRx.Pages.Due.PayModel
+@{
+    ViewData["Title"] = "Collect Due Payment";
+}
+
+<h2 class="mb-3">Collect Due Payment</h2>
+
+@if (Model.Bill is null)
+{
+    <div class="alert alert-danger">Bill not found.</div>
+}
+else
+{
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-success">@Model.Message</div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <div class="row g-3">
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header">Bill Details</div>
+                <div class="card-body">
+                    <p><strong>Bill:</strong> @Model.Bill.BillNumber</p>
+                    <p><strong>Customer:</strong> @Model.Bill.CustomerName</p>
+                    <p><strong>Phone:</strong> @Model.Bill.CustomerPhone</p>
+                    <p><strong>Total:</strong> @Model.Bill.FinalAmount.ToString("N2")</p>
+                    <p><strong>Paid:</strong> @Model.Bill.PaidAmount.ToString("N2")</p>
+                    <p class="text-danger"><strong>Due:</strong> @Model.Bill.DueAmount.ToString("N2")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header">Record Payment</div>
+                <div class="card-body">
+                    <form method="post">
+                        <input type="hidden" asp-for="Input.BillId" />
+                        <div class="mb-3">
+                            <label asp-for="Input.AmountPaid" class="form-label">Amount</label>
+                            <input asp-for="Input.AmountPaid" class="form-control" type="number" step="0.01" min="0.01" max="@Model.Bill.DueAmount" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Input.PaymentMethod" class="form-label">Payment Method</label>
+                            <select asp-for="Input.PaymentMethod" class="form-select">
+                                <option value="Cash">Cash</option>
+                                <option value="Online">Online / Card</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Input.Remarks" class="form-label">Remarks</label>
+                            <input asp-for="Input.Remarks" class="form-control" />
+                        </div>
+                        <button type="submit" class="btn btn-primary">Record Payment</button>
+                        <a asp-page="/Due/Index" class="btn btn-outline-secondary">Back</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.PaymentHistory.Any())
+    {
+        <h5 class="mt-4">Payment History</h5>
+        <div class="table-responsive card shadow-sm">
+            <table class="table mb-0">
+                <thead class="table-light">
+                    <tr><th>Date</th><th>Amount</th><th>Method</th><th>Remarks</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.PaymentHistory)
+                    {
+                        <tr>
+                            <td>@p.PaymentDate.ToString("dd-MM-yyyy HH:mm")</td>
+                            <td>@p.AmountPaid.ToString("N2")</td>
+                            <td>@p.PaymentMethod</td>
+                            <td>@p.Remarks</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}

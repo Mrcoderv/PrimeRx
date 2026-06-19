@@ -1,0 +1,37 @@
+@page
+@model PrimeRx.Pages.Inventory.PurchaseModel
+@{
+    ViewData["Title"] = "Purchase Entry";
+}
+
+<h2 class="mb-3">Purchase Entry</h2>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success">@Model.Message</div>
+}
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="card shadow-sm col-lg-6">
+    <div class="card-body">
+        <form method="post">
+            <div class="mb-3">
+                <label asp-for="Input.MedicineId" class="form-label">Medicine</label>
+                <select asp-for="Input.MedicineId" class="form-select" asp-items="Model.MedicineOptions"></select>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.Quantity" class="form-label">Quantity</label>
+                <input asp-for="Input.Quantity" class="form-control" type="number" min="1" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.Reference" class="form-label">Reference / Supplier</label>
+                <input asp-for="Input.Reference" class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-success">Add Stock</button>
+            <a asp-page="/Inventory/Index" class="btn btn-outline-secondary">Back</a>
+        </form>
+    </div>
+</div>

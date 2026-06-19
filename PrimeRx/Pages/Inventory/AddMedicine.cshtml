@@ -1,0 +1,29 @@
+@page
+@model PrimeRx.Pages.Inventory.AddMedicineModel
+@{
+    ViewData["Title"] = "Add Medicine";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Add New Medicine</h1>
+        <p class="page-subtitle">Register a medicine in your inventory catalog</p>
+    </div>
+    <a asp-page="/Inventory/Index" class="btn btn-outline-accent">Back to Inventory</a>
+</div>
+
+<div class="panel-card col-lg-9">
+    <div class="panel-body">
+        <form method="post">
+            <partial name="_MedicineForm" model="Model.Medicine" />
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-accent">Save Medicine</button>
+                <a asp-page="/Inventory/Index" class="btn btn-outline-accent">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

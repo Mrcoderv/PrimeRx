@@ -1,0 +1,50 @@
+@model PrimeRx.Models.Medicine
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="Name" class="form-label">Medicine Name</label>
+        <input asp-for="Name" class="form-control" placeholder="e.g. Paracetamol 500mg" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="GenericName" class="form-label">Generic Name</label>
+        <input asp-for="GenericName" class="form-control" />
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Manufacturer" class="form-label">Manufacturer</label>
+        <input asp-for="Manufacturer" class="form-control" />
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Category" class="form-label">Category</label>
+        <input asp-for="Category" class="form-control" placeholder="e.g. Analgesic" />
+    </div>
+    <div class="col-md-4">
+        <label asp-for="MRP" class="form-label">MRP (Rs.)</label>
+        <input asp-for="MRP" class="form-control" type="number" step="0.01" min="0" />
+    </div>
+    <div class="col-md-4">
+        <label asp-for="PurchasePrice" class="form-label">Purchase Price</label>
+        <input asp-for="PurchasePrice" class="form-control" type="number" step="0.01" min="0" />
+    </div>
+    <div class="col-md-4">
+        <label asp-for="StockQuantity" class="form-label">Opening Stock</label>
+        <input asp-for="StockQuantity" class="form-control" type="number" min="0" />
+    </div>
+    <div class="col-md-4">
+        <label asp-for="LowStockThreshold" class="form-label">Low Stock Alert</label>
+        <input asp-for="LowStockThreshold" class="form-control" type="number" min="0" />
+    </div>
+    <div class="col-md-4">
+        <label asp-for="ExpiryDate" class="form-label">Expiry Date</label>
+        <input asp-for="ExpiryDate" class="form-control" type="date" />
+    </div>
+    @if (Model.Id > 0)
+    {
+        <div class="col-md-4 d-flex align-items-end">
+            <div class="form-check">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label">Active</label>
+            </div>
+        </div>
+    }
+</div>

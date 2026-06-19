@@ -1,0 +1,376 @@
+@page
+@model PrimeRx.Pages.Reports.IndexModel
+@{
+    ViewData["Title"] = "Reports & Analytics";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Reports & Analytics</h1>
+        <p class="page-subtitle">Sales performance, charts, and exportable business reports</p>
+    </div>
+</div>
+
+<!-- Summary strip -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-primary">
+            <div class="stat-label">Today Sales</div>
+            <div class="stat-value">Rs. @Model.Stats.TodaySales.ToString("N0")</div>
+            <div class="stat-foot">@Model.Stats.TodayBills bills</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-info">
+            <div class="stat-label">Month Sales</div>
+            <div class="stat-value">Rs. @Model.Stats.MonthSales.ToString("N0")</div>
+            <div class="stat-foot">This month</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-warning">
+            <div class="stat-label">Outstanding Due</div>
+            <div class="stat-value">Rs. @Model.Stats.OutstandingDue.ToString("N0")</div>
+            <div class="stat-foot">Pending collection</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-success">
+            <div class="stat-label">Chart Period</div>
+            <div class="stat-value" style="font-size:1.25rem">30 Days</div>
+            <div class="stat-foot">Sales &amp; medicine trends</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="panel-card h-100">
+            <div class="panel-header d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-bar-chart-line me-2"></i>Daily Sales Trend</h5>
+                <span class="report-chip">30 days</span>
+            </div>
+            <div class="panel-body chart-panel">
+                <canvas id="monthlySalesChart" height="110"></canvas>
+                <div id="salesChartEmpty" class="chart-empty d-none">No sales data for the selected period.</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="panel-card h-100">
+            <div class="panel-header"><h5><i class="bi bi-pie-chart me-2"></i>Top Medicines</h5></div>
+            <div class="panel-body chart-panel">
+                <canvas id="medicinePieChart" height="200"></canvas>
+                <div id="medChartEmpty" class="chart-empty d-none">No medicine sales data yet.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report generators -->
+<div class="panel-card mb-4">
+    <div class="panel-header">
+        <h5><i class="bi bi-file-earmark-bar-graph me-2 text-info"></i>Generate Reports</h5>
+        <p class="report-section-hint mb-0">Pick a report, set dates if needed, then view on screen or export.</p>
+    </div>
+    <div class="panel-body">
+        <div class="report-section-label">Sales Reports</div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6 col-xl-4">
+                <div class="report-action-card">
+                    <div class="report-action-title"><i class="bi bi-calendar-day me-2"></i>Daily Sales</div>
+                    <form method="get" asp-page-handler="DailySales">
+                        <input type="date" name="date" value="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control form-control-sm mb-2" />
+                        <div class="btn-group-sm d-flex gap-2">
+                            <button type="submit" name="format" value="view" class="btn btn-accent btn-sm flex-fill">View</button>
+                            <button type="submit" name="format" value="pdf" class="btn btn-outline-accent btn-sm">PDF</button>
+                            <button type="submit" name="format" value="excel" class="btn btn-outline-accent btn-sm">Excel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="report-action-card">
+                    <div class="report-action-title"><i class="bi bi-calendar-month me-2"></i>Monthly Sales</div>
+                    <form method="get" asp-page-handler="MonthlySales">
+                        <div class="row g-2 mb-2">
+                            <div class="col-6"><input type="number" name="year" value="@DateTime.Today.Year" class="form-control form-control-sm" /></div>
+                            <div class="col-6"><input type="number" name="month" value="@DateTime.Today.Month" class="form-control form-control-sm" min="1" max="12" /></div>
+                        </div>
+                        <div class="btn-group-sm d-flex gap-2">
+                            <button type="submit" name="format" value="view" class="btn btn-accent btn-sm flex-fill">View</button>
+                            <button type="submit" name="format" value="pdf" class="btn btn-outline-accent btn-sm">PDF</button>
+                            <button type="submit" name="format" value="excel" class="btn btn-outline-accent btn-sm">Excel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="report-action-card">
+                    <div class="report-action-title"><i class="bi bi-capsule me-2"></i>Medicine Sales</div>
+                    <p class="text-muted-small mb-2">Last 30 days breakdown</p>
+                    <form method="get" asp-page-handler="MedicineSales" class="d-flex gap-2">
+                        <button type="submit" name="format" value="view" class="btn btn-accent btn-sm flex-fill">View</button>
+                        <button type="submit" name="format" value="excel" class="btn btn-outline-accent btn-sm">Excel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="report-section-label">Business &amp; Inventory</div>
+        <div class="row g-3">
+            <div class="col-md-6 col-xl-4">
+                <div class="report-action-card">
+                    <div class="report-action-title"><i class="bi bi-currency-rupee me-2"></i>Profit &amp; Loss</div>
+                    <p class="text-muted-small mb-2">Revenue vs cost (30 days)</p>
+                    <a asp-page-handler="ProfitLoss" class="btn btn-accent btn-sm w-100">View Report</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="report-action-card">
+                    <div class="report-action-title"><i class="bi bi-wallet2 me-2"></i>Due Collection</div>
+                    <p class="text-muted-small mb-2">Collected vs outstanding</p>
+                    <a asp-page-handler="DueCollection" class="btn btn-accent btn-sm w-100">View Report</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="report-action-card">
+                    <div class="report-action-title"><i class="bi bi-box-seam me-2"></i>Inventory</div>
+                    <p class="text-muted-small mb-2">Current stock snapshot</p>
+                    <div class="d-flex gap-2">
+                        <a asp-page-handler="Inventory" class="btn btn-accent btn-sm flex-fill">View</a>
+                        <a asp-page-handler="Inventory" asp-route-format="excel" class="btn btn-outline-accent btn-sm">Excel</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="report-action-card">
+                    <div class="report-action-title"><i class="bi bi-exclamation-triangle me-2"></i>Expiry Alert</div>
+                    <p class="text-muted-small mb-2">Medicines expiring in 90 days</p>
+                    <a asp-page-handler="Expiry" class="btn btn-accent btn-sm w-100">View Report</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report results -->
+@if (Model.ReportTitle != null)
+{
+    <div class="panel-card report-results" id="reportResults">
+        <div class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0"><i class="bi bi-table me-2"></i>@Model.ReportTitle</h5>
+            @if (Model.SummaryText != null)
+            {
+                <span class="report-summary-badge">@Model.SummaryText</span>
+            }
+        </div>
+        <div class="p-0 panel-body-flush">
+            @if (Model.SalesReport != null)
+            {
+                @if (!Model.SalesReport.Bills.Any())
+                {
+                    <div class="report-empty">No bills found for this period.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-pro mb-0">
+                            <thead><tr><th>Bill #</th><th>Date</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead>
+                            <tbody>
+                                @foreach (var b in Model.SalesReport.Bills)
+                                {
+                                    <tr>
+                                        <td><strong>@b.BillNumber</strong></td>
+                                        <td>@b.BillDate.ToString("dd-MM-yyyy HH:mm")</td>
+                                        <td>@b.CustomerName</td>
+                                        <td>@b.CustomerPhone</td>
+                                        <td class="amount-cell">Rs. @b.FinalAmount.ToString("N2")</td>
+                                        <td>@b.PaymentMethod</td>
+                                        <td><span class="badge-status @(b.PaymentStatus == "Paid" ? "paid" : b.PaymentStatus == "Due" ? "due" : "partial")">@b.PaymentStatus</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="report-total-row">
+                                    <td colspan="4" class="text-end"><strong>Total</strong></td>
+                                    <td class="amount-cell"><strong>Rs. @Model.SalesReport.TotalSales.ToString("N2")</strong></td>
+                                    <td colspan="2"><strong>@Model.SalesReport.BillCount bills</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+            }
+            @if (Model.MedicineSales != null)
+            {
+                <div class="table-responsive">
+                    <table class="table table-pro mb-0">
+                        <thead><tr><th>#</th><th>Medicine</th><th>Quantity Sold</th><th>Revenue</th></tr></thead>
+                        <tbody>
+                            @{ var i = 1; }
+                            @foreach (var r in Model.MedicineSales)
+                            {
+                                <tr>
+                                    <td>@i</td>
+                                    <td>@r.MedicineName</td>
+                                    <td>@r.TotalQuantity</td>
+                                    <td class="amount-cell">Rs. @r.TotalAmount.ToString("N2")</td>
+                                </tr>
+                                i++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            @if (Model.ProfitLoss != null)
+            {
+                <div class="panel-body">
+                    <div class="row g-3">
+                        <div class="col-md-3"><div class="pnl-box"><div class="pnl-label">Revenue</div><div class="pnl-value">Rs. @Model.ProfitLoss.Revenue.ToString("N2")</div></div></div>
+                        <div class="col-md-3"><div class="pnl-box"><div class="pnl-label">Cost</div><div class="pnl-value">Rs. @Model.ProfitLoss.Cost.ToString("N2")</div></div></div>
+                        <div class="col-md-3"><div class="pnl-box pnl-profit"><div class="pnl-label">Net Profit</div><div class="pnl-value @(Model.ProfitLoss.Profit >= 0 ? "positive" : "negative")">Rs. @Model.ProfitLoss.Profit.ToString("N2")</div></div></div>
+                        <div class="col-md-3"><div class="pnl-box"><div class="pnl-label">Bills</div><div class="pnl-value">@Model.ProfitLoss.BillCount</div></div></div>
+                    </div>
+                </div>
+            }
+            @if (Model.DueReport != null)
+            {
+                <div class="panel-body">
+                    <div class="row g-3">
+                        <div class="col-md-6"><div class="pnl-box pnl-profit"><div class="pnl-label">Total Collected</div><div class="pnl-value positive">Rs. @Model.DueReport.TotalCollected.ToString("N2")</div></div></div>
+                        <div class="col-md-6"><div class="pnl-box"><div class="pnl-label">Outstanding Due</div><div class="pnl-value negative">Rs. @Model.DueReport.OutstandingDue.ToString("N2")</div></div></div>
+                    </div>
+                </div>
+            }
+            @if (Model.InventoryMedicines != null)
+            {
+                <div class="table-responsive">
+                    <table class="table table-pro mb-0">
+                        <thead><tr><th>Medicine</th><th>Stock</th><th>MRP</th><th>Purchase</th><th>Expiry</th></tr></thead>
+                        <tbody>
+                            @foreach (var m in Model.InventoryMedicines)
+                            {
+                                <tr>
+                                    <td>@m.Name</td>
+                                    <td>@m.StockQuantity</td>
+                                    <td class="amount-cell">Rs. @m.MRP.ToString("N2")</td>
+                                    <td class="amount-cell">Rs. @m.PurchasePrice.ToString("N2")</td>
+                                    <td>@(m.ExpiryDate?.ToString("dd-MM-yyyy") ?? "—")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            @if (Model.ExpiryMedicines != null)
+            {
+                <div class="table-responsive">
+                    <table class="table table-pro mb-0">
+                        <thead><tr><th>Medicine</th><th>Stock</th><th>Expiry Date</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var m in Model.ExpiryMedicines)
+                            {
+                                <tr>
+                                    <td>@m.Name</td>
+                                    <td>@m.StockQuantity</td>
+                                    <td class="negative">@m.ExpiryDate?.ToString("dd-MM-yyyy")</td>
+                                    <td><span class="badge-status partial">Expiring</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        const salesTrend = @Html.Raw(Model.SalesTrendJson);
+        const topMeds = @Html.Raw(Model.MedicineChartJson);
+        const chartFont = '#cbd5e1';
+        const chartGrid = 'rgba(255,255,255,0.08)';
+
+        const salesCanvas = document.getElementById('monthlySalesChart');
+        const salesEmpty = document.getElementById('salesChartEmpty');
+        if (salesTrend.length === 0 || salesTrend.every(x => x.amount === 0)) {
+            salesCanvas.classList.add('d-none');
+            salesEmpty.classList.remove('d-none');
+        } else {
+            new Chart(salesCanvas, {
+                type: 'bar',
+                data: {
+                    labels: salesTrend.map(x => x.label),
+                    datasets: [{
+                        label: 'Sales (Rs.)',
+                        data: salesTrend.map(x => x.amount),
+                        backgroundColor: 'rgba(14, 165, 233, 0.75)',
+                        borderColor: '#38bdf8',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f2744',
+                            titleColor: '#fff',
+                            bodyColor: '#cbd5e1',
+                            callbacks: { label: ctx => ' Rs. ' + ctx.parsed.y.toLocaleString() }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#94a3b8', callback: v => 'Rs.' + v },
+                            grid: { color: chartGrid }
+                        },
+                        x: { ticks: { color: '#94a3b8', maxRotation: 45, font: { size: 10 } }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        const medCanvas = document.getElementById('medicinePieChart');
+        const medEmpty = document.getElementById('medChartEmpty');
+        if (topMeds.length === 0) {
+            medCanvas.classList.add('d-none');
+            medEmpty.classList.remove('d-none');
+        } else {
+            new Chart(medCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: topMeds.map(x => x.medicineName),
+                    datasets: [{
+                        data: topMeds.map(x => x.totalAmount),
+                        backgroundColor: ['#3b82f6','#06b6d4','#6366f1','#8b5cf6','#0ea5e9','#14b8a6','#f59e0b','#ef4444'],
+                        borderColor: '#0f2744',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: chartFont, boxWidth: 12, padding: 10, font: { size: 11 } } },
+                        tooltip: {
+                            backgroundColor: '#0f2744',
+                            callbacks: { label: ctx => ' Rs. ' + ctx.parsed.toLocaleString() }
+                        }
+                    }
+                }
+            });
+        }
+
+        @if (Model.ReportTitle != null)
+        {
+            <text>document.getElementById('reportResults')?.scrollIntoView({ behavior: 'smooth', block: 'start' });</text>
+        }
+    </script>
+}
