@@ -1,0 +1,22 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "PrimeRx";
+    Layout = "_Layout";
+}
+
+<div class="text-center py-5">
+    <div class="mb-4">
+        <span class="brand-logo" style="font-size:2rem;padding:0.5rem 1rem;">Rx</span>
+    </div>
+    <h1 class="display-4 fw-bold text-white mb-2">PrimeRx</h1>
+    <p class="lead text-muted mb-4">Professional Pharmacy Billing & Inventory Management</p>
+
+    <div class="row justify-content-center g-3 mb-4 col-lg-8 mx-auto">
+        <div class="col-md-4"><div class="stat-card stat-primary text-center"><div class="stat-label">Billing</div><div class="stat-foot">Fast POS</div></div></div>
+        <div class="col-md-4"><div class="stat-card stat-info text-center"><div class="stat-label">Inventory</div><div class="stat-foot">Real-time stock</div></div></div>
+        <div class="col-md-4"><div class="stat-card stat-success text-center"><div class="stat-label">Reports</div><div class="stat-foot">Sales analytics</div></div></div>
+    </div>
+
+    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-accent btn-lg px-5">Login to Continue</a>
+</div>

@@ -1,0 +1,86 @@
+@page
+@model WebApplication1.Pages.Admin.Users.IndexModel
+@{
+    ViewData["Title"] = "Staff Management";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Staff Management</h1>
+        <p class="page-subtitle">Create and manage staff accounts for billing and inventory access</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success">@Model.Message</div>
+}
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="panel-card">
+            <div class="panel-header"><h5><i class="bi bi-person-plus me-2"></i>Add Staff Member</h5></div>
+            <div class="panel-body">
+                <form method="post" asp-page-handler="Create">
+                    <div class="mb-3">
+                        <label asp-for="NewStaff.Email" class="form-label">Email / Username</label>
+                        <input asp-for="NewStaff.Email" class="form-control" placeholder="staff@pharmacy.com" />
+                        <span asp-validation-for="NewStaff.Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NewStaff.Password" class="form-label">Password</label>
+                        <input asp-for="NewStaff.Password" class="form-control" type="password" placeholder="Min. 6 characters" />
+                        <span asp-validation-for="NewStaff.Password" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NewStaff.ConfirmPassword" class="form-label">Confirm Password</label>
+                        <input asp-for="NewStaff.ConfirmPassword" class="form-control" type="password" />
+                    </div>
+                    <button type="submit" class="btn btn-accent w-100">
+                        <i class="bi bi-person-check me-1"></i>Create Staff Account
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="panel-card staff-card">
+            <div class="panel-header d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-people me-2"></i>Staff Directory</h5>
+                <span class="badge bg-info">@Model.StaffUsers.Count staff</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-pro mb-0">
+                    <thead>
+                        <tr><th>Email</th><th>Role</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.StaffUsers.Any())
+                        {
+                            @foreach (var user in Model.StaffUsers)
+                            {
+                                <tr>
+                                    <td><i class="bi bi-person me-1"></i>@user.Email</td>
+                                    <td><span class="badge-status paid">@string.Join(", ", user.Roles)</span></td>
+                                    <td><span class="badge-status paid">Active</span></td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="3" class="text-center text-muted py-4">No staff accounts yet. Create one using the form.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

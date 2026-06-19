@@ -1,0 +1,42 @@
+## Build / IDE
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## .NET
+**/bin/
+**/obj/
+**/out/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## User-specific
+**/appsettings.Development.json
+**/Properties/launchSettings.json.user
+**/serviceDependencies.local.json
+**/serviceDependencies.local.json.user
+
+## Local dev database (publish bundle includes its own)
+WebApplication1/Data/primerx.db
+WebApplication1/Data/*.db-shm
+WebApplication1/Data/*.db-wal
+
+## Old framework-dependent publish output (use publish/win-x64 only)
+publish/*
+!publish/win-x64/
+!publish/win-x64/**
+
+## OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+## Logs
+*.log
+
+## Keep publish folder (self-contained release is committed intentionally)
+# publish/ is NOT ignored

@@ -1,0 +1,23 @@
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebApplication1.Models;
+using WebApplication1.Services;
+
+namespace WebApplication1.Pages.Inventory;
+
+public class IndexModel(InventoryService inventoryService) : PageModel
+{
+    public List<Medicine> Medicines { get; set; } = [];
+    public List<Medicine> LowStock { get; set; } = [];
+    public List<Medicine> ExpiringSoon { get; set; } = [];
+    public string? Search { get; set; }
+    public string? Message { get; set; }
+
+    public async Task OnGetAsync(string? search, string? message)
+    {
+        Search = search;
+        Message = message;
+        Medicines = await inventoryService.GetAllAsync(search);
+        LowStock = await inventoryService.GetLowStockAsync();
+        ExpiringSoon = await inventoryService.GetExpiringSoonAsync();
+    }
+}

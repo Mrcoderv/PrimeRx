@@ -1,0 +1,43 @@
+@page
+@model WebApplication1.Pages.Admin.Company.IndexModel
+@{
+    ViewData["Title"] = "Company Profile";
+}
+
+<h2 class="mb-3">Company Profile</h2>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success">@Model.Message</div>
+}
+
+<div class="card shadow-sm col-lg-8">
+    <div class="card-body">
+        <form method="post">
+            <input type="hidden" asp-for="Company.Id" />
+            <div class="mb-3">
+                <label asp-for="Company.Name" class="form-label"></label>
+                <input asp-for="Company.Name" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Company.Address" class="form-label"></label>
+                <textarea asp-for="Company.Address" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Company.Phone" class="form-label"></label>
+                    <input asp-for="Company.Phone" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Company.PAN" class="form-label"></label>
+                    <input asp-for="Company.PAN" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Company.GSTIN" class="form-label"></label>
+                    <input asp-for="Company.GSTIN" class="form-control" />
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Save</button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,549 @@
+# Pharmacy Billing Application - Design Document
+
+## 1. Project Overview
+
+### Application Name
+
+**Pharmacy Billing App**
+
+### Technology Stack
+
+* **Backend:** ASP.NET Core 8/9 (Razor Pages)
+* **Database:** SQL Server (Initial) / PostgreSQL (Future)
+* **ORM:** Entity Framework Core + LINQ
+* **Authentication:** ASP.NET Core Identity
+* **Roles:** Admin, Staff
+* **Frontend:** Razor Pages + Bootstrap + JavaScript
+* **Search:** jQuery + TomSelect (Medicine Autocomplete)
+* **Reporting:** QuestPDF (PDF Bills), EPPlus (Excel Reports)
+* **Architecture:** Layered Architecture (Models, Data, Services, Pages)
+
+### Key Goals
+
+* Lightning-fast pharmacy billing
+* Minimal data entry
+* Real-time inventory management
+* Due payment tracking
+* PDF invoice generation
+* Mobile-friendly interface
+* Future cloud deployment support
+
+---
+
+# 2. Features
+
+## 2.1 Medicine Management
+
+### Features
+
+* Pre-loaded medicine database
+* Fast autocomplete medicine search
+* Add/Edit/Delete medicines
+* Generic name support
+* Manufacturer information
+* Category management
+* Expiry tracking
+* Low stock threshold management
+
+---
+
+## 2.2 Billing System
+
+### Billing Workflow
+
+1. Search and select medicine(s)
+2. Enter Customer Name
+3. Enter Customer Phone Number
+4. Select Payment Method:
+
+   * Cash
+   * Online / Mobile Payment / Card
+   * Due
+5. Apply discount (optional)
+6. Generate bill
+
+### System Automatically
+
+* Calculates totals
+* Deducts inventory stock
+* Creates bill records
+* Creates inventory transaction logs
+* Generates PDF invoice
+* Stores due amount if payment method is Due
+
+---
+
+## 2.3 Inventory Management
+
+### Features
+
+* Real-time stock updates
+* Purchase entry
+* Stock adjustments
+* Low stock alerts
+* Expiry alerts
+* Inventory transaction history
+
+---
+
+## 2.4 Due Payment Management
+
+### Features
+
+* View all unpaid bills
+* Search by customer name
+* Search by phone number
+* Partial payment support
+* Full payment settlement
+* Due payment history
+
+---
+
+## 2.5 Reports & Analytics
+
+### Reports
+
+* Daily Sales Report
+* Monthly Sales Report
+* Medicine-wise Sales
+* Profit & Loss Report
+* Due Collection Report
+* Inventory Report
+* Expiry Report
+
+### Export Formats
+
+* PDF
+* Excel
+
+---
+
+## 2.6 User Management
+
+### Admin
+
+* Full system access
+* Manage medicines
+* Manage staff
+* View reports
+* Company setup
+* Inventory management
+
+### Staff
+
+* Billing
+* Inventory viewing
+* Due collection
+* Reports viewing
+
+---
+
+# 3. Database Design
+
+## 3.1 Company Profile
+
+```csharp
+public class CompanyProfile
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+
+    public string Address { get; set; } = string.Empty;
+
+    public string Phone { get; set; } = string.Empty;
+
+    public string PAN { get; set; } = string.Empty;
+
+    public string? GSTIN { get; set; }
+
+    public string? LogoPath { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+}
+```
+
+## 3.2 Medicine
+
+```csharp
+public class Medicine
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+
+    public string? GenericName { get; set; }
+
+    public string? Manufacturer { get; set; }
+
+    public decimal MRP { get; set; }
+
+    public decimal PurchasePrice { get; set; }
+
+    public int StockQuantity { get; set; }
+
+    public int LowStockThreshold { get; set; } = 10;
+
+    public DateTime? ExpiryDate { get; set; }
+
+    public string? Category { get; set; }
+
+    public bool IsActive { get; set; } = true;
+}
+```
+
+## 3.3 Bill
+
+```csharp
+public class Bill
+{
+    public int Id { get; set; }
+
+    public string BillNumber { get; set; } = string.Empty;
+
+    public DateTime BillDate { get; set; } = DateTime.Now;
+
+    [Required]
+    public string CustomerName { get; set; } = string.Empty;
+
+    [Required]
+    public string CustomerPhone { get; set; } = string.Empty;
+
+    public decimal TotalAmount { get; set; }
+
+    public decimal DiscountAmount { get; set; }
+
+    public decimal FinalAmount { get; set; }
+
+    // Cash, Online, Due
+    public string PaymentMethod { get; set; } = "Cash";
+
+    public decimal PaidAmount { get; set; }
+
+    public decimal DueAmount { get; set; }
+
+    // Paid, Partially Paid, Due
+    public string PaymentStatus { get; set; } = "Paid";
+
+    public string? StaffId { get; set; }
+
+    public string? StaffName { get; set; }
+
+    public List<SaleItem> SaleItems { get; set; } = new();
+}
+```
+
+## 3.4 Sale Item
+
+```csharp
+public class SaleItem
+{
+    public int Id { get; set; }
+
+    public int BillId { get; set; }
+
+    public Bill Bill { get; set; } = null!;
+
+    public int MedicineId { get; set; }
+
+    public string MedicineName { get; set; } = string.Empty;
+
+    public decimal Rate { get; set; }
+
+    public int Quantity { get; set; }
+
+    public decimal DiscountPerItem { get; set; }
+
+    public decimal Amount { get; set; }
+}
+```
+
+## 3.5 Due Payment
+
+```csharp
+public class DuePayment
+{
+    public int Id { get; set; }
+
+    public int BillId { get; set; }
+
+    public Bill Bill { get; set; } = null!;
+
+    public decimal AmountPaid { get; set; }
+
+    public DateTime PaymentDate { get; set; } = DateTime.Now;
+
+    public string PaymentMethod { get; set; } = string.Empty;
+
+    public string? Remarks { get; set; }
+}
+```
+
+## 3.6 Inventory Transaction
+
+```csharp
+public class InventoryTransaction
+{
+    public int Id { get; set; }
+
+    public int MedicineId { get; set; }
+
+    public string TransactionType { get; set; } = string.Empty;
+
+    public int QuantityChange { get; set; }
+
+    public DateTime TransactionDate { get; set; } = DateTime.Now;
+
+    public string? Reference { get; set; }
+}
+```
+
+---
+
+# 4. ApplicationDbContext
+
+```csharp
+public class ApplicationDbContext
+    : IdentityDbContext<IdentityUser>
+{
+    public DbSet<CompanyProfile> CompanyProfiles { get; set; }
+
+    public DbSet<Medicine> Medicines { get; set; }
+
+    public DbSet<Bill> Bills { get; set; }
+
+    public DbSet<SaleItem> SaleItems { get; set; }
+
+    public DbSet<DuePayment> DuePayments { get; set; }
+
+    public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Medicine>()
+            .HasIndex(m => m.Name);
+
+        modelBuilder.Entity<Bill>()
+            .HasIndex(b => b.CustomerPhone);
+    }
+}
+```
+
+# 5. Project Structure
+
+```text
+PharmacyBillingApp/
+│
+├── Areas/
+│   └── Identity/
+│
+├── Data/
+│   ├── ApplicationDbContext.cs
+│   ├── Migrations/
+│   └── Seeder/
+│
+├── Models/
+│   ├── CompanyProfile.cs
+│   ├── Medicine.cs
+│   ├── Bill.cs
+│   ├── SaleItem.cs
+│   ├── DuePayment.cs
+│   └── InventoryTransaction.cs
+│
+├── Services/
+│   ├── BillingService.cs
+│   ├── InventoryService.cs
+│   ├── DueService.cs
+│   └── ReportService.cs
+│
+├── Pages/
+│   ├── Admin/
+│   ├── Billing/
+│   ├── Due/
+│   ├── Inventory/
+│   └── Reports/
+│
+├── Helpers/
+│   └── PdfGenerator.cs
+│
+├── wwwroot/
+│   ├── css/
+│   ├── js/
+│   └── lib/
+│
+├── Program.cs
+└── appsettings.json
+```
+
+# 6. Key Workflows
+
+## 6.1 First-Time Setup
+
+1. Launch Application
+2. Redirect to Setup Page
+3. Enter Company Information
+4. Create Admin User
+5. Create Staff Accounts
+6. Seed Medicine Database
+
+---
+
+## 6.2 Billing Process
+
+### User Actions
+
+1. Search medicine
+2. Select medicine(s)
+3. Enter quantity
+4. Enter customer name
+5. Enter customer phone number
+6. Select payment method
+
+   * Cash
+   * Online/Mobile Payment/Card
+   * Due
+7. Click Generate Bill
+
+### System Actions
+
+1. Validate stock
+2. Calculate total
+3. Apply discounts
+4. Save Bill
+5. Save Sale Items
+6. Deduct stock
+7. Create Inventory Transaction
+8. Generate PDF Invoice
+
+### Due Payment Logic
+
+```csharp
+if (bill.PaymentMethod == "Due")
+{
+    bill.PaidAmount = 0;
+    bill.DueAmount = bill.FinalAmount;
+    bill.PaymentStatus = "Due";
+}
+else
+{
+    bill.PaidAmount = bill.FinalAmount;
+    bill.DueAmount = 0;
+    bill.PaymentStatus = "Paid";
+}
+```
+
+---
+
+## 6.3 Due Payment Portal
+
+### Display
+
+* Bill Number
+* Date
+* Customer Name
+* Phone Number
+* Total Amount
+* Paid Amount
+* Due Amount
+* Status
+
+### Features
+
+* Search customer
+* Search phone
+* Record payment
+* Partial payment
+* Mark fully paid
+
+---
+
+# 7. Non-Functional Requirements
+
+### Performance
+
+* Medicine search under 200ms
+* Fast bill generation
+
+### Security
+
+* ASP.NET Identity
+* Role-based authorization
+* Input validation
+
+### Scalability
+
+* Service-based architecture
+* Dependency Injection
+
+### Reliability
+
+* Transaction-based billing
+* Audit logs
+
+### Usability
+
+* Mobile responsive
+* Minimal clicks billing
+
+---
+
+# 8. Future Enhancements
+
+## Phase 2
+
+* Barcode scanner support
+* Batch number tracking
+* Supplier management
+* Purchase orders
+
+## Phase 3
+
+* Multi-tenant support
+* Azure deployment
+* PostgreSQL support
+* Cloud backups
+
+## Phase 4
+
+* SMS reminders for due payments
+* WhatsApp invoice sharing
+* Email notifications
+* Hangfire background jobs
+
+## Phase 5
+
+* Progressive Web App (PWA)
+* Offline billing mode
+* Mobile application
+
+---
+
+# 9. Recommended NuGet Packages
+
+```text
+Microsoft.EntityFrameworkCore.SqlServer
+Microsoft.AspNetCore.Identity.EntityFrameworkCore
+QuestPDF
+EPPlus
+AutoMapper.Extensions.Microsoft.DependencyInjection
+FluentValidation.AspNetCore
+EFCore.BulkExtensions
+Serilog.AspNetCore
+TomSelect
+```
+
+# 10. Final Billing Flow
+
+Medicine Search
+→ Select Medicines
+→ Enter Customer Name
+→ Enter Customer Phone Number
+→ Select Payment Method (Cash / Online-Mobile Payment-Card / Due)
+→ Generate Bill
+→ Auto Stock Deduction
+→ Save Bill
+→ Generate PDF Invoice
+→ Store Due Amount (if any)
+→ Display in Due Management Portal
