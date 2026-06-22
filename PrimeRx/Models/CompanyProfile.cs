@@ -22,4 +22,8 @@ public class CompanyProfile
     public string BillPrimaryColor { get; set; } = "#2563eb";
     public bool ShowPanOnBill { get; set; } = true;
     public bool ShowGstinOnBill { get; set; } = true;
+
+    // Pricing defaults
+    /// <summary>Default discount margin percentage applied to new bills (default: 20%).</summary>
+    public decimal DefaultDiscountMarginPercent { get; set; } = 20;
 }
