@@ -10,11 +10,7 @@ using PrimeRx.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS"))
-    && !builder.Environment.IsDevelopment())
-{
-    builder.WebHost.UseUrls("http://localhost:5000");
-}
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 var sqliteConnection = DatabasePath.ResolveSqliteConnectionString(
     builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -61,6 +57,7 @@ builder.Services.AddScoped<BillingService>();
 builder.Services.AddScoped<DueService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<ExpenseService>();
 builder.Services.AddSingleton<PdfGenerator>();
 
 var app = builder.Build();

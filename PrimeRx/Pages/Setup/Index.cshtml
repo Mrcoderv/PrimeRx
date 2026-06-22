@@ -9,63 +9,75 @@
     <div class="col-lg-8">
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">PrimeRx - First Time Setup</h4>
+                <h4 class="mb-0"><i class="bi bi-shop me-2"></i>PrimeRx - First Time Setup</h4>
             </div>
             <div class="card-body">
-                <p class="text-muted">Configure your pharmacy and create the administrator account.</p>
+                <p class="text-muted mb-4">Configure your pharmacy details and create the administrator account to get started.</p>
 
                 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
                 {
-                    <div class="alert alert-danger">@Model.ErrorMessage</div>
+                    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>@Model.ErrorMessage</div>
                 }
 
                 <form method="post">
-                    <h5 class="mt-3">Company Information</h5>
+                    <h5 class="mt-2 mb-3 text-primary"><i class="bi bi-building me-2"></i>Company Information</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label asp-for="Input.CompanyName" class="form-label"></label>
-                            <input asp-for="Input.CompanyName" class="form-control" />
-                            <span asp-validation-for="Input.CompanyName" class="text-danger"></span>
+                            <label asp-for="Input.CompanyName" class="form-label fw-semibold"></label>
+                            <input asp-for="Input.CompanyName" class="form-control" placeholder="e.g. City Pharmacy" />
+                            <span asp-validation-for="Input.CompanyName" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Input.Phone" class="form-label"></label>
-                            <input asp-for="Input.Phone" class="form-control" />
-                            <span asp-validation-for="Input.Phone" class="text-danger"></span>
+                            <label asp-for="Input.Phone" class="form-label fw-semibold"></label>
+                            <input asp-for="Input.Phone" class="form-control" placeholder="e.g. 9876543210" />
+                            <span asp-validation-for="Input.Phone" class="text-danger small"></span>
                         </div>
                         <div class="col-12">
-                            <label asp-for="Input.Address" class="form-label"></label>
-                            <textarea asp-for="Input.Address" class="form-control" rows="2"></textarea>
+                            <label asp-for="Input.Address" class="form-label fw-semibold"></label>
+                            <textarea asp-for="Input.Address" class="form-control" rows="2" placeholder="Full pharmacy address"></textarea>
+                            <span asp-validation-for="Input.Address" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Input.PAN" class="form-label"></label>
-                            <input asp-for="Input.PAN" class="form-control" />
+                            <label asp-for="Input.PAN" class="form-label fw-semibold"></label>
+                            <input asp-for="Input.PAN" class="form-control" placeholder="e.g. ABCDE1234F" />
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Input.GSTIN" class="form-label"></label>
-                            <input asp-for="Input.GSTIN" class="form-control" />
+                            <label asp-for="Input.GSTIN" class="form-label fw-semibold"></label>
+                            <input asp-for="Input.GSTIN" class="form-control" placeholder="e.g. 22ABCDE1234F1Z5" />
                         </div>
                     </div>
 
-                    <h5 class="mt-4">Administrator Account</h5>
+                    <hr class="my-4" />
+                    <h5 class="mb-3 text-primary"><i class="bi bi-person-lock me-2"></i>Administrator Account</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label asp-for="Input.AdminEmail" class="form-label"></label>
-                            <input asp-for="Input.AdminEmail" class="form-control" />
-                            <span asp-validation-for="Input.AdminEmail" class="text-danger"></span>
+                            <label asp-for="Input.AdminEmail" class="form-label fw-semibold"></label>
+                            <input asp-for="Input.AdminEmail" class="form-control" placeholder="admin@yourpharmacy.com" />
+                            <span asp-validation-for="Input.AdminEmail" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Input.AdminPassword" class="form-label"></label>
-                            <input asp-for="Input.AdminPassword" class="form-control" type="password" />
-                            <span asp-validation-for="Input.AdminPassword" class="text-danger"></span>
+                            <label asp-for="Input.AdminPassword" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <input asp-for="Input.AdminPassword" class="form-control" type="password"
+                                       id="adminPasswordInput" placeholder="Min. 6 characters" />
+                                <button class="btn btn-outline-secondary" type="button"
+                                        id="toggleAdminPassword" tabindex="-1"
+                                        title="Toggle password visibility">
+                                    <i class="bi bi-eye" id="adminPasswordIcon"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Input.AdminPassword" class="text-danger small"></span>
                         </div>
                     </div>
 
                     <div class="form-check mt-3">
                         <input asp-for="Input.SeedMedicines" class="form-check-input" />
-                        <label asp-for="Input.SeedMedicines" class="form-check-label">Load sample medicine database</label>
+                        <label asp-for="Input.SeedMedicines" class="form-check-label">Load sample medicine database (recommended for first-time setup)</label>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-lg mt-4 w-100">Complete Setup</button>
+                    <button type="submit" class="btn btn-primary btn-lg mt-4 w-100">
+                        <i class="bi bi-check-circle me-2"></i>Complete Setup
+                    </button>
                 </form>
             </div>
         </div>
@@ -74,4 +86,18 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Toggle password visibility on the Setup page
+        document.getElementById('toggleAdminPassword').addEventListener('click', function () {
+            var input = document.getElementById('adminPasswordInput');
+            var icon = document.getElementById('adminPasswordIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        });
+    </script>
 }

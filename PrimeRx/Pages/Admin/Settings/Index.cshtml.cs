@@ -51,6 +51,7 @@ public class IndexModel(ApplicationDbContext context) : PageModel
             existing.BillPrimaryColor = Settings.BillPrimaryColor;
             existing.ShowPanOnBill = Settings.ShowPanOnBill;
             existing.ShowGstinOnBill = Settings.ShowGstinOnBill;
+            existing.DefaultDiscountMarginPercent = Settings.DefaultDiscountMarginPercent;
         }
 
         await context.SaveChangesAsync();

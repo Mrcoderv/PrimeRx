@@ -38,6 +38,14 @@
         <label asp-for="ExpiryDate" class="form-label">Expiry Date</label>
         <input asp-for="ExpiryDate" class="form-control" type="date" />
     </div>
+    <div class="col-md-4">
+        <label asp-for="BatchNumber" class="form-label">Batch Number</label>
+        <input asp-for="BatchNumber" class="form-control" placeholder="e.g. BATCH-20260622" />
+    </div>
+    <div class="col-md-4">
+        <label asp-for="PurchaseSource" class="form-label">Purchase Source</label>
+        <input asp-for="PurchaseSource" class="form-control" placeholder="e.g. ABC Distributors" />
+    </div>
     @if (Model.Id > 0)
     {
         <div class="col-md-4 d-flex align-items-end">

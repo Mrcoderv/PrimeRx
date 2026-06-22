@@ -22,6 +22,8 @@ public class IndexModel(
 
     public async Task<IActionResult> OnGetAsync()
     {
+        // If setup is already complete, redirect to Dashboard.
+        // Comment out the line below to always show the Setup page during development/testing.
         if (await context.CompanyProfiles.AnyAsync())
             return RedirectToPage("/Dashboard/Index");
 
@@ -33,6 +35,7 @@ public class IndexModel(
         if (!ModelState.IsValid)
             return Page();
 
+        // Prevent re-running setup if a profile already exists.
         if (await context.CompanyProfiles.AnyAsync())
             return RedirectToPage("/Dashboard/Index");
 
@@ -62,6 +65,9 @@ public class IndexModel(
         if (!result.Succeeded)
         {
             ErrorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
+            // Remove the partially-saved company profile so the user can retry.
+            context.CompanyProfiles.Remove(company);
+            await context.SaveChangesAsync();
             return Page();
         }
 

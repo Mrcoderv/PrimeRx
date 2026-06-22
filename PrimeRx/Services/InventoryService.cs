@@ -55,10 +55,23 @@ public class InventoryService(ApplicationDbContext context)
 
     public async Task<Medicine> CreateAsync(Medicine medicine)
     {
+        if (medicine.MRP <= 0 && medicine.PurchasePrice > 0)
+            medicine.MRP = CalculateMrp(medicine.PurchasePrice, await GetDefaultMarginPercentAsync());
+
         context.Medicines.Add(medicine);
         await context.SaveChangesAsync();
         return medicine;
     }
+
+    /// <summary>Default markup margin (%) used to derive MRP from purchase price; falls back to 16% if no profile exists.</summary>
+    public async Task<decimal> GetDefaultMarginPercentAsync()
+    {
+        var profile = await context.CompanyProfiles.AsNoTracking().FirstOrDefaultAsync();
+        return profile?.DefaultDiscountMarginPercent ?? 16m;
+    }
+
+    public static decimal CalculateMrp(decimal purchasePrice, decimal marginPercent) =>
+        Math.Round(purchasePrice * (1 + marginPercent / 100m), 2);
 
     public async Task UpdateAsync(Medicine medicine)
     {
@@ -77,20 +90,60 @@ public class InventoryService(ApplicationDbContext context)
 
     public async Task RecordPurchaseAsync(PurchaseEntryRequest request)
     {
+        if (request.Quantity <= 0)
+            throw new InvalidOperationException("Quantity must be greater than zero.");
+
         var medicine = await context.Medicines.FindAsync(request.MedicineId)
             ?? throw new InvalidOperationException("Medicine not found.");
 
         medicine.StockQuantity += request.Quantity;
+
+        if (request.PurchasePrice is > 0)
+        {
+            medicine.PurchasePrice = request.PurchasePrice.Value;
+            medicine.MRP = CalculateMrp(medicine.PurchasePrice, await GetDefaultMarginPercentAsync());
+        }
+
+        var batchNumber = request.BatchNumber?.Trim();
+        var purchaseSource = request.PurchaseSource?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(batchNumber))
+            medicine.BatchNumber = batchNumber;
+        if (!string.IsNullOrWhiteSpace(purchaseSource))
+            medicine.PurchaseSource = purchaseSource;
+        if (request.ExpiryDate.HasValue)
+            medicine.ExpiryDate = request.ExpiryDate;
+
+        context.InventoryBatches.Add(new InventoryBatch
+        {
+            MedicineId = medicine.Id,
+            BatchNumber = string.IsNullOrWhiteSpace(batchNumber) ? "N/A" : batchNumber,
+            Quantity = request.Quantity,
+            PurchasePrice = request.PurchasePrice ?? medicine.PurchasePrice,
+            PurchaseSource = purchaseSource ?? request.Reference?.Trim() ?? string.Empty,
+            ExpiryDate = request.ExpiryDate
+        });
 
         context.InventoryTransactions.Add(new InventoryTransaction
         {
             MedicineId = medicine.Id,
             TransactionType = TransactionTypes.Purchase,
             QuantityChange = request.Quantity,
-            Reference = request.Reference ?? $"Purchase +{request.Quantity}"
+            Reference = BuildPurchaseReference(request)
         });
 
         await context.SaveChangesAsync();
+    }
+
+    private static string BuildPurchaseReference(PurchaseEntryRequest request)
+    {
+        var parts = new List<string> { $"Purchase +{request.Quantity}" };
+        if (!string.IsNullOrWhiteSpace(request.BatchNumber))
+            parts.Add($"Batch {request.BatchNumber.Trim()}");
+        var source = request.PurchaseSource?.Trim() ?? request.Reference?.Trim();
+        if (!string.IsNullOrWhiteSpace(source))
+            parts.Add(source);
+        return string.Join(" • ", parts);
     }
 
     public async Task AdjustStockAsync(StockAdjustmentRequest request)
