@@ -50,6 +50,13 @@ public class PurchaseEntryRequest
     public int MedicineId { get; set; }
     public int Quantity { get; set; }
     public string? Reference { get; set; }
+
+    public string? BatchNumber { get; set; }
+    public string? PurchaseSource { get; set; }
+
+    /// <summary>Per-unit purchase price for this batch. When greater than zero it updates the medicine's purchase price and recalculates MRP using the configured margin.</summary>
+    public decimal? PurchasePrice { get; set; }
+    public DateTime? ExpiryDate { get; set; }
 }
 
 public class StockAdjustmentRequest

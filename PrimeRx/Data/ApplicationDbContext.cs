@@ -12,6 +12,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
     public DbSet<DuePayment> DuePayments => Set<DuePayment>();
     public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
+    public DbSet<InventoryBatch> InventoryBatches => Set<InventoryBatch>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +45,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(t => t.MedicineId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<InventoryBatch>()
+            .HasOne(b => b.Medicine)
+            .WithMany()
+            .HasForeignKey(b => b.MedicineId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
