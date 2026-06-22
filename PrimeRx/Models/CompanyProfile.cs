@@ -24,6 +24,6 @@ public class CompanyProfile
     public bool ShowGstinOnBill { get; set; } = true;
 
     // Pricing defaults
-    /// <summary>Default discount margin percentage applied to new bills (default: 20%).</summary>
-    public decimal DefaultDiscountMarginPercent { get; set; } = 20;
+    /// <summary>Default markup margin percentage used to derive a medicine's MRP from its purchase price (default: 16%).</summary>
+    public decimal DefaultDiscountMarginPercent { get; set; } = 16;
 }
