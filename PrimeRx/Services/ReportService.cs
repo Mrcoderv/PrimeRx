@@ -7,7 +7,7 @@ using PrimeRx.Models;
 
 namespace PrimeRx.Services;
 
-public class ReportService(ApplicationDbContext context)
+public class ReportService(ApplicationDbContext context, ExpenseService expenseService)
 {
     static ReportService()
     {
@@ -76,12 +76,16 @@ public class ReportService(ApplicationDbContext context)
 
         decimal revenue = bills.Sum(b => b.FinalAmount);
         decimal cost = saleItems.Sum(s => medicines.GetValueOrDefault(s.MedicineId) * s.Quantity);
+        decimal expenses = await expenseService.GetTotalExpensesAsync(
+            from?.Date ?? DateTime.MinValue,
+            to?.Date.AddDays(1) ?? DateTime.MaxValue);
 
         return new ProfitLossReport
         {
             Revenue = revenue,
             Cost = cost,
-            Profit = revenue - cost,
+            Expenses = expenses,
+            Profit = revenue - cost - expenses,
             BillCount = bills.Count
         };
     }
@@ -286,6 +290,7 @@ public class ProfitLossReport
 {
     public decimal Revenue { get; set; }
     public decimal Cost { get; set; }
+    public decimal Expenses { get; set; }
     public decimal Profit { get; set; }
     public int BillCount { get; set; }
 }

@@ -1,0 +1,80 @@
+@page
+@using PrimeRx.Models
+@model PrimeRx.Pages.Admin.Expenses.IndexModel
+@{
+    ViewData["Title"] = "Expenses";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Expenses</h2>
+    <a asp-page="/Admin/Expenses/Create" class="btn btn-primary">Add Expense</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success">@Model.Message</div>
+}
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <a class="btn btn-outline-secondary btn-sm" asp-page="/Admin/Expenses/Index"
+       asp-route-year="@Model.PreviousMonth.Year" asp-route-month="@Model.PreviousMonth.Month">&laquo; Prev</a>
+    <strong>@Model.MonthLabel</strong>
+    <a class="btn btn-outline-secondary btn-sm" asp-page="/Admin/Expenses/Index"
+       asp-route-year="@Model.NextMonth.Year" asp-route-month="@Model.NextMonth.Month">Next &raquo;</a>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Total (@Model.MonthLabel)</div>
+                <div class="h4 mb-0">Rs. @Model.Total.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+    @foreach (var c in ExpenseCategories.All)
+    {
+        var amount = Model.ByCategory.TryGetValue(c, out var v) ? v : 0m;
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">@ExpenseCategories.Display(c)</div>
+                    <div class="h5 mb-0">Rs. @amount.ToString("N2")</div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="table-responsive card shadow-sm">
+    <table class="table table-hover mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Reason</th>
+                <th>Staff</th>
+                <th class="text-end">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Expenses.Count == 0)
+            {
+                <tr><td colspan="5" class="text-center text-muted py-4">No expenses recorded for @Model.MonthLabel.</td></tr>
+            }
+            else
+            {
+                @foreach (var e in Model.Expenses)
+                {
+                    <tr>
+                        <td>@e.ExpenseDate.ToString("dd-MM-yyyy")</td>
+                        <td>@ExpenseCategories.Display(e.Category)</td>
+                        <td>@e.Reason</td>
+                        <td>@e.StaffId</td>
+                        <td class="text-end">Rs. @e.Amount.ToString("N2")</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
