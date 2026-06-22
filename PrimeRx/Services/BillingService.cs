@@ -77,6 +77,8 @@ public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenera
                 {
                     MedicineId = item.MedicineId,
                     MedicineName = medicine.Name,
+                    MRP = medicine.MRP,
+                    ExpiryDate = medicine.ExpiryDate,
                     Rate = item.Rate,
                     Quantity = item.Quantity,
                     DiscountPerItem = item.DiscountPerItem,

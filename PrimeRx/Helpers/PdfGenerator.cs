@@ -64,16 +64,16 @@ public class PdfGenerator
                     {
                         table.ColumnsDefinition(c =>
                         {
-                            c.ConstantColumn(30);   // S.No
-                            c.RelativeColumn(3.5);  // Item Description
-                            c.RelativeColumn(1);    // Pack
-                            c.RelativeColumn(1.2);  // Batch
-                            c.RelativeColumn(1);    // Exp
-                            c.RelativeColumn(0.8);  // Qty
-                            c.RelativeColumn(1);    // Rate
-                            c.RelativeColumn(1);    // MRP
-                            c.RelativeColumn(1);    // Disc
-                            c.RelativeColumn(1.2);  // Amount
+                            c.ConstantColumn(30);    // S.No
+                            c.RelativeColumn(3.5f);  // Item Description
+                            c.RelativeColumn(1f);    // Pack
+                            c.RelativeColumn(1.2f);  // Batch
+                            c.RelativeColumn(1f);    // Exp
+                            c.RelativeColumn(0.8f);  // Qty
+                            c.RelativeColumn(1f);    // Rate
+                            c.RelativeColumn(1f);    // MRP
+                            c.RelativeColumn(1f);    // Disc
+                            c.RelativeColumn(1.2f);  // Amount
                         });
 
                         table.Header(h =>
