@@ -1,4 +1,5 @@
 @page
+@using PrimeRx.Models
 @model PrimeRx.Pages.Dashboard.IndexModel
 @{
     ViewData["Title"] = "Dashboard";
@@ -46,6 +47,37 @@
 </div>
 
 <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-warning">
+            <div class="stat-label">Monthly Expenses</div>
+            <div class="stat-value">Rs. @Model.Summary.MonthExpenses.ToString("N0")</div>
+            <div class="stat-foot">Rs. @Model.Summary.TodayExpenses.ToString("N0") today</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-info">
+            <div class="stat-label">Discount Given (Month)</div>
+            <div class="stat-value">Rs. @Model.Summary.MonthDiscount.ToString("N0")</div>
+            <div class="stat-foot">across @Model.Summary.MonthBills bills</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-primary">
+            <div class="stat-label">Net (Month)</div>
+            <div class="stat-value">Rs. @Model.Summary.MonthNet.ToString("N0")</div>
+            <div class="stat-foot">sales − expenses</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-success">
+            <div class="stat-label">Monthly Sales</div>
+            <div class="stat-value">Rs. @Model.Summary.MonthSales.ToString("N0")</div>
+            <div class="stat-foot"><a asp-page="/Admin/Expenses/Index" class="text-white text-decoration-underline">Manage expenses</a></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
     <div class="col-lg-8">
         <div class="panel-card h-100">
             <div class="panel-header">
@@ -65,6 +97,82 @@
             <div class="panel-body chart-panel">
                 <canvas id="topMedicinesChart" height="200"></canvas>
                 <div id="dashMedEmpty" class="chart-empty d-none">No medicine sales data yet.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="panel-card h-100">
+            <div class="panel-header d-flex justify-content-between align-items-center">
+                <h5>Expenses by Category (This Month)</h5>
+                <a asp-page="/Admin/Expenses/Index" class="btn btn-sm btn-outline-light">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-pro mb-0">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th class="text-end">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Summary.ExpensesByCategory.Count == 0)
+                        {
+                            <tr><td colspan="2" class="text-center text-muted py-3">No expenses recorded this month.</td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var c in Model.Summary.ExpensesByCategory)
+                            {
+                                <tr>
+                                    <td>@c.Label</td>
+                                    <td class="text-end">Rs. @c.Amount.ToString("N2")</td>
+                                </tr>
+                            }
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td class="text-end"><strong>Rs. @Model.Summary.MonthExpenses.ToString("N2")</strong></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="panel-card h-100">
+            <div class="panel-header">
+                <h5>Staff Performance (This Month)</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-pro mb-0">
+                    <thead>
+                        <tr>
+                            <th>Staff</th>
+                            <th class="text-center">Bills</th>
+                            <th class="text-end">Sales</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Summary.StaffPerformance.Count == 0)
+                        {
+                            <tr><td colspan="3" class="text-center text-muted py-3">No sales recorded this month.</td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var s in Model.Summary.StaffPerformance)
+                            {
+                                <tr>
+                                    <td>@s.StaffName</td>
+                                    <td class="text-center">@s.BillCount</td>
+                                    <td class="text-end">Rs. @s.SalesAmount.ToString("N2")</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -115,6 +223,10 @@
                 <a asp-page="/Billing/Index" class="btn btn-accent">Create Bill</a>
                 <a asp-page="/Inventory/AddMedicine" class="btn btn-outline-accent">Add Medicine</a>
                 <a asp-page="/Inventory/Purchase" class="btn btn-outline-accent">Purchase Entry</a>
+                @if (User.IsInRole(AppRoles.Admin))
+                {
+                    <a asp-page="/Admin/Expenses/Create" class="btn btn-outline-accent">Add Expense</a>
+                }
                 <a asp-page="/Due/Index" class="btn btn-outline-accent">Due Collection</a>
                 <a asp-page="/Reports/Index" class="btn btn-outline-accent">Reports & Charts</a>
             </div>

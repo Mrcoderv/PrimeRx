@@ -28,3 +28,20 @@ public static class TransactionTypes
     public const string Purchase = "Purchase";
     public const string Adjustment = "Adjustment";
 }
+
+public static class ExpenseCategories
+{
+    public const string Purchase = "Purchase";
+    public const string StaffSalary = "StaffSalary";
+    public const string Miscellaneous = "Miscellaneous";
+
+    public static readonly string[] All = [Purchase, StaffSalary, Miscellaneous];
+
+    public static string Display(string category) => category switch
+    {
+        Purchase => "Purchase / Inventory",
+        StaffSalary => "Staff Salary",
+        Miscellaneous => "Miscellaneous",
+        _ => category
+    };
+}

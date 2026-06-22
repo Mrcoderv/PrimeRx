@@ -57,6 +57,7 @@ builder.Services.AddScoped<BillingService>();
 builder.Services.AddScoped<DueService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<ExpenseService>();
 builder.Services.AddSingleton<PdfGenerator>();
 
 var app = builder.Build();
