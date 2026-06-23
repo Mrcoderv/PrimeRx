@@ -9,9 +9,10 @@ public class BillLineItem
     public decimal Rate { get; set; }
     public int Quantity { get; set; }
     public int AvailableStock { get; set; }
-    public decimal DiscountPerItem { get; set; }
+    public decimal DiscountPercent { get; set; }
+    public decimal DiscountAmount { get; set; }
 
-    public decimal LineTotal => (Rate * Quantity) - (DiscountPerItem * Quantity);
+    public decimal LineTotal => (Rate * Quantity) - DiscountAmount;
 }
 
 public class CreateBillRequest
@@ -35,6 +36,7 @@ public class MedicineSearchResult
     public string? GenericName { get; set; }
     public decimal MRP { get; set; }
     public int StockQuantity { get; set; }
+    public decimal DiscountPercent { get; set; }
 }
 
 public class RecordDuePaymentRequest

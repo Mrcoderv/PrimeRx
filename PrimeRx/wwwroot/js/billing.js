@@ -17,8 +17,11 @@
         let itemDiscount = 0;
 
         items.forEach(item => {
-            subtotal += item.rate * item.quantity;
-            itemDiscount += item.discountPerItem * item.quantity;
+            const gross = item.rate * item.quantity;
+            const discountAmount = gross * (item.discountPercent / 100);
+            item.discountAmount = discountAmount;
+            subtotal += gross;
+            itemDiscount += discountAmount;
         });
 
         const billDiscount = parseFloat(document.getElementById('billDiscount').value) || 0;
@@ -35,7 +38,8 @@
             rate: i.rate,
             quantity: i.quantity,
             availableStock: i.availableStock,
-            discountPerItem: i.discountPerItem
+            discountPercent: i.discountPercent,
+            discountAmount: i.discountAmount
         })));
 
         generateBtn.disabled = items.length === 0;
@@ -56,7 +60,8 @@
             rate: medicine.mrp,
             quantity: 1,
             availableStock: medicine.stockQuantity,
-            discountPerItem: 0
+            discountPercent: medicine.discountPercent || 0,
+            discountAmount: 0
         });
 
         renderRow(items[items.length - 1]);
@@ -70,8 +75,9 @@
             <td>${item.medicineName}<br><small>Stock: ${item.availableStock}</small></td>
             <td><input type="number" class="form-control form-control-sm rate-input" value="${item.rate}" step="0.01" min="0"></td>
             <td><input type="number" class="form-control form-control-sm qty-input" value="${item.quantity}" min="1" max="${item.availableStock}"></td>
-            <td><input type="number" class="form-control form-control-sm disc-input" value="${item.discountPerItem}" step="0.01" min="0"></td>
-            <td class="line-total">${formatMoney(item.rate * item.quantity - item.discountPerItem * item.quantity)}</td>
+            <td><input type="number" class="form-control form-control-sm disc-percent-input" value="${item.discountPercent}" step="0.1" min="0" max="100"></td>
+            <td class="disc-amount">${formatMoney(item.discountAmount)}</td>
+            <td class="line-total">${formatMoney(item.rate * item.quantity - item.discountAmount)}</td>
             <td><button type="button" class="btn btn-sm btn-outline-danger remove-btn">&times;</button></td>
         `;
 
@@ -93,8 +99,12 @@
             recalcTotals();
         });
 
-        tr.querySelector('.disc-input').addEventListener('input', e => {
-            item.discountPerItem = parseFloat(e.target.value) || 0;
+        tr.querySelector('.disc-percent-input').addEventListener('input', e => {
+            let percent = parseFloat(e.target.value) || 0;
+            if (percent < 0) percent = 0;
+            if (percent > 100) percent = 100;
+            e.target.value = percent;
+            item.discountPercent = percent;
             updateLineTotal(tr, item);
             recalcTotals();
         });
@@ -110,9 +120,11 @@
     }
 
     function updateLineTotal(tr, item) {
-        tr.querySelector('.line-total').textContent = formatMoney(
-            item.rate * item.quantity - item.discountPerItem * item.quantity
-        );
+        const gross = item.rate * item.quantity;
+        const discountAmount = gross * (item.discountPercent / 100);
+        item.discountAmount = discountAmount;
+        tr.querySelector('.disc-amount').textContent = formatMoney(discountAmount);
+        tr.querySelector('.line-total').textContent = formatMoney(gross - discountAmount);
     }
 
     document.getElementById('billDiscount')?.addEventListener('input', recalcTotals);

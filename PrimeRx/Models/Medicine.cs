@@ -17,6 +17,7 @@ public class Medicine
     public DateTime? ExpiryDate { get; set; }
     public string? Category { get; set; }
     public bool IsActive { get; set; } = true;
+    public decimal DiscountPercent { get; set; } = 0;
 
     // Latest batch / supplier recorded for this medicine (see InventoryBatch for full history).
     public string? BatchNumber { get; set; }

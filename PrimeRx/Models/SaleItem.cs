@@ -13,6 +13,7 @@ public class SaleItem
     public decimal MRP { get; set; }
     public decimal Rate { get; set; }
     public int Quantity { get; set; }
-    public decimal DiscountPerItem { get; set; }
+    public decimal DiscountPercent { get; set; }
+    public decimal DiscountAmount { get; set; }
     public decimal Amount { get; set; }
 }

@@ -72,7 +72,8 @@ public class PdfGenerator
                             c.RelativeColumn(0.8f);  // Qty
                             c.RelativeColumn(1f);    // Rate
                             c.RelativeColumn(1f);    // MRP
-                            c.RelativeColumn(1f);    // Disc
+                            c.RelativeColumn(0.8f);  // Disc %
+                            c.RelativeColumn(1f);    // Disc Amt
                             c.RelativeColumn(1.2f);  // Amount
                         });
 
@@ -86,7 +87,8 @@ public class PdfGenerator
                             h.Cell().Background(headerColor).Padding(5).Text("Qty").Bold().FontColor(Colors.White);
                             h.Cell().Background(headerColor).Padding(5).Text("Rate").Bold().FontColor(Colors.White);
                             h.Cell().Background(headerColor).Padding(5).Text("MRP").Bold().FontColor(Colors.White);
-                            h.Cell().Background(headerColor).Padding(5).Text("Disc").Bold().FontColor(Colors.White);
+                            h.Cell().Background(headerColor).Padding(5).Text("Disc %").Bold().FontColor(Colors.White);
+                            h.Cell().Background(headerColor).Padding(5).Text("Disc Amt").Bold().FontColor(Colors.White);
                             h.Cell().Background(headerColor).Padding(5).Text("Amount").Bold().FontColor(Colors.White);
                         });
 
@@ -101,7 +103,8 @@ public class PdfGenerator
                             table.Cell().Padding(4).Text(item.Quantity.ToString());
                             table.Cell().Padding(4).Text(item.Rate.ToString("N2"));
                             table.Cell().Padding(4).Text(item.MRP.ToString("N2"));
-                            table.Cell().Padding(4).Text(item.DiscountPerItem > 0 ? $"-{item.DiscountPerItem:N2}" : "0.00");
+                            table.Cell().Padding(4).Text(item.DiscountPercent > 0 ? $"{item.DiscountPercent:N1}%" : "0%");
+                            table.Cell().Padding(4).Text(item.DiscountAmount > 0 ? $"-{item.DiscountAmount:N2}" : "0.00");
                             table.Cell().Padding(4).Text(item.Amount.ToString("N2"));
                         }
                     });

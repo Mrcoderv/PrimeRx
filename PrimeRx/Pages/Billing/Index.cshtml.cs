@@ -41,7 +41,8 @@ public class IndexModel(
             name = m.Name,
             genericName = m.GenericName,
             mrp = m.MRP,
-            stockQuantity = m.StockQuantity
+            stockQuantity = m.StockQuantity,
+            discountPercent = m.DiscountPercent
         }));
     }
 
