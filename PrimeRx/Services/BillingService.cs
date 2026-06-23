@@ -35,7 +35,7 @@ public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenera
             }
 
             var totalAmount = request.Items.Sum(i => i.Rate * i.Quantity);
-            var itemDiscount = request.Items.Sum(i => i.DiscountPerItem * i.Quantity);
+            var itemDiscount = request.Items.Sum(i => i.DiscountAmount);
             var subtotalAfterDiscount = totalAmount - itemDiscount - request.DiscountAmount;
 
             if (subtotalAfterDiscount < 0)
@@ -81,8 +81,9 @@ public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenera
                     ExpiryDate = medicine.ExpiryDate,
                     Rate = item.Rate,
                     Quantity = item.Quantity,
-                    DiscountPerItem = item.DiscountPerItem,
-                    Amount = (item.Rate * item.Quantity) - (item.DiscountPerItem * item.Quantity)
+                    DiscountPercent = item.DiscountPercent,
+                    DiscountAmount = item.DiscountAmount,
+                    Amount = (item.Rate * item.Quantity) - item.DiscountAmount
                 });
 
                 context.InventoryTransactions.Add(new InventoryTransaction

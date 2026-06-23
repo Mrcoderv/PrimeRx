@@ -45,7 +45,8 @@ public class InventoryService(ApplicationDbContext context)
                 Name = m.Name,
                 GenericName = m.GenericName,
                 MRP = m.MRP,
-                StockQuantity = m.StockQuantity
+                StockQuantity = m.StockQuantity,
+                DiscountPercent = m.DiscountPercent
             })
             .ToListAsync();
     }

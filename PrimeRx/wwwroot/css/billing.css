@@ -47,10 +47,11 @@
   border: 1px solid rgba(255, 255, 255, 0.18) !important;
   border-radius: 10px !important;
   color: #fff !important;
-  z-index: 1050;
+  z-index: 9999 !important;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45) !important;
   margin-top: 4px;
   overflow: hidden;
+  position: fixed !important;
 }
 
 .billing-page .ts-dropdown-content {
@@ -106,6 +107,10 @@
   --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
   --bs-table-hover-color: #fff;
   margin-bottom: 0;
+}
+
+.billing-page .table-responsive {
+  overflow: visible !important;
 }
 
 .billing-page #itemsTable thead th {

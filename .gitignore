@@ -24,10 +24,8 @@ PrimeRx/Data/primerx.db
 PrimeRx/Data/*.db-shm
 PrimeRx/Data/*.db-wal
 
-## Old framework-dependent publish output (use publish/win-x64 only)
-publish/*
-!publish/win-x64/
-!publish/win-x64/**
+## Publish output
+publish/
 
 ## OS
 Thumbs.db
@@ -37,6 +35,3 @@ Desktop.ini
 
 ## Logs
 *.log
-
-## Keep publish folder (self-contained release is committed intentionally)
-# publish/ is NOT ignored
