@@ -1,0 +1,243 @@
+@page "/Notifications"
+@model PrimeRx.Pages.Notifications.IndexModel
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Notifications</h1>
+        <p class="page-subtitle">Alerts for dues, expiring medicines, and low stock</p>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card stat-danger stat-clickable" onclick="window.location.href='/Due/Index'">
+            <div class="stat-icon"><i class="bi bi-wallet2"></i></div>
+            <div class="stat-content">
+                <div class="stat-value">@Model.TotalDueAmount</div>
+                <div class="stat-label">Customer Dues</div>
+                <div class="stat-foot">Pending collections</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card stat-warning stat-clickable" onclick="window.location.href='/Inventory/Expiry'">
+            <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+            <div class="stat-content">
+                <div class="stat-value">@Model.TotalExpiringCount</div>
+                <div class="stat-label">Expiring Soon</div>
+                <div class="stat-foot">Within 30 days</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card stat-info stat-clickable" onclick="window.location.href='/Inventory/Index'">
+            <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
+            <div class="stat-content">
+                <div class="stat-value">@Model.TotalLowStockCount</div>
+                <div class="stat-label">Low Stock</div>
+                <div class="stat-foot">Below threshold</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Dues Section -->
+<div class="panel-card mb-4">
+    <div class="panel-header d-flex justify-content-between align-items-center">
+        <h5><i class="bi bi-wallet2 me-2"></i>Customer Dues (@Model.TotalDueAmount)</h5>
+        <a asp-page="/Due/Index" class="btn btn-sm btn-outline-accent">View All</a>
+    </div>
+    <div class="panel-body">
+        @if (Model.CustomerDues.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-pro">
+                    <thead>
+                        <tr>
+                            <th>Bill #</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Due Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var bill in Model.CustomerDues.Take(5))
+                        {
+                            <tr>
+                                <td>@bill.BillNumber</td>
+                                <td>
+                                    <strong>@bill.CustomerName</strong><br>
+                                    <small class="text-muted">@bill.CustomerPhone</small>
+                                </td>
+                                <td>@bill.BillDate.ToString("dd-MM-yyyy")</td>
+                                <td class="text-danger fw-bold">Rs. @bill.DueAmount.ToString("N2")</td>
+                                <td>
+                                    <a asp-page="/Due/Pay" asp-route-id="@bill.Id" class="btn btn-sm btn-success">Collect</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (Model.CustomerDues.Count > 5)
+            {
+                <div class="text-center mt-3">
+                    <small class="text-muted">Showing 5 of @Model.CustomerDues.Count dues</small>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                <p class="mt-2 mb-0">No pending customer dues</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Expiring Medicines Section -->
+<div class="panel-card mb-4">
+    <div class="panel-header d-flex justify-content-between align-items-center">
+        <h5><i class="bi bi-clock-history me-2"></i>Expiring Medicines (@Model.TotalExpiringCount)</h5>
+        <a asp-page="/Inventory/Expiry" class="btn btn-sm btn-outline-accent">View All</a>
+    </div>
+    <div class="panel-body">
+        @if (Model.Expiring.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-pro">
+                    <thead>
+                        <tr>
+                            <th>Medicine</th>
+                            <th>Stock</th>
+                            <th>Expiry Date</th>
+                            <th>Days Left</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var med in Model.Expiring.Take(5))
+                        {
+                            var daysLeft = (med.ExpiryDate!.Value - DateTime.Today).Days;
+                            var urgencyClass = daysLeft <= 7 ? "text-danger fw-bold" : "text-warning fw-semibold";
+                            
+                            <tr>
+                                <td>
+                                    <strong>@med.Name</strong>
+                                    @if (!string.IsNullOrEmpty(med.BatchNumber))
+                                    {
+                                        <br><small class="text-muted">Batch: @med.BatchNumber</small>
+                                    }
+                                </td>
+                                <td>@med.StockQuantity units</td>
+                                <td>@med.ExpiryDate?.ToString("dd-MM-yyyy")</td>
+                                <td class="@urgencyClass">@daysLeft days</td>
+                                <td>
+                                    <a asp-page="/Inventory/Adjust" asp-route-id="@med.Id" class="btn btn-sm btn-warning">Adjust</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (Model.Expiring.Count > 5)
+            {
+                <div class="text-center mt-3">
+                    <small class="text-muted">Showing 5 of @Model.Expiring.Count expiring medicines</small>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                <p class="mt-2 mb-0">No medicines expiring within 30 days</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Low Stock Section -->
+<div class="panel-card">
+    <div class="panel-header d-flex justify-content-between align-items-center">
+        <h5><i class="bi bi-box-seam me-2"></i>Low Stock Alerts (@Model.TotalLowStockCount)</h5>
+        <a asp-page="/Inventory/Index" class="btn btn-sm btn-outline-accent">View All</a>
+    </div>
+    <div class="panel-body">
+        @if (Model.LowStock.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-pro">
+                    <thead>
+                        <tr>
+                            <th>Medicine</th>
+                            <th>Current Stock</th>
+                            <th>Threshold</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var med in Model.LowStock.Take(5))
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@med.Name</strong>
+                                    @if (!string.IsNullOrEmpty(med.GenericName))
+                                    {
+                                        <br><small class="text-muted">@med.GenericName</small>
+                                    }
+                                </td>
+                                <td class="text-danger fw-bold">@med.StockQuantity</td>
+                                <td>@med.LowStockThreshold</td>
+                                <td>
+                                    @if (med.StockQuantity == 0)
+                                    {
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">Low Stock</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-page="/Inventory/Purchase" class="btn btn-sm btn-primary">Purchase</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (Model.LowStock.Count > 5)
+            {
+                <div class="text-center mt-3">
+                    <small class="text-muted">Showing 5 of @Model.LowStock.Count low stock items</small>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                <p class="mt-2 mb-0">All medicines are well stocked</p>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .stat-clickable {
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-clickable:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+</style>

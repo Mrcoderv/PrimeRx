@@ -78,6 +78,7 @@
                             <label asp-for="Input.CustomerPhone" class="form-label"></label>
                             <input asp-for="Input.CustomerPhone" class="form-control" id="customerPhone" />
                             <span asp-validation-for="Input.CustomerPhone" class="text-danger"></span>
+                            <small class="text-muted" id="customerPhoneHint">Required when payment is Due</small>
                         </div>
                         <div class="mb-3">
                             <label asp-for="Input.PaymentMethod" class="form-label"></label>
@@ -87,14 +88,11 @@
                                 <option value="Due">Due</option>
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label asp-for="Input.DiscountAmount" class="form-label"></label>
-                            <input asp-for="Input.DiscountAmount" class="form-control" id="billDiscount" type="number" step="0.01" min="0" value="0" />
-                        </div>
 
                         <hr class="billing-divider" />
                         <div class="billing-total-row"><span>Subtotal</span><span id="subtotalDisplay">0.00</span></div>
-                        <div class="billing-total-row"><span>Discount</span><span id="discountDisplay">0.00</span></div>
+                        <div class="billing-total-row"><span>Discount (after Subtotal)</span><span id="discountDisplay">0.00</span></div>
+
                         <div class="billing-total-row billing-total-final"><span>Total</span><span id="totalDisplay">0.00</span></div>
 
                         <input type="hidden" asp-for="Input.ItemsJson" id="itemsJson" />
@@ -113,6 +111,6 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/js/tom-select.complete.min.js"></script>
     <script src="~/js/billing.js" asp-append-version="true"></script>
 }
+

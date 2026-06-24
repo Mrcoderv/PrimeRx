@@ -56,7 +56,7 @@ public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenera
                 BillNumber = await GenerateBillNumberAsync(),
                 BillDate = DateTime.Now,
                 CustomerName = request.CustomerName.Trim(),
-                CustomerPhone = request.CustomerPhone.Trim(),
+                CustomerPhone = string.IsNullOrWhiteSpace(request.CustomerPhone) ? null : request.CustomerPhone.Trim(),
                 TotalAmount = totalAmount,
                 DiscountAmount = request.DiscountAmount + itemDiscount,
                 TaxAmount = taxAmount,

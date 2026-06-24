@@ -36,6 +36,11 @@
                         <i class="bi bi-receipt me-1"></i>Bill Design
                     </button>
                 </li>
+                <li class="nav-item">
+                    <button class="nav-link @(tab == "updates" ? "active" : "")" data-bs-toggle="tab" data-bs-target="#tab-updates" type="button">
+                        <i class="bi bi-download me-1"></i>Updates
+                    </button>
+                </li>
             </ul>
 
             <form method="post" class="panel-body">
@@ -119,6 +124,60 @@
                             <input asp-for="Settings.ShowGstinOnBill" class="form-check-input" id="previewShowGstin" />
                             <label asp-for="Settings.ShowGstinOnBill" class="form-check-label">Show GSTIN on bill</label>
                         </div>
+                    </div>
+
+                    <div class="tab-pane fade @(tab == "updates" ? "show active" : "")" id="tab-updates">
+                        <h6 class="settings-section-title">Software Updates</h6>
+                        
+                        @if (Model.UpdateInfo != null)
+                        {
+                            <div class="alert @(Model.UpdateInfo.UpdateAvailable ? "alert-info" : "alert-success")">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi @(Model.UpdateInfo.UpdateAvailable ? "bi-info-circle" : "bi-check-circle") fs-4 me-2"></i>
+                                    <div>
+                                        <strong>@(Model.UpdateInfo.UpdateAvailable ? "Update Available" : "Up to Date")</strong>
+                                        <div class="small">Current: @Model.UpdateInfo.CurrentVersion | Latest: @Model.UpdateInfo.LatestVersion</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            if (Model.UpdateInfo.UpdateAvailable)
+                            {
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Release Notes</h6>
+                                        <div class="small text-muted" style="white-space: pre-wrap;">@Model.UpdateInfo.ReleaseNotes</div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" asp-page-handler="Update" class="btn btn-primary">
+                                        <i class="bi bi-download me-1"></i>Update Now
+                                    </button>
+                                    <a href="@Model.UpdateInfo.ReleaseUrl" target="_blank" class="btn btn-outline-secondary">
+                                        <i class="bi bi-box-arrow-up-right me-1"></i>View Release
+                                    </a>
+                                </div>
+
+                                <p class="text-muted-small mt-2">
+                                    Download size: @((Model.UpdateInfo.DownloadSize / 1024.0 / 1024.0).ToString("F2")) MB
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="text-muted">You are running the latest version of PrimeRx.</p>
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Unable to check for updates. Please check your internet connection.
+                            </div>
+                        }
+
+                        <button type="submit" asp-page-handler="CheckUpdates" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Check for Updates
+                        </button>
                     </div>
                 </div>
 

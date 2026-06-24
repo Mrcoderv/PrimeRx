@@ -20,7 +20,6 @@ public class CreateBillRequest
     [Required]
     public string CustomerName { get; set; } = string.Empty;
 
-    [Required]
     [Phone]
     public string CustomerPhone { get; set; } = string.Empty;
 

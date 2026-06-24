@@ -2,6 +2,10 @@
 
 **PrimeRx** is a professional pharmacy billing and inventory management system built for commercial pharmacy operations. It provides fast point-of-sale billing, real-time stock control, due payment tracking, analytics dashboards, and exportable reports.
 
+**Developed by Prime LogicTech**  
+📞 986-7788298 | 📧 primelogictech3@gmail.com  
+🌐 [https://www.facebook.com/PrimeLogictech](https://www.facebook.com/PrimeLogictech)
+
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
 ![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-Razor%20Pages-512BD4)
 ![SQLite](https://img.shields.io/badge/Database-SQLite-003B57)
@@ -166,6 +170,10 @@ This project is intended for commercial pharmacy use. Contact the repository own
 
 ---
 
-## Author
+## Author & Support
 
-**Mrcoderv** — [PrimeRx on GitHub](https://github.com/Mrcoderv/PrimeRx)
+**Developed by Prime LogicTech**  
+📞 986-7788298 | 📧 primelogictech3@gmail.com  
+🌐 [https://www.facebook.com/PrimeLogictech](https://www.facebook.com/PrimeLogictech)
+
+**GitHub:** [https://github.com/Mrcoderv/PrimeRx](https://github.com/Mrcoderv/PrimeRx)
