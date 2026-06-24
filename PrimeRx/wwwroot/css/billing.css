@@ -1,4 +1,4 @@
-/* Billing page — high-contrast dark theme overrides */
+/* Billing page — high-contrast dark theme */
 
 .billing-page .page-subtitle {
   color: #cbd5e1;
@@ -12,176 +12,121 @@
   margin-bottom: 0.5rem;
 }
 
-/* Medicine search (Tom Select) */
-.billing-page .ts-wrapper {
-  width: 100%;
-}
-
-.billing-page .ts-wrapper.single .ts-control {
+/* Medicine search input */
+.billing-page .medicine-search-input {
   background: rgba(255, 255, 255, 0.1) !important;
   border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  color: #fff !important;
   border-radius: 10px !important;
   min-height: 46px;
   padding: 0.4rem 0.85rem !important;
-  box-shadow: none !important;
-}
-
-.billing-page .ts-wrapper.dropdown-active .ts-control {
-  border-color: #38bdf8 !important;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
-}
-
-.billing-page .ts-control input {
   color: #fff !important;
-  font-size: 1rem !important;
+  box-shadow: none !important;
+  font-size: 1rem;
 }
 
-.billing-page .ts-control input::placeholder {
+.billing-page .medicine-search-input::placeholder {
   color: #cbd5e1 !important;
   opacity: 1 !important;
 }
 
-.billing-page .ts-dropdown {
-  background: #0f2744 !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  border-radius: 10px !important;
-  color: #fff !important;
-  z-index: 9999 !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45) !important;
-  margin-top: 4px;
-  overflow: hidden;
-  position: fixed !important;
+.billing-page .medicine-search-input:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
+  outline: none;
 }
 
-.billing-page .ts-dropdown-content {
-  max-height: 300px;
-}
-
-.billing-page .ts-dropdown .option {
-  padding: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.billing-page .ts-dropdown .option:last-child {
-  border-bottom: none;
-}
-
-.billing-page .ts-dropdown .option.active {
-  background: rgba(14, 165, 233, 0.28) !important;
-}
-
-.billing-page .med-option {
-  padding: 0.7rem 0.9rem;
-}
-
-.billing-page .med-option-title {
-  color: #fff;
-  font-weight: 600;
-  font-size: 0.95rem;
-  line-height: 1.35;
-}
-
-.billing-page .med-option-generic {
-  color: #7dd3fc;
-  font-weight: 500;
-  font-size: 0.88rem;
-}
-
-.billing-page .med-option-meta {
-  color: #94a3b8;
-  font-size: 0.84rem;
-  margin-top: 0.2rem;
-}
-
-.billing-page .med-no-results {
-  padding: 1rem;
-  color: #cbd5e1;
-  text-align: center;
-}
-
-/* Floating pharmacy-style medicine popup */
-.billing-page #medicineSearchPopup.medicine-popup{
-  position: fixed !important;
-  z-index: 2147483647 !important;
+/* Inline suggestions dropdown */
+.billing-page .medicine-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1050;
   background: rgba(15, 39, 68, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
   overflow: hidden;
   color: #fff;
-  pointer-events: auto;
 }
 
-.billing-page .medicine-popup-header{
-  padding: 0.7rem 0.95rem;
-  font-weight: 700;
-  background: rgba(56,189,248,0.12);
-  border-bottom: 1px solid rgba(255,255,255,0.14);
-  font-size: 0.95rem;
-}
-
-.billing-page .medicine-popup-body{
-  max-height: 330px;
-  overflow: auto;
-}
-
-.billing-page .medicine-popup-table{
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.billing-page .medicine-popup-table th{
-  position: sticky;
-  top: 0;
-  background: rgba(255,255,255,0.06);
-  border-bottom: 1px solid rgba(255,255,255,0.14);
+.billing-page .medicine-dropdown-header {
+  display: flex;
+  gap: 0;
+  padding: 0.55rem 0.85rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: 0.72rem;
-  padding: 0.6rem 0.75rem;
-  color: rgba(226,232,240,0.95);
+  font-weight: 600;
+  color: rgba(226, 232, 240, 0.85);
 }
 
-.billing-page .medicine-popup-table td{
-  padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  vertical-align: middle;
+.billing-page .medicine-dropdown-header span {
+  display: inline-block;
+}
+
+.billing-page .medicine-dropdown-body {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.billing-page .medicine-dropdown-row {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  cursor: pointer;
   font-size: 0.9rem;
   color: #e2e8f0;
+  transition: background 0.1s;
 }
 
-.billing-page .medicine-popup-row{cursor:pointer;}
-.billing-page .medicine-popup-row:hover td{background: rgba(14,165,233,0.18); color:#fff;}
-.billing-page .medicine-popup-row.active td{background: rgba(14,165,233,0.28); color:#fff;}
+.billing-page .medicine-dropdown-row:last-child {
+  border-bottom: none;
+}
 
-.billing-page .medicine-popup-empty{
+.billing-page .medicine-dropdown-row:hover,
+.billing-page .medicine-dropdown-row.active {
+  background: rgba(14, 165, 233, 0.22);
+  color: #fff;
+}
+
+.billing-page .med-col-name  { width: 52%; }
+.billing-page .med-col-batch { width: 16%; }
+.billing-page .med-col-stock { width: 14%; }
+.billing-page .med-col-rate  { width: 18%; }
+
+.billing-page .med-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+
+.billing-page .med-generic {
+  display: block;
+  font-size: 0.8rem;
+  color: #7dd3fc;
+}
+
+.billing-page .medicine-dropdown-empty {
   padding: 1rem;
-  color: #cbd5e1;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
 }
 
-.billing-page .medicine-popup-footer{
-  padding: 0.55rem 0.95rem;
+.billing-page .medicine-dropdown-footer {
   display: flex;
   justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.78rem;
-  color: rgba(148,163,184,0.95);
-  border-top: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.02);
+  padding: 0.45rem 0.85rem;
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
 }
-
-.billing-page .medicine-search-input{
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  border-radius: 10px !important;
-  min-height: 46px;
-  padding: 0.4rem 0.85rem !important;
-  color: #fff !important;
-  box-shadow: none !important;
-}
-
-.billing-page .medicine-search-input::placeholder{color:#cbd5e1 !important; opacity:1 !important;}
 
 /* Bill items table */
 .billing-page #itemsTable {
