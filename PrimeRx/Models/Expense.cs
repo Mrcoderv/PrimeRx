@@ -23,4 +23,9 @@ public class Expense
     public string? Notes { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+    // Audit fields
+    public string? CreatedBy { get; set; }
+    public string? LastModifiedBy { get; set; }
+    public DateTime? LastModifiedAt { get; set; }
 }
