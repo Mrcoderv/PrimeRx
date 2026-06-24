@@ -1,0 +1,92 @@
+@page "/Inventory/Expiry"
+@model PrimeRx.Pages.Inventory.ExpiryModel
+@{
+    ViewData["Title"] = "Medicine Expiry Alerts";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Medicine Expiry</h1>
+        <p class="page-subtitle">Sorted by days remaining (ascending) • Focus on soon-to-expire stock</p>
+    </div>
+    <a asp-page="/Inventory/Index" class="btn btn-outline-accent">Back to Inventory</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-info">@Model.Message</div>
+}
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <form method="get">
+            <div class="input-group">
+                <select name="days" class="form-select">
+                    <option value="30" selected="selected">Next 30 days</option>
+                    <option value="60">Next 60 days</option>
+                    <option value="90">Next 90 days</option>
+                    <option value="180">Next 180 days</option>
+                </select>
+                <button type="submit" class="btn btn-accent">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel-card">
+    <div class="table-responsive">
+        <table class="table table-pro">
+            <thead class="table-light">
+                <tr>
+                    <th>Medicine</th>
+                    <th>Batch/Stock</th>
+                    <th>Expiry Date</th>
+                    <th>Days Left</th>
+                    <th>MRP</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in Model.ExpiringMedicines)
+                {
+                    var daysLeft = (m.ExpiryDate!.Value - DateTime.Today).Days;
+                    var urgencyClass = daysLeft <= 7 ? "text-danger fw-bold" : daysLeft <= 30 ? "text-warning fw-semibold" : "";
+                    var urgencyBadge = daysLeft <= 7 ? "bg-danger" : daysLeft <= 30 ? "bg-warning text-dark" : "bg-info";
+                    
+                    <tr>
+                        <td>
+                            <strong>@m.Name</strong>
+                            @if (!string.IsNullOrEmpty(m.GenericName))
+                            {
+                                <br><small class="text-muted">@m.GenericName</small>
+                            }
+                            @if (!string.IsNullOrEmpty(m.BatchNumber))
+                            {
+                                <br><small class="text-muted">Batch: @m.BatchNumber</small>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge @(m.StockQuantity <= m.LowStockThreshold ? "bg-danger" : "bg-success")">@m.StockQuantity units</span>
+                        </td>
+                        <td>@m.ExpiryDate?.ToString("dd-MM-yyyy")</td>
+                        <td>
+                            <span class="badge @urgencyBadge">@daysLeft days</span>
+                        </td>
+                        <td>Rs. @m.MRP.ToString("N2")</td>
+                        <td>
+                            <a asp-page="/Inventory/Adjust" asp-route-id="@m.Id" class="btn btn-sm btn-outline-warning">Adjust Stock</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (!Model.ExpiringMedicines.Any())
+{
+    <div class="text-center py-5">
+        <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+        <p class="text-muted mt-3">No expiring medicines found in the selected period.</p>
+    </div>
+}

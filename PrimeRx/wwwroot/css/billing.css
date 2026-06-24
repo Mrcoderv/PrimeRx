@@ -100,6 +100,89 @@
   text-align: center;
 }
 
+/* Floating pharmacy-style medicine popup */
+.billing-page #medicineSearchPopup.medicine-popup{
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  background: rgba(15, 39, 68, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+  overflow: hidden;
+  color: #fff;
+  pointer-events: auto;
+}
+
+.billing-page .medicine-popup-header{
+  padding: 0.7rem 0.95rem;
+  font-weight: 700;
+  background: rgba(56,189,248,0.12);
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+  font-size: 0.95rem;
+}
+
+.billing-page .medicine-popup-body{
+  max-height: 330px;
+  overflow: auto;
+}
+
+.billing-page .medicine-popup-table{
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.billing-page .medicine-popup-table th{
+  position: sticky;
+  top: 0;
+  background: rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  padding: 0.6rem 0.75rem;
+  color: rgba(226,232,240,0.95);
+}
+
+.billing-page .medicine-popup-table td{
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  vertical-align: middle;
+  font-size: 0.9rem;
+  color: #e2e8f0;
+}
+
+.billing-page .medicine-popup-row{cursor:pointer;}
+.billing-page .medicine-popup-row:hover td{background: rgba(14,165,233,0.18); color:#fff;}
+.billing-page .medicine-popup-row.active td{background: rgba(14,165,233,0.28); color:#fff;}
+
+.billing-page .medicine-popup-empty{
+  padding: 1rem;
+  color: #cbd5e1;
+}
+
+.billing-page .medicine-popup-footer{
+  padding: 0.55rem 0.95rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: rgba(148,163,184,0.95);
+  border-top: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.02);
+}
+
+.billing-page .medicine-search-input{
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 10px !important;
+  min-height: 46px;
+  padding: 0.4rem 0.85rem !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.billing-page .medicine-search-input::placeholder{color:#cbd5e1 !important; opacity:1 !important;}
+
 /* Bill items table */
 .billing-page #itemsTable {
   --bs-table-bg: transparent;

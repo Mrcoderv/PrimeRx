@@ -48,6 +48,12 @@ public class IndexModel(
 
     public async Task<IActionResult> OnPostAsync()
     {
+        // Conditional validation: CustomerPhone is required when PaymentMethod is Due
+        if (Input.PaymentMethod == "Due" && string.IsNullOrWhiteSpace(Input.CustomerPhone))
+        {
+            ModelState.AddModelError("Input.CustomerPhone", "Phone number is required when payment is Due");
+        }
+
         if (!ModelState.IsValid)
             return Page();
 
@@ -59,11 +65,16 @@ public class IndexModel(
             var request = new CreateBillRequest
             {
                 CustomerName = Input.CustomerName,
-                CustomerPhone = Input.CustomerPhone,
+                CustomerPhone = Input.CustomerPhone ?? string.Empty,
                 PaymentMethod = Input.PaymentMethod,
-                DiscountAmount = Input.DiscountAmount,
+
+                // Bill-level DiscountAmount is removed from UI.
+                // Keep only per-item discounts.
+                DiscountAmount = 0m,
+
                 Items = items
             };
+
 
             var user = await userManager.GetUserAsync(User);
             var bill = await billingService.CreateBillAsync(request, user?.Id, user?.UserName);
@@ -88,12 +99,10 @@ public class IndexModel(
         [Required(ErrorMessage = "Customer name is required")]
         public string CustomerName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Phone number is required")]
         [Phone]
-        public string CustomerPhone { get; set; } = string.Empty;
+        public string? CustomerPhone { get; set; }
 
         public string PaymentMethod { get; set; } = "Cash";
-        public decimal DiscountAmount { get; set; }
         public string ItemsJson { get; set; } = "[]";
     }
 }

@@ -1,19 +1,34 @@
 :root {
-  --rx-blue-900: #0a1628;
-  --rx-blue-800: #0f2744;
-  --rx-blue-700: #15325a;
-  --rx-blue-600: #1e4a7a;
-  --rx-blue-500: #2563eb;
-  --rx-blue-400: #3b82f6;
-  --rx-cyan: #38bdf8;
-  --rx-accent: #0ea5e9;
-  --rx-surface: rgba(255, 255, 255, 0.06);
-  --rx-surface-hover: rgba(255, 255, 255, 0.1);
-  --rx-border: rgba(255, 255, 255, 0.12);
-  --rx-text: #e2e8f0;
-  --rx-text-muted: #94a3b8;
-  --rx-card-bg: rgba(15, 39, 68, 0.85);
-  --rx-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  /* Deep background shades (used in gradients) */
+  --rx-blue-900: #0a1628; /* darkest navy */
+  --rx-blue-800: #0f2744; /* dark navy */
+  --rx-blue-700: #15325a; /* medium-dark navy */
+  --rx-blue-600: #1e4a7a; /* dark blue */
+
+  /* Primary blues (accent/CTA + hover gradients) */
+  --rx-blue-500: #2563eb; /* main brand blue */
+  --rx-blue-400: #3b82f6; /* lighter brand blue */
+
+  /* UI highlights */
+  --rx-cyan: #38bdf8; /* cyan highlight color */
+  --rx-accent: #0ea5e9; /* accent/aqua (buttons, links) */
+
+  /* Surfaces & overlays */
+  --rx-surface: rgba(255, 255, 255, 0.06); /* subtle panel surface */
+  --rx-surface-hover: rgba(255, 255, 255, 0.1); /* hover surface */
+
+  /* Borders & strokes */
+  --rx-border: rgba(255, 255, 255, 0.12); /* light border stroke */
+
+  /* Text colors */
+  --rx-text: #e2e8f0; /* primary text */
+  --rx-text-muted: #94a3b8; /* muted/secondary text */
+
+  /* Cards */
+  --rx-card-bg: rgba(98, 154, 223, 0.85); /* card background tint */
+
+  /* Shadow */
+  --rx-shadow: 0 8px 32px rgba(0, 0, 0, 0.25); /* global card shadow */
 }
 
 * { box-sizing: border-box; }

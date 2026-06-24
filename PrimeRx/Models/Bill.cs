@@ -11,8 +11,7 @@ public class Bill
     [Required]
     public string CustomerName { get; set; } = string.Empty;
 
-    [Required]
-    public string CustomerPhone { get; set; } = string.Empty;
+    public string? CustomerPhone { get; set; }
 
     public decimal TotalAmount { get; set; }
     public decimal DiscountAmount { get; set; }

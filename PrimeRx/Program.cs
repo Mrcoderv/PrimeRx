@@ -59,6 +59,7 @@ builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<ExpenseService>();
 builder.Services.AddSingleton<PdfGenerator>();
+builder.Services.AddScoped<UpdateService>();
 
 var app = builder.Build();
 
@@ -110,5 +111,38 @@ if (!app.Environment.IsDevelopment()
         }
     });
 }
+
+// Check for updates in background
+_ = Task.Run(async () =>
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var updateService = scope.ServiceProvider.GetRequiredService<UpdateService>();
+        
+        // Wait a bit for the app to fully start
+        await Task.Delay(5000);
+        
+        var updateInfo = await updateService.CheckForUpdatesAsync();
+        
+        if (updateInfo.UpdateAvailable)
+        {
+            Console.WriteLine($"\n{'='*60}");
+            Console.WriteLine($"UPDATE AVAILABLE");
+            Console.WriteLine($"{'='*60}");
+            Console.WriteLine($"Current Version: {updateInfo.CurrentVersion}");
+            Console.WriteLine($"Latest Version:  {updateInfo.LatestVersion}");
+            Console.WriteLine($"Download Size:   {updateInfo.DownloadSize / 1024 / 1024:F2} MB");
+            Console.WriteLine($"\nRelease Notes:");
+            Console.WriteLine(updateInfo.ReleaseNotes ?? "No release notes available.");
+            Console.WriteLine($"\nTo update, visit: {updateInfo.ReleaseUrl}");
+            Console.WriteLine($"{'='*60}\n");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error checking for updates: {ex.Message}");
+    }
+});
 
 app.Run();

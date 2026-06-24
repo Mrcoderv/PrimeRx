@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PrimeRx.Data;
 
@@ -10,9 +11,11 @@ using PrimeRx.Data;
 namespace PrimeRx.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260624054038_AddBillGeneratedBy")]
+    partial class AddBillGeneratedBy
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
@@ -231,6 +234,7 @@ namespace PrimeRx.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CustomerPhone")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("DiscountAmount")
@@ -243,6 +247,9 @@ namespace PrimeRx.Data.Migrations
 
                     b.Property<decimal>("FinalAmount")
                         .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GeneratedBy")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("PaidAmount")

@@ -195,4 +195,13 @@ public class InventoryService(ApplicationDbContext context)
             .Where(m => m.IsActive && m.ExpiryDate != null && m.ExpiryDate <= DateTime.Now.AddDays(days))
             .OrderBy(m => m.ExpiryDate)
             .ToListAsync();
+
+    public async Task<List<Medicine>> GetExpiringMedicinesAsync(int daysThreshold = 90)
+    {
+        var today = DateTime.Today;
+        return await context.Medicines
+            .Where(m => m.IsActive && m.ExpiryDate.HasValue && m.ExpiryDate.Value <= today.AddDays(daysThreshold))
+            .OrderBy(m => m.ExpiryDate)  // Ascending expiry = soonest first
+            .ToListAsync();
+    }
 }
