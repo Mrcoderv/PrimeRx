@@ -1,0 +1,59 @@
+@page
+@using PrimeRx.Models
+@model PrimeRx.Pages.Admin.Payables.CreateModel
+@{
+    ViewData["Title"] = "Add Payable";
+}
+
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a asp-page="/Admin/Payables/Index" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Back
+    </a>
+    <h2 class="mb-0">Add Payable</h2>
+</div>
+
+<div class="card shadow-sm border-0" style="max-width:560px;">
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="Input.SupplierName" class="form-label"></label>
+                <input asp-for="Input.SupplierName" class="form-control" placeholder="e.g. MedCo Distributors" />
+                <span asp-validation-for="Input.SupplierName" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.InvoiceNo" class="form-label"></label>
+                <input asp-for="Input.InvoiceNo" class="form-control" placeholder="e.g. INV-2026-001" />
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col">
+                    <label asp-for="Input.Amount" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text">Rs.</span>
+                        <input asp-for="Input.Amount" class="form-control" step="0.01" min="0.01" />
+                    </div>
+                    <span asp-validation-for="Input.Amount" class="text-danger small"></span>
+                </div>
+                <div class="col">
+                    <label asp-for="Input.DueDate" class="form-label"></label>
+                    <input asp-for="Input.DueDate" class="form-control" type="date" />
+                    <span asp-validation-for="Input.DueDate" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.Description" class="form-label"></label>
+                <textarea asp-for="Input.Description" class="form-control" rows="2"
+                          placeholder="Optional notes about this payable"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-plus-circle me-1"></i>Save Payable
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

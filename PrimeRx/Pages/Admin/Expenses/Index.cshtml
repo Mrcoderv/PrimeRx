@@ -6,13 +6,21 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Expenses</h2>
-    <a asp-page="/Admin/Expenses/Create" class="btn btn-primary">Add Expense</a>
+    <div>
+        <h2 class="mb-0">Expenses</h2>
+        <p class="text-muted small mb-0">Admin view — full list, edit & delete</p>
+    </div>
+    <a asp-page="/Admin/Expenses/Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>Add Expense
+    </a>
 </div>
 
 @if (!string.IsNullOrEmpty(Model.Message))
 {
-    <div class="alert alert-success">@Model.Message</div>
+    <div class="alert alert-success alert-dismissible fade show">
+        @Model.Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 
 <div class="d-flex align-items-center gap-2 mb-3">
@@ -23,58 +31,169 @@
        asp-route-year="@Model.NextMonth.Year" asp-route-month="@Model.NextMonth.Month">Next &raquo;</a>
 </div>
 
-<div class="row g-3 mb-3">
-    <div class="col-md-3">
-        <div class="card shadow-sm h-100">
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-2">
+        <div class="card shadow-sm h-100 border-0">
             <div class="card-body">
-                <div class="text-muted small">Total (@Model.MonthLabel)</div>
-                <div class="h4 mb-0">Rs. @Model.Total.ToString("N2")</div>
+                <div class="text-muted small">Total</div>
+                <div class="h5 mb-0">Rs. @Model.Total.ToString("N2")</div>
             </div>
         </div>
     </div>
     @foreach (var c in ExpenseCategories.All)
     {
         var amount = Model.ByCategory.TryGetValue(c, out var v) ? v : 0m;
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-muted small">@ExpenseCategories.Display(c)</div>
-                    <div class="h5 mb-0">Rs. @amount.ToString("N2")</div>
+        <div class="col-md-2">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body p-2">
+                    <div class="text-muted" style="font-size:.72rem;">@ExpenseCategories.Display(c)</div>
+                    <div class="fw-bold mb-0" style="font-size:.9rem;">Rs. @amount.ToString("N2")</div>
                 </div>
             </div>
         </div>
     }
 </div>
 
-<div class="table-responsive card shadow-sm">
-    <table class="table table-hover mb-0">
-        <thead class="table-light">
-            <tr>
-                <th>Date</th>
-                <th>Category</th>
-                <th>Reason</th>
-                <th>Staff</th>
-                <th class="text-end">Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.Expenses.Count == 0)
-            {
-                <tr><td colspan="5" class="text-center text-muted py-4">No expenses recorded for @Model.MonthLabel.</td></tr>
-            }
-            else
-            {
-                @foreach (var e in Model.Expenses)
+<!-- Expense Table -->
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Reason</th>
+                    <th>Staff</th>
+                    <th>Added By</th>
+                    <th>Last Edit</th>
+                    <th class="text-end">Amount</th>
+                    <th style="width:110px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Expenses.Count == 0)
                 {
-                    <tr>
-                        <td>@e.ExpenseDate.ToString("dd-MM-yyyy")</td>
-                        <td>@ExpenseCategories.Display(e.Category)</td>
-                        <td>@e.Reason</td>
-                        <td>@e.StaffId</td>
-                        <td class="text-end">Rs. @e.Amount.ToString("N2")</td>
-                    </tr>
+                    <tr><td colspan="8" class="text-center text-muted py-4">No expenses recorded for @Model.MonthLabel.</td></tr>
                 }
-            }
-        </tbody>
-    </table>
+                else
+                {
+                    @foreach (var e in Model.Expenses)
+                    {
+                        <tr>
+                            <td>@e.ExpenseDate.ToString("dd-MM-yyyy")</td>
+                            <td><span class="badge bg-secondary">@ExpenseCategories.Display(e.Category)</span></td>
+                            <td>@(e.Reason ?? "—")</td>
+                            <td class="text-muted small">@(e.StaffId ?? "—")</td>
+                            <td class="text-muted small">@(e.CreatedBy ?? "—")</td>
+                            <td class="text-muted small">
+                                @if (e.LastModifiedAt.HasValue)
+                                {
+                                    <span title="@e.LastModifiedBy">@e.LastModifiedAt.Value.ToString("dd-MM-yyyy")</span>
+                                }
+                                else { <span>—</span> }
+                            </td>
+                            <td class="text-end fw-bold">Rs. @e.Amount.ToString("N2")</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                        data-bs-toggle="modal" data-bs-target="#editModal"
+                                        data-id="@e.Id"
+                                        data-date="@e.ExpenseDate.ToString("yyyy-MM-dd")"
+                                        data-category="@e.Category"
+                                        data-amount="@e.Amount"
+                                        data-reason="@e.Reason"
+                                        data-staffid="@e.StaffId"
+                                        data-notes="@e.Notes">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <form method="post" asp-page-handler="Delete"
+                                      asp-route-id="@e.Id"
+                                      asp-route-year="@Model.Year"
+                                      asp-route-month="@Model.Month"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Delete this expense? This cannot be undone.')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Edit"
+                  asp-route-year="@Model.Year" asp-route-month="@Model.Month">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Expense</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="Edit.Id" id="editId" />
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Edit.ExpenseDate" class="form-label">Date</label>
+                            <input asp-for="Edit.ExpenseDate" class="form-control" type="date" id="editDate" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Edit.Category" class="form-label">Category</label>
+                            <select asp-for="Edit.Category" class="form-select" id="editCategory">
+                                @foreach (var c in ExpenseCategories.All)
+                                {
+                                    <option value="@c">@ExpenseCategories.Display(c)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Edit.Amount" class="form-label">Amount (Rs.)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rs.</span>
+                                <input asp-for="Edit.Amount" class="form-control" type="number" step="0.01" min="0.01" id="editAmount" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Edit.StaffId" class="form-label">Staff</label>
+                            <input asp-for="Edit.StaffId" class="form-control" id="editStaffId" />
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Edit.Reason" class="form-label">Reason</label>
+                            <textarea asp-for="Edit.Reason" class="form-control" rows="2" id="editReason"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Edit.Notes" class="form-label">Notes</label>
+                            <input asp-for="Edit.Notes" class="form-control" id="editNotes" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-check2 me-1"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.getElementById('editModal').addEventListener('show.bs.modal', function (e) {
+        const btn = e.relatedTarget;
+        document.getElementById('editId').value       = btn.dataset.id;
+        document.getElementById('editDate').value     = btn.dataset.date;
+        document.getElementById('editCategory').value = btn.dataset.category;
+        document.getElementById('editAmount').value   = btn.dataset.amount;
+        document.getElementById('editReason').value   = btn.dataset.reason || '';
+        document.getElementById('editStaffId').value  = btn.dataset.staffid || '';
+        document.getElementById('editNotes').value    = btn.dataset.notes || '';
+    });
+</script>
+}

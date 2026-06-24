@@ -36,7 +36,28 @@
                 <div class="panel-card mb-3">
                     <div class="panel-body">
                         <label class="form-label billing-label">Search Medicine</label>
-                        <select id="medicineSearch" placeholder="Type to search medicines..."></select>
+                        <div class="position-relative">
+                            <input type="text" id="medicineSearchText"
+                                   class="form-control medicine-search-input"
+                                   placeholder="Type medicine name or code..."
+                                   autocomplete="off">
+                            <div id="medicineSearchDropdown"
+                                 class="medicine-dropdown"
+                                 style="display:none;">
+                                <div class="medicine-dropdown-header">
+                                    <span style="width:52%">NAME</span>
+                                    <span style="width:16%">BATCH</span>
+                                    <span style="width:14%">STOCK</span>
+                                    <span style="width:18%">RATE</span>
+                                </div>
+                                <div class="medicine-dropdown-body" id="medicineDropdownBody"></div>
+                                <div class="medicine-dropdown-footer">
+                                    <span>↑ ↓ Navigate</span>
+                                    <span>Enter Select</span>
+                                    <span>Esc Close</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -105,7 +126,6 @@
 </div>
 
 @section Styles {
-    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/css/tom-select.default.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/billing.css" asp-append-version="true" />
 }
 

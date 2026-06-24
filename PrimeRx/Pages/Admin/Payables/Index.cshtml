@@ -1,0 +1,185 @@
+@page
+@using PrimeRx.Models
+@model PrimeRx.Pages.Admin.Payables.IndexModel
+@{
+    ViewData["Title"] = "Payables";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">Payables</h2>
+        <p class="text-muted small mb-0">Track amounts owed to suppliers and vendors</p>
+    </div>
+    <a asp-page="/Admin/Payables/Create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>Add Payable</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @Model.Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-0">
+            <div class="card-body">
+                <div class="text-muted small">Total Pending</div>
+                <div class="h4 mb-0 text-danger">Rs. @Model.TotalPending.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-0">
+            <div class="card-body">
+                <div class="text-muted small">Overdue</div>
+                <div class="h4 mb-0 text-warning">@Model.OverdueCount entries</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-0">
+            <div class="card-body">
+                <div class="text-muted small">Due Within 7 Days</div>
+                <div class="h4 mb-0 text-info">@Model.DueSoonCount entries</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="mb-3">
+    <div class="btn-group btn-group-sm" role="group">
+        <a asp-page="/Admin/Payables/Index" asp-route-filter="All"
+           class="btn @(Model.Filter == "All" ? "btn-primary" : "btn-outline-secondary")">All</a>
+        <a asp-page="/Admin/Payables/Index" asp-route-filter="Pending"
+           class="btn @(Model.Filter == "Pending" ? "btn-primary" : "btn-outline-secondary")">Pending</a>
+        <a asp-page="/Admin/Payables/Index" asp-route-filter="Partial"
+           class="btn @(Model.Filter == "Partial" ? "btn-primary" : "btn-outline-secondary")">Partial</a>
+        <a asp-page="/Admin/Payables/Index" asp-route-filter="Overdue"
+           class="btn @(Model.Filter == "Overdue" ? "btn-danger" : "btn-outline-danger")">Overdue</a>
+        <a asp-page="/Admin/Payables/Index" asp-route-filter="Paid"
+           class="btn @(Model.Filter == "Paid" ? "btn-success" : "btn-outline-success")">Paid</a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Supplier</th>
+                    <th>Invoice No</th>
+                    <th>Description</th>
+                    <th>Due Date</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Paid</th>
+                    <th class="text-end">Pending</th>
+                    <th>Status</th>
+                    <th style="width:140px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Payables.Any())
+                {
+                    <tr><td colspan="9" class="text-center text-muted py-4">No payables found.</td></tr>
+                }
+                else
+                {
+                    @foreach (var p in Model.Payables)
+                    {
+                        <tr class="@(p.IsOverdue ? "table-warning" : "")">
+                            <td><strong>@p.SupplierName</strong></td>
+                            <td>@(p.InvoiceNo ?? "—")</td>
+                            <td class="text-muted small">@(p.Description ?? "—")</td>
+                            <td>
+                                @p.DueDate.ToString("dd-MM-yyyy")
+                                @if (p.IsOverdue)
+                                {
+                                    <span class="badge bg-danger ms-1">Overdue</span>
+                                }
+                            </td>
+                            <td class="text-end">Rs. @p.Amount.ToString("N2")</td>
+                            <td class="text-end text-success">Rs. @p.PaidAmount.ToString("N2")</td>
+                            <td class="text-end text-danger fw-bold">Rs. @p.PendingAmount.ToString("N2")</td>
+                            <td>
+                                @{
+                                    var badgeClass = p.Status switch
+                                    {
+                                        "Paid" => "bg-success",
+                                        "Partial" => "bg-warning text-dark",
+                                        _ => "bg-secondary"
+                                    };
+                                }
+                                <span class="badge @badgeClass">@p.Status</span>
+                            </td>
+                            <td>
+                                @if (p.Status != PayableStatus.Paid)
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-success"
+                                            data-bs-toggle="modal" data-bs-target="#payModal"
+                                            data-id="@p.Id" data-name="@p.SupplierName"
+                                            data-pending="@p.PendingAmount.ToString("F2")">
+                                        <i class="bi bi-cash me-1"></i>Pay
+                                    </button>
+                                }
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@p.Id"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Delete this payable?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pay Modal -->
+<div class="modal fade" id="payModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="RecordPayment">
+                <div class="modal-header">
+                    <h5 class="modal-title">Record Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2 text-muted small" id="payModalSupplier"></p>
+                    <input type="hidden" name="id" id="payModalId" />
+                    <div class="mb-3">
+                        <label class="form-label">Amount Paying (Rs.)</label>
+                        <input type="number" class="form-control" name="amount" id="payModalAmount"
+                               step="0.01" min="0.01" required />
+                        <div class="form-text" id="payModalPendingHint"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success btn-sm">Confirm Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const payModal = document.getElementById('payModal');
+    payModal.addEventListener('show.bs.modal', e => {
+        const btn = e.relatedTarget;
+        document.getElementById('payModalId').value = btn.dataset.id;
+        document.getElementById('payModalSupplier').textContent = btn.dataset.name;
+        const pending = parseFloat(btn.dataset.pending);
+        document.getElementById('payModalAmount').value = pending.toFixed(2);
+        document.getElementById('payModalAmount').max = pending;
+        document.getElementById('payModalPendingHint').textContent = `Pending: Rs. ${pending.toFixed(2)}`;
+    });
+</script>
+}

@@ -13,6 +13,26 @@ public class ExpenseService(ApplicationDbContext context)
         await context.SaveChangesAsync();
     }
 
+    public async Task<Expense?> GetByIdAsync(int id)
+        => await context.Expenses.FindAsync(id);
+
+    public async Task UpdateAsync(Expense expense)
+    {
+        expense.LastModifiedAt = DateTime.Now;
+        context.Expenses.Update(expense);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var expense = await context.Expenses.FindAsync(id);
+        if (expense != null)
+        {
+            context.Expenses.Remove(expense);
+            await context.SaveChangesAsync();
+        }
+    }
+
     public async Task<List<Expense>> GetMonthlyExpensesAsync(int year, int month)
     {
         var start = new DateTime(year, month, 1);

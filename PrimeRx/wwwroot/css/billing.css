@@ -1,283 +1,217 @@
-/* Billing page — high-contrast dark theme overrides */
+/* ══════════════════════════════════════════════════════════
+   PrimeRx — Billing / POS page  (Light + Dark mode)
+══════════════════════════════════════════════════════════ */
 
-.billing-page .page-subtitle {
-  color: #cbd5e1;
-}
-
+/* ── Search bar ───────────────────────────────────────────── */
 .billing-page .billing-label,
 .billing-page .form-label {
-  color: #e2e8f0 !important;
+  color: var(--rx-label-color) !important;
   font-weight: 600;
   font-size: 0.95rem;
   margin-bottom: 0.5rem;
 }
+.billing-page .page-subtitle { color: var(--rx-text-muted); }
 
-/* Medicine search (Tom Select) */
-.billing-page .ts-wrapper {
-  width: 100%;
-}
-
-.billing-page .ts-wrapper.single .ts-control {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  color: #fff !important;
+.billing-page .medicine-search-input {
+  background: var(--rx-form-bg) !important;
+  border: 1px solid var(--rx-border) !important;
   border-radius: 10px !important;
   min-height: 46px;
   padding: 0.4rem 0.85rem !important;
+  color: var(--rx-form-text) !important;
   box-shadow: none !important;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-
-.billing-page .ts-wrapper.dropdown-active .ts-control {
-  border-color: #38bdf8 !important;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
-}
-
-.billing-page .ts-control input {
-  color: #fff !important;
-  font-size: 1rem !important;
-}
-
-.billing-page .ts-control input::placeholder {
-  color: #cbd5e1 !important;
+.billing-page .medicine-search-input::placeholder {
+  color: var(--rx-form-placeholder) !important;
   opacity: 1 !important;
 }
+.billing-page .medicine-search-input:focus {
+  border-color: var(--rx-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(56,189,248,0.2) !important;
+  outline: none;
+}
+[data-bs-theme="light"] .billing-page .medicine-search-input:focus {
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15) !important;
+}
 
-.billing-page .ts-dropdown {
-  background: #0f2744 !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  border-radius: 10px !important;
-  color: #fff !important;
-  z-index: 9999 !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45) !important;
-  margin-top: 4px;
+/* ── Suggestion dropdown ──────────────────────────────────── */
+.billing-page .medicine-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background: var(--rx-dropdown-bg);
+  border: 1px solid var(--rx-border);
+  border-radius: 10px;
+  box-shadow: var(--rx-shadow);
   overflow: hidden;
-  position: fixed !important;
+  color: var(--rx-text);
 }
 
-.billing-page .ts-dropdown-content {
-  max-height: 300px;
+/* Dark mode specific tint */
+[data-bs-theme="dark"] .billing-page .medicine-dropdown {
+  background: rgba(15,39,68,0.98);
+  border-color: rgba(255,255,255,0.18);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
 }
 
-.billing-page .ts-dropdown .option {
-  padding: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.billing-page .ts-dropdown .option:last-child {
-  border-bottom: none;
-}
-
-.billing-page .ts-dropdown .option.active {
-  background: rgba(14, 165, 233, 0.28) !important;
-}
-
-.billing-page .med-option {
-  padding: 0.7rem 0.9rem;
-}
-
-.billing-page .med-option-title {
-  color: #fff;
-  font-weight: 600;
-  font-size: 0.95rem;
-  line-height: 1.35;
-}
-
-.billing-page .med-option-generic {
-  color: #7dd3fc;
-  font-weight: 500;
-  font-size: 0.88rem;
-}
-
-.billing-page .med-option-meta {
-  color: #94a3b8;
-  font-size: 0.84rem;
-  margin-top: 0.2rem;
-}
-
-.billing-page .med-no-results {
-  padding: 1rem;
-  color: #cbd5e1;
-  text-align: center;
-}
-
-/* Floating pharmacy-style medicine popup */
-.billing-page #medicineSearchPopup.medicine-popup{
-  position: fixed !important;
-  z-index: 2147483647 !important;
-  background: rgba(15, 39, 68, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.55);
-  overflow: hidden;
-  color: #fff;
-  pointer-events: auto;
-}
-
-.billing-page .medicine-popup-header{
-  padding: 0.7rem 0.95rem;
-  font-weight: 700;
-  background: rgba(56,189,248,0.12);
-  border-bottom: 1px solid rgba(255,255,255,0.14);
-  font-size: 0.95rem;
-}
-
-.billing-page .medicine-popup-body{
-  max-height: 330px;
-  overflow: auto;
-}
-
-.billing-page .medicine-popup-table{
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.billing-page .medicine-popup-table th{
-  position: sticky;
-  top: 0;
-  background: rgba(255,255,255,0.06);
-  border-bottom: 1px solid rgba(255,255,255,0.14);
+.billing-page .medicine-dropdown-header {
+  display: flex;
+  padding: 0.55rem 0.85rem;
+  background: var(--rx-surface);
+  border-bottom: 1px solid var(--rx-border);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: 0.72rem;
-  padding: 0.6rem 0.75rem;
-  color: rgba(226,232,240,0.95);
+  font-weight: 600;
+  color: var(--rx-text-muted);
+}
+.billing-page .medicine-dropdown-header span { display: inline-block; }
+
+.billing-page .medicine-dropdown-body {
+  max-height: 320px;
+  overflow-y: auto;
 }
 
-.billing-page .medicine-popup-table td{
-  padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  vertical-align: middle;
+.billing-page .medicine-dropdown-row {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--rx-table-border);
+  cursor: pointer;
   font-size: 0.9rem;
-  color: #e2e8f0;
+  color: var(--rx-text);
+  transition: background 0.1s;
+}
+.billing-page .medicine-dropdown-row:last-child { border-bottom: none; }
+.billing-page .medicine-dropdown-row:hover,
+.billing-page .medicine-dropdown-row.active {
+  background: var(--rx-surface-hover);
+  color: var(--rx-heading);
+}
+[data-bs-theme="dark"] .billing-page .medicine-dropdown-row:hover,
+[data-bs-theme="dark"] .billing-page .medicine-dropdown-row.active {
+  background: rgba(14,165,233,0.22);
 }
 
-.billing-page .medicine-popup-row{cursor:pointer;}
-.billing-page .medicine-popup-row:hover td{background: rgba(14,165,233,0.18); color:#fff;}
-.billing-page .medicine-popup-row.active td{background: rgba(14,165,233,0.28); color:#fff;}
+.billing-page .med-col-name  { width: 52%; }
+.billing-page .med-col-batch { width: 16%; }
+.billing-page .med-col-stock { width: 14%; }
+.billing-page .med-col-rate  { width: 18%; }
 
-.billing-page .medicine-popup-empty{
+.billing-page .med-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.92rem;
+  line-height: 1.3;
+  color: var(--rx-heading);
+}
+.billing-page .med-generic {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--rx-cyan);
+}
+
+.billing-page .medicine-dropdown-empty {
   padding: 1rem;
-  color: #cbd5e1;
+  text-align: center;
+  color: var(--rx-text-muted);
+  font-size: 0.9rem;
 }
-
-.billing-page .medicine-popup-footer{
-  padding: 0.55rem 0.95rem;
+.billing-page .medicine-dropdown-footer {
   display: flex;
   justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.78rem;
-  color: rgba(148,163,184,0.95);
-  border-top: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.02);
+  padding: 0.45rem 0.85rem;
+  font-size: 0.75rem;
+  color: var(--rx-text-muted);
+  border-top: 1px solid var(--rx-border);
+  background: var(--rx-surface);
 }
 
-.billing-page .medicine-search-input{
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  border-radius: 10px !important;
-  min-height: 46px;
-  padding: 0.4rem 0.85rem !important;
-  color: #fff !important;
-  box-shadow: none !important;
-}
-
-.billing-page .medicine-search-input::placeholder{color:#cbd5e1 !important; opacity:1 !important;}
-
-/* Bill items table */
+/* ── Items table ──────────────────────────────────────────── */
 .billing-page #itemsTable {
   --bs-table-bg: transparent;
-  --bs-table-color: #e2e8f0;
-  --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
-  --bs-table-hover-color: #fff;
+  --bs-table-color: var(--rx-text);
+  --bs-table-hover-bg: var(--rx-table-hover);
+  --bs-table-hover-color: var(--rx-heading);
   margin-bottom: 0;
 }
-
-.billing-page .table-responsive {
-  overflow: visible !important;
-}
+.billing-page .table-responsive { overflow: visible !important; }
 
 .billing-page #itemsTable thead th {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #e2e8f0 !important;
+  background: var(--rx-table-head-bg) !important;
+  color: var(--rx-table-head-color) !important;
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-bottom: 1px solid var(--rx-border) !important;
   padding: 0.85rem 1rem;
 }
-
 .billing-page #itemsTable tbody td {
   background: transparent !important;
-  color: #e2e8f0 !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: var(--rx-text) !important;
+  border-bottom: 1px solid var(--rx-table-border) !important;
   padding: 0.85rem 1rem;
   vertical-align: middle;
 }
-
 .billing-page #itemsTable tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.04) !important;
-  color: #fff !important;
+  background: var(--rx-table-hover) !important;
+  color: var(--rx-heading) !important;
 }
-
 .billing-page #itemsTable .line-total {
-  color: #7dd3fc;
+  color: var(--rx-cyan);
   font-weight: 700;
   font-size: 0.95rem;
 }
-
-.billing-page #itemsTable tbody small {
-  color: #94a3b8 !important;
-}
+.billing-page #itemsTable tbody small { color: var(--rx-text-muted) !important; }
 
 .billing-page .billing-empty-msg {
   text-align: center;
   padding: 2.5rem 1rem !important;
-  color: #94a3b8 !important;
+  color: var(--rx-text-muted) !important;
   font-size: 0.95rem;
-  background: rgba(255, 255, 255, 0.03) !important;
+  background: var(--rx-surface) !important;
 }
 
 .billing-page #itemsTable .form-control-sm {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
-  color: #fff !important;
+  background: var(--rx-form-bg) !important;
+  border-color: var(--rx-border) !important;
+  color: var(--rx-form-text) !important;
 }
 
-/* Sidebar totals */
+/* ── Sidebar totals ───────────────────────────────────────── */
 .billing-page .billing-divider {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--rx-border);
   opacity: 1;
 }
-
 .billing-page .billing-total-row {
   display: flex;
   justify-content: space-between;
-  color: #cbd5e1;
+  color: var(--rx-text-muted);
   font-size: 0.95rem;
   padding: 0.2rem 0;
 }
-
 .billing-page .billing-total-row span:last-child {
-  color: #fff;
+  color: var(--rx-text);
   font-weight: 600;
 }
-
 .billing-page .billing-total-final {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--rx-heading);
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--rx-border);
 }
-
 .billing-page .billing-total-final span:last-child {
-  color: #7dd3fc;
+  color: var(--rx-cyan);
   font-size: 1.35rem;
 }
-
 .billing-page .panel-header {
-  color: #fff;
+  color: var(--rx-heading);
   font-weight: 600;
 }

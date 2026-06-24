@@ -29,18 +29,33 @@ public static class TransactionTypes
     public const string Adjustment = "Adjustment";
 }
 
+public static class PayableStatus
+{
+    public const string Pending = "Pending";
+    public const string Partial = "Partial";
+    public const string Paid = "Paid";
+
+    public static readonly string[] All = [Pending, Partial, Paid];
+}
+
 public static class ExpenseCategories
 {
     public const string Purchase = "Purchase";
     public const string StaffSalary = "StaffSalary";
+    public const string Rent = "Rent";
+    public const string Utilities = "Utilities";
+    public const string Transport = "Transport";
     public const string Miscellaneous = "Miscellaneous";
 
-    public static readonly string[] All = [Purchase, StaffSalary, Miscellaneous];
+    public static readonly string[] All = [Purchase, StaffSalary, Rent, Utilities, Transport, Miscellaneous];
 
     public static string Display(string category) => category switch
     {
         Purchase => "Purchase / Inventory",
         StaffSalary => "Staff Salary",
+        Rent => "Rent",
+        Utilities => "Utilities (Electric / Water / Internet)",
+        Transport => "Transport / Delivery",
         Miscellaneous => "Miscellaneous",
         _ => category
     };

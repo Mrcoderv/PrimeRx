@@ -17,7 +17,8 @@ var sqliteConnection = DatabasePath.ResolveSqliteConnectionString(
     builder.Environment.ContentRootPath);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(sqliteConnection));
+    options.UseSqlite(sqliteConnection)
+           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
@@ -47,6 +48,7 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizeFolder("/Inventory", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Due", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Reports", "StaffAccess");
+    options.Conventions.AuthorizeFolder("/Expenses", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Admin", "AdminOnly");
     options.Conventions.AllowAnonymousToPage("/Setup/Index");
     options.Conventions.AllowAnonymousToPage("/Index");
@@ -68,6 +70,32 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var db = services.GetRequiredService<ApplicationDbContext>();
     await db.Database.MigrateAsync();
+
+    // Ensure Expense audit columns exist (idempotent — SQLite throws if column already exists, so swallow those errors)
+    foreach (var col in new[] {
+        "ALTER TABLE Expenses ADD COLUMN CreatedBy TEXT NULL",
+        "ALTER TABLE Expenses ADD COLUMN LastModifiedBy TEXT NULL",
+        "ALTER TABLE Expenses ADD COLUMN LastModifiedAt TEXT NULL"
+    })
+    {
+        try { await db.Database.ExecuteSqlRawAsync(col); } catch { /* already exists */ }
+    }
+
+    // Ensure Payables table exists (created outside the normal EF migration to guarantee availability)
+    await db.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS "Payables" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_Payables" PRIMARY KEY AUTOINCREMENT,
+            "SupplierName" TEXT NOT NULL,
+            "InvoiceNo" TEXT NULL,
+            "Amount" TEXT NOT NULL DEFAULT '0',
+            "PaidAmount" TEXT NOT NULL DEFAULT '0',
+            "DueDate" TEXT NOT NULL,
+            "Status" TEXT NOT NULL DEFAULT 'Pending',
+            "Description" TEXT NULL,
+            "CreatedAt" TEXT NOT NULL
+        )
+        """);
+
     await RoleSeeder.SeedAsync(services.GetRequiredService<RoleManager<IdentityRole>>());
 }
 

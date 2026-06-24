@@ -1,0 +1,123 @@
+ 
+
+You are enhancing the UI/UX of **PrimeRx**, an open-source Pharmacy Management System built with **ASP.NET Core Razor Pages**, Entity Framework Core, and **Bootstrap 5.3+**. The web app is used by small-to-medium pharmacies for inventory, billing, sales, expenses, reports, and admin tasks.
+
+**Current State**: Classic Bootstrap admin template with sidebar navigation, data tables, and basic forms. It feels dated and slow for daily POS/billing use.
+
+**Goal**: Transform it into a **modern, fast, professional, and efficient pharmacy POS-style interface** — clean, responsive, mobile-friendly (especially for tablets), with excellent keyboard support for high-speed billing. **Support both Light (Normal) and Dark Mode** with seamless toggling.
+
+### Overall Design Direction
+
+- **Color Scheme**:
+
+  - **Light Mode** (default): Clean medical/pharmacy theme — Primary: #0d6efd (blue), Accent: #198754 (green for success/stock), soft whites/grays background.
+
+  - **Dark Mode**: Professional dark variant — dark backgrounds (#212529 or #1e1e1e), light text, adjusted accent colors for good contrast. Use Bootstrap’s built-in dark variables where possible.
+
+- **Typography**: System fonts + Inter or Roboto. Clear hierarchy.
+
+- **Style**: Modern SaaS admin + POS hybrid. Cards, subtle borders, hover effects, micro-animations.
+
+- **Dark/Light Mode Support**:
+
+  - Use Bootstrap 5.3+ native `data-bs-theme="dark"` / `data-bs-theme="light"` on `<html>` tag.
+
+  - Persistent preference via `localStorage`.
+
+  - Toggle switch in top navbar (sun/moon icon).
+
+  - Respect system preference (`prefers-color-scheme`) as fallback.
+
+  - Ensure all custom CSS respects both modes (use CSS variables or Bootstrap utilities).
+
+### Key Pages & Specific Improvements
+
+1. **Billing / Sales Page** (Highest Priority — Make it Extremely Efficient)
+
+   - Large, prominent **medicine search bar** at the top.
+
+   - **Custom suggestion dropdown** (YouTube/Google-style, NOT standard autocomplete):
+
+     - As user types → show dropdown with medicine name, generic name, MRP, current stock.
+
+     - Full keyboard navigation: **↓ / ↑** arrows to highlight, **Enter** to select & add to bill, **Esc** to close.
+
+     - Debounced AJAX search (150ms) to `/Billing?handler=SearchAsync`.
+
+   - Right-side or bottom **live cart/table** with inline editing (quantity, discount).
+
+   - Live totals, taxes, discounts, tendered amount, change due.
+
+   - Quick actions: Clear, Save & Print (PDF), Hold bill.
+
+   - Barcode scanner ready.
+
+   - Auto-focus quantity after adding medicine.
+
+   - Fully compatible with both light and dark modes.
+
+2. **Notifications / Dues Section**
+
+   - Top navbar **bell icon** with red badge for pending dues (Payables — dues pharmacy has to pay).
+
+   - Dropdown shows recent dues with supplier, amount, due date.
+
+   - Real-time refresh (every 30s).
+
+3. **Expenses Module**
+
+   - Staff: Can access simple **"Add Expense"** form only.
+
+   - Admin: Full view/edit of expenses.
+
+   - Role-based sidebar visibility.
+
+4. **Other Pages**
+
+   - **Dashboard**: Modern metric cards + Chart.js graphs.
+
+   - **Inventory**: Enhanced tables with stock badges.
+
+   - **All Tables**: Search, sort, pagination, export (use DataTables.js or Tabulator).
+
+   - **Forms**: Strong validation, toasts, loading states.
+
+### Technical Requirements (Razor Pages)
+
+- Keep existing Razor Pages structure.
+
+- **Dark Mode Implementation**:
+
+  ```html
+
+  <html data-bs-theme="light">  <!-- or "dark" -->
+
+  ```
+
+  - Add toggle JS that updates `document.documentElement.setAttribute('data-bs-theme', mode)` and saves to `localStorage`.
+
+- Prefer vanilla JS + Bootstrap 5.
+
+- Responsive: Sidebar collapses on mobile/tablet.
+
+- Accessibility: ARIA labels, keyboard support.
+
+- Custom CSS: Use CSS variables for easy theming.
+
+**Deliverables Expected**:
+
+- Updated `Pages/Shared/_Layout.cshtml` (navbar with theme toggle + sidebar).
+
+- Full enhanced `Pages/Billing/Index.cshtml` + `Index.cshtml.cs`.
+
+- Custom CSS (with light/dark variables).
+
+- JavaScript for billing suggestions, notifications, and theme toggle.
+
+- Sample Payables notification handler.
+
+- Role-based UI conditions (`@User.IsInRole`).
+
+- General style guide / CSS variables for both modes.
+
+Make the billing experience feel like a **real professional pharmacy POS** — fast, keyboard-driven, and beautiful in both **Light (Normal)** and **Dark** modes.
