@@ -14,6 +14,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
     public DbSet<InventoryBatch> InventoryBatches => Set<InventoryBatch>();
     public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<Payable> Payables => Set<Payable>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

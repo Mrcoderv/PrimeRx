@@ -1,4 +1,4 @@
-modules = ["dotnet-7.0", "web", "nodejs-20"]
+modules = ["web", "nodejs-20", "dotnet-10.0"]
 [agent]
 expertMode = true
 stack = "BEST_EFFORT_FALLBACK"

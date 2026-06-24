@@ -68,6 +68,22 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var db = services.GetRequiredService<ApplicationDbContext>();
     await db.Database.MigrateAsync();
+
+    // Ensure Payables table exists (created outside the normal EF migration to guarantee availability)
+    await db.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS "Payables" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_Payables" PRIMARY KEY AUTOINCREMENT,
+            "SupplierName" TEXT NOT NULL,
+            "InvoiceNo" TEXT NULL,
+            "Amount" TEXT NOT NULL DEFAULT '0',
+            "PaidAmount" TEXT NOT NULL DEFAULT '0',
+            "DueDate" TEXT NOT NULL,
+            "Status" TEXT NOT NULL DEFAULT 'Pending',
+            "Description" TEXT NULL,
+            "CreatedAt" TEXT NOT NULL
+        )
+        """);
+
     await RoleSeeder.SeedAsync(services.GetRequiredService<RoleManager<IdentityRole>>());
 }
 

@@ -29,6 +29,15 @@ public static class TransactionTypes
     public const string Adjustment = "Adjustment";
 }
 
+public static class PayableStatus
+{
+    public const string Pending = "Pending";
+    public const string Partial = "Partial";
+    public const string Paid = "Paid";
+
+    public static readonly string[] All = [Pending, Partial, Paid];
+}
+
 public static class ExpenseCategories
 {
     public const string Purchase = "Purchase";
