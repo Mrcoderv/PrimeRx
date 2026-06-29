@@ -1,0 +1,287 @@
+ase 3 Implementation Prompt – PrimeRx Pharmacy Management System
+
+You are now implementing Phase 3 (Advanced) of PrimeRx, the open-source Pharmacy Management System.
+
+Focus: Polish, Automation, Analytics, and Advanced Capabilities.
+
+Phase 3 Features
+
+1. Backup & Restore System (High Priority)
+
+
+
+
+
+Automatic Daily Backup (scheduled background job).
+
+
+
+Backup location: Separate, easily accessible folder (e.g. AppData/Backups/ or configurable path).
+
+
+
+Backup content:
+
+
+
+
+
+Full Database (SQLite / SQL Server)
+
+
+
+Sales Bills (daily/monthly)
+
+
+
+Purchase Records
+
+
+
+Inventory + Batch Data
+
+
+
+Ledger & Accounts
+
+
+
+Supported formats: JSON, Excel, PDF
+
+
+
+Features:
+
+
+
+
+
+Manual backup trigger (per bill / per purchase / full)
+
+
+
+Backup history log (backup_history table)
+
+
+
+Download + Restore functionality (Admin only)
+
+
+
+Retention policy as per admin choise 
+
+2. Dashboard Analytics Enhancements
+
+
+
+
+
+Make dashboard match the modern design (colorful cards, charts, top medicines, sales trend).
+
+
+
+Add more smart cards:
+
+
+
+
+
+Low Stock Items
+
+
+
+Out of Stock
+
+
+
+Fast Moving Medicines
+
+
+
+Slow Moving / Dead Stock
+
+
+
+Supplier Dues
+
+
+
+Expiry Alerts Count
+
+
+
+Sales trend chart (last 7/30 days)
+
+
+
+Top medicines donut chart
+
+3. Barcode System
+
+
+
+
+
+Barcode generation for medicines
+
+
+
+Barcode scanning support (for sales & inventory search)
+
+
+
+Barcode printing (for labels)
+
+
+
+Integration in Billing, Purchase, and Inventory search
+
+4. Activity Logs & Audit Trail
+
+
+
+
+
+Track all critical actions:
+
+
+
+
+
+Login/Logout history
+
+
+
+Bill creation / modification
+
+
+
+Purchase & Return changes
+
+
+
+Stock adjustments
+
+
+
+Payment records
+
+
+
+Admin-only Audit Log page with filters and export
+
+5. Entry Calculator Integration
+
+
+
+
+
+Floating / embedded calculator in:
+
+
+
+
+
+Billing Page
+
+
+
+Purchase Entry
+
+
+
+Purchase Return
+
+
+
+Support basic operations: +, −, ×, ÷, %
+
+6. Smart Suggestions System (AI-like)
+
+
+
+
+
+Sales Billing: Suggest medicine, generic, batch (FIFO), expiry warning
+
+
+
+Purchase: Suggest previous rates, last supplier, profit margin
+
+
+
+Returns: Auto-suggest expired/near-expiry items
+
+
+
+Dashboard: Intelligent cards based on real data
+
+Implementation Guidelines
+
+
+
+
+
+Use BackgroundService or Hangfire for scheduled backups.
+
+
+
+Add proper authorization for sensitive features.
+
+
+
+Ensure mobile-friendly responsive design.
+
+
+
+Maintain clean separation (Services, Repositories, ViewModels).
+
+
+
+Write clean, commented, maintainable code.
+
+Priority Order for Phase 3:
+
+
+
+
+
+Automatic Backup System
+
+
+
+Enhanced Modern Dashboard
+
+
+
+Activity Logs
+
+
+
+Barcode Support
+
+
+
+Smart Suggestions + Calculator
+
+Would you like me to start implementing any specific part of Phase 3 right now?
+
+Reply with your choice, e.g.:
+
+
+
+
+
+“Start with Automatic Backup System”
+
+
+
+“Update Dashboard to match the screenshot”
+
+
+
+“Implement Activity Logs”
+
+
+
+“Generate full Phase 3 code structure

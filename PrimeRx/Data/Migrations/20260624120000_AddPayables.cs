@@ -1,11 +1,15 @@
 using System;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using PrimeRx.Data;
 
 #nullable disable
 
 namespace PrimeRx.Data.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20260624120000_AddPayables")]
     public partial class AddPayables : Migration
     {
         /// <inheritdoc />

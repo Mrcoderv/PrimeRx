@@ -27,7 +27,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd PrimeRx && ASPNETCORE_ENVIRONMENT=Development dotnet run --no-launch-profile"
+args = "cd PrimeRx && ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://0.0.0.0:5000 dotnet run --no-launch-profile"
 waitForPort = 5000
 
 [[ports]]
