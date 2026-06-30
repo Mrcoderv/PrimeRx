@@ -14,6 +14,10 @@ public class UpdateService
     {
         _httpClient = new HttpClient();
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "PrimeRx");
+
+        var token = Environment.GetEnvironmentVariable("GITHUB_PERSONAL_ACCESS_TOKEN");
+        if (!string.IsNullOrWhiteSpace(token))
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
     }
 
     public class GitHubRelease
