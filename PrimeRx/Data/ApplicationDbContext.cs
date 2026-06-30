@@ -15,6 +15,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<InventoryBatch> InventoryBatches => Set<InventoryBatch>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<Payable> Payables => Set<Payable>();
+    public DbSet<Purchase> Purchases => Set<Purchase>();
+    public DbSet<PurchaseItem> PurchaseItems => Set<PurchaseItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,6 +58,24 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         modelBuilder.Entity<Expense>()
             .HasIndex(e => e.ExpenseDate);
+
+        modelBuilder.Entity<PurchaseItem>()
+            .HasOne(pi => pi.Purchase)
+            .WithMany(p => p.Items)
+            .HasForeignKey(pi => pi.PurchaseId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PurchaseItem>()
+            .HasOne(pi => pi.Medicine)
+            .WithMany()
+            .HasForeignKey(pi => pi.MedicineId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Purchase>()
+            .HasIndex(p => p.PurchaseDate);
+
+        modelBuilder.Entity<Purchase>()
+            .HasIndex(p => p.SupplierName);
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {

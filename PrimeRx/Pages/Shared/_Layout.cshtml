@@ -50,11 +50,19 @@
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" asp-page="/Inventory/Index"><i class="bi bi-list-ul me-2"></i>Stock View</a></li>
                                 <li><a class="dropdown-item" asp-page="/Inventory/AddMedicine"><i class="bi bi-plus-circle me-2"></i>Add Medicine</a></li>
-                                <li><a class="dropdown-item" asp-page="/Inventory/Purchase"><i class="bi bi-cart-plus me-2"></i>Purchase Entry</a></li>
                                 <li><a class="dropdown-item" asp-page="/Inventory/Adjust"><i class="bi bi-arrow-left-right me-2"></i>Stock Adjustment</a></li>
                                 <li><a class="dropdown-item" asp-page="/Inventory/History"><i class="bi bi-clock-history me-2"></i>Transaction History</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" asp-page="/Inventory/Expiry"><i class="bi bi-exclamation-triangle me-2"></i>Expiry Alerts</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                <i class="bi bi-truck me-1"></i>Purchase
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-page="/Purchase/Create"><i class="bi bi-plus-lg me-2"></i>New Purchase</a></li>
+                                <li><a class="dropdown-item" asp-page="/Purchase/Index"><i class="bi bi-clock-history me-2"></i>Purchase History</a></li>
                             </ul>
                         </li>
                         <li class="nav-item">

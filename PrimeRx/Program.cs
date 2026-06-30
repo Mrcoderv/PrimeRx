@@ -43,6 +43,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddRazorPages(options =>
 {
+    options.Conventions.AuthorizeFolder("/Purchase", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Billing", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Dashboard", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Inventory", "StaffAccess");
@@ -60,6 +61,7 @@ builder.Services.AddScoped<DueService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<ExpenseService>();
+builder.Services.AddScoped<PurchaseService>();
 builder.Services.AddSingleton<PdfGenerator>();
 builder.Services.AddScoped<UpdateService>();
 

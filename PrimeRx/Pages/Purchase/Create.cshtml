@@ -1,0 +1,142 @@
+@page
+@model PrimeRx.Pages.Purchase.CreateModel
+@{
+    ViewData["Title"] = "New Purchase";
+}
+
+<div class="page-header mb-3">
+    <div>
+        <h1 class="page-title">New Purchase</h1>
+        <p class="page-subtitle">Record a multi-item stock purchase from a supplier</p>
+    </div>
+    <a asp-page="/Purchase/Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<form method="post" id="purchaseForm">
+    <div class="row g-3">
+
+        <!-- Left: Medicine search + items table -->
+        <div class="col-lg-8">
+            <div class="panel-card mb-3">
+                <div class="panel-body">
+                    <label class="form-label billing-label">Search Medicine to Add</label>
+                    <div class="position-relative">
+                        <input type="text" id="medicineSearchText"
+                               class="form-control medicine-search-input"
+                               placeholder="Type medicine name…"
+                               autocomplete="off">
+                        <div id="medicineSearchDropdown" class="medicine-dropdown" style="display:none;">
+                            <div class="medicine-dropdown-header">
+                                <span style="width:55%">NAME</span>
+                                <span style="width:25%">GENERIC</span>
+                                <span style="width:20%">STOCK</span>
+                            </div>
+                            <div class="medicine-dropdown-body" id="medicineDropdownBody"></div>
+                            <div class="medicine-dropdown-footer">
+                                <span>↑ ↓ Navigate</span><span>Enter Select</span><span>Esc Close</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-header">Purchase Items</div>
+                <div class="table-responsive">
+                    <table class="table table-pro mb-0" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th>Medicine</th>
+                                <th style="width:95px">Batch #</th>
+                                <th style="width:115px">Expiry</th>
+                                <th style="width:65px">Qty</th>
+                                <th style="width:105px">Purchase Price</th>
+                                <th style="width:95px">MRP</th>
+                                <th style="width:95px">Amount</th>
+                                <th style="width:40px"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody">
+                            <tr id="emptyRow">
+                                <td colspan="8" class="text-center text-muted py-4">Search and add medicines above</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" class="text-end fw-semibold">Total Purchase Amount</td>
+                                <td class="fw-bold text-accent" id="totalDisplay">Rs. 0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Supplier details + save -->
+        <div class="col-lg-4">
+            <div class="panel-card billing-sidebar">
+                <div class="panel-header">Supplier Details</div>
+                <div class="panel-body">
+                    <div class="mb-3">
+                        <label class="form-label">Supplier / Company <span class="text-danger">*</span></label>
+                        <input asp-for="Input.SupplierName" class="form-control" id="supplierName"
+                               placeholder="e.g. ABC Pharma Distributors"
+                               list="supplierList" autocomplete="off" />
+                        <datalist id="supplierList">
+                            @foreach (var s in Model.KnownSuppliers)
+                            {
+                                <option value="@s" />
+                            }
+                        </datalist>
+                        <span asp-validation-for="Input.SupplierName" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Supplier Phone</label>
+                        <input asp-for="Input.SupplierPhone" class="form-control" placeholder="Optional" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Invoice Number</label>
+                        <input asp-for="Input.InvoiceNumber" class="form-control" placeholder="Supplier invoice #" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Purchase Date</label>
+                        <input asp-for="Input.PurchaseDate" class="form-control" type="date" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea asp-for="Input.Notes" class="form-control" rows="2" placeholder="Optional remarks…"></textarea>
+                    </div>
+
+                    <hr class="billing-divider" />
+                    <div class="billing-total-row billing-total-final mb-3">
+                        <span>Total</span>
+                        <span id="sidebarTotal">Rs. 0.00</span>
+                    </div>
+
+                    <input type="hidden" id="itemsJson" name="ItemsJson" value="[]" />
+                    <button type="submit" class="btn btn-accent btn-lg w-100" id="saveBtn" disabled>
+                        <i class="bi bi-save me-1"></i>Save Purchase
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/billing.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+    const MARGIN_PERCENT = @Model.MarginPercent;
+    </script>
+    <script src="~/js/purchase.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,187 @@
+@page
+@model PrimeRx.Pages.Purchase.IndexModel
+@{
+    ViewData["Title"] = "Purchase History";
+}
+
+<div class="page-header mb-3">
+    <div>
+        <h1 class="page-title">Purchase History</h1>
+        <p class="page-subtitle">All stock purchase records by supplier</p>
+    </div>
+    <a asp-page="/Purchase/Create" class="btn btn-accent"><i class="bi bi-plus-lg me-1"></i>New Purchase</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @Model.Message <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @Model.ErrorMessage <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="panel-card mb-3">
+    <div class="panel-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small">Supplier Name</label>
+                <input type="text" name="supplier" value="@Model.SupplierFilter" class="form-control" placeholder="Filter by supplier…" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">From Date</label>
+                <input type="date" name="from" value="@Model.FromDate?.ToString("yyyy-MM-dd")" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">To Date</label>
+                <input type="date" name="to" value="@Model.ToDate?.ToString("yyyy-MM-dd")" class="form-control" />
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
+                <a asp-page="/Purchase/Index" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel-card">
+    <div class="panel-header d-flex justify-content-between align-items-center">
+        <span>@Model.Purchases.Count purchase(s)</span>
+        <span class="fw-bold">Total: Rs. @Model.Purchases.Sum(p => p.TotalAmount).ToString("N2")</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-pro mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Invoice #</th>
+                    <th>Supplier</th>
+                    <th>Phone</th>
+                    <th class="text-center">Items</th>
+                    <th class="text-end">Total</th>
+                    <th>Recorded By</th>
+                    <th style="width:120px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Purchases.Any())
+                {
+                    <tr><td colspan="8" class="text-center text-muted py-4">No purchases found</td></tr>
+                }
+                @foreach (var p in Model.Purchases)
+                {
+                    <tr>
+                        <td>@p.PurchaseDate.ToString("dd MMM yyyy")</td>
+                        <td>@(p.InvoiceNumber ?? "—")</td>
+                        <td class="fw-semibold">@p.SupplierName</td>
+                        <td>@(p.SupplierPhone ?? "—")</td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary">@p.Items.Count</span>
+                        </td>
+                        <td class="text-end fw-semibold">Rs. @p.TotalAmount.ToString("N2")</td>
+                        <td><small class="text-muted">@(p.CreatedBy ?? "—")</small></td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a asp-page="/Purchase/Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="confirmDelete(@p.Id, '@p.SupplierName.Replace("'","\\'")', @p.Items.Count)"
+                                        title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        data-bs-toggle="collapse" data-bs-target="#items-@p.Id"
+                                        title="View items">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="items-@p.Id">
+                        <td colspan="8" class="p-0">
+                            <div class="px-4 py-2 bg-body-secondary">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Medicine</th>
+                                            <th>Batch #</th>
+                                            <th>Expiry</th>
+                                            <th class="text-center">Qty</th>
+                                            <th class="text-end">Purchase Price</th>
+                                            <th class="text-end">MRP</th>
+                                            <th class="text-end">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in p.Items)
+                                        {
+                                            <tr>
+                                                <td>@item.MedicineName</td>
+                                                <td>@(item.BatchNumber ?? "—")</td>
+                                                <td>
+                                                    @if (item.ExpiryDate.HasValue)
+                                                    {
+                                                        var daysLeft = (item.ExpiryDate.Value - DateTime.Today).Days;
+                                                        <span class="@(daysLeft < 30 ? "text-danger fw-semibold" : daysLeft < 90 ? "text-warning" : "")">
+                                                            @item.ExpiryDate.Value.ToString("MMM yyyy")
+                                                        </span>
+                                                    }
+                                                    else { <span class="text-muted">—</span> }
+                                                </td>
+                                                <td class="text-center">@item.Quantity</td>
+                                                <td class="text-end">Rs. @item.PurchasePrice.ToString("N2")</td>
+                                                <td class="text-end">Rs. @item.MRP.ToString("N2")</td>
+                                                <td class="text-end fw-semibold">Rs. @item.Amount.ToString("N2")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                @if (!string.IsNullOrEmpty(p.Notes))
+                                {
+                                    <p class="text-muted small mb-0 mt-1"><i class="bi bi-chat-left-text me-1"></i>@p.Notes</p>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Purchase?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="deleteModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" asp-page-handler="Delete" id="deleteForm">
+                    <input type="hidden" name="id" id="deleteId" />
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Delete & Reverse Stock</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function confirmDelete(id, supplier, itemCount) {
+    document.getElementById('deleteId').value = id;
+    document.getElementById('deleteModalBody').innerHTML =
+        `<p>Delete purchase from <strong>${supplier}</strong> with <strong>${itemCount} item(s)</strong>?</p><p class="text-danger small mb-0">This will reverse the stock added by this purchase.</p>`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+}

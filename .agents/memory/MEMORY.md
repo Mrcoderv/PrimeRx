@@ -1,0 +1,2 @@
+- [EF Core manual migrations](ef-core-manual-migrations.md) — hand-written migrations need [DbContext] + [Migration] attributes or they are silently skipped.
+- [Broken migrations fix pattern](broken-migrations-fix.md) — duplicate-column / wrong-column migrations must be fixed in-place; delete the DB to start fresh when no data exists yet.

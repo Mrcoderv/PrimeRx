@@ -1,0 +1,239 @@
+using Microsoft.EntityFrameworkCore;
+using PrimeRx.Data;
+using PrimeRx.Models;
+using PrimeRx.Models.ViewModels;
+
+namespace PrimeRx.Services;
+
+public class PurchaseService(ApplicationDbContext context, InventoryService inventoryService)
+{
+    public async Task<List<Purchase>> GetAllAsync(int limit = 100)
+    {
+        return await context.Purchases
+            .Include(p => p.Items)
+            .OrderByDescending(p => p.PurchaseDate)
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    public async Task<Purchase?> GetByIdAsync(int id)
+    {
+        return await context.Purchases
+            .Include(p => p.Items)
+                .ThenInclude(i => i.Medicine)
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
+
+    public async Task<List<Purchase>> GetBySupplierAsync(string supplierName)
+    {
+        return await context.Purchases
+            .Include(p => p.Items)
+            .Where(p => p.SupplierName.ToLower().Contains(supplierName.ToLower()))
+            .OrderByDescending(p => p.PurchaseDate)
+            .ToListAsync();
+    }
+
+    public async Task<Purchase> CreateAsync(PurchaseCreateRequest request, string? createdBy)
+    {
+        if (!request.Items.Any())
+            throw new InvalidOperationException("At least one item is required.");
+
+        var margin = await inventoryService.GetDefaultMarginPercentAsync();
+
+        var purchase = new Purchase
+        {
+            PurchaseDate = request.PurchaseDate,
+            SupplierName = request.SupplierName.Trim(),
+            SupplierPhone = request.SupplierPhone?.Trim(),
+            InvoiceNumber = request.InvoiceNumber?.Trim(),
+            Notes = request.Notes?.Trim(),
+            CreatedBy = createdBy,
+            CreatedAt = DateTime.Now
+        };
+
+        decimal total = 0;
+
+        foreach (var line in request.Items)
+        {
+            var medicine = await context.Medicines.FindAsync(line.MedicineId)
+                ?? throw new InvalidOperationException($"Medicine ID {line.MedicineId} not found.");
+
+            if (line.Quantity <= 0)
+                throw new InvalidOperationException($"Quantity must be > 0 for '{medicine.Name}'.");
+
+            var mrp = line.MRP > 0 ? line.MRP : InventoryService.CalculateMrp(line.PurchasePrice, margin);
+
+            purchase.Items.Add(new PurchaseItem
+            {
+                MedicineId = medicine.Id,
+                MedicineName = medicine.Name,
+                Quantity = line.Quantity,
+                PurchasePrice = line.PurchasePrice,
+                MRP = mrp,
+                BatchNumber = line.BatchNumber?.Trim(),
+                ExpiryDate = line.ExpiryDate
+            });
+
+            total += line.Quantity * line.PurchasePrice;
+
+            // Update stock and batch record
+            await inventoryService.RecordPurchaseAsync(new PurchaseEntryRequest
+            {
+                MedicineId = medicine.Id,
+                Quantity = line.Quantity,
+                PurchasePrice = line.PurchasePrice > 0 ? line.PurchasePrice : null,
+                BatchNumber = line.BatchNumber,
+                PurchaseSource = request.SupplierName,
+                ExpiryDate = line.ExpiryDate,
+                Reference = request.InvoiceNumber
+            });
+        }
+
+        purchase.TotalAmount = total;
+
+        context.Purchases.Add(purchase);
+        await context.SaveChangesAsync();
+        return purchase;
+    }
+
+    public async Task UpdateAsync(int id, PurchaseCreateRequest request, string? updatedBy)
+    {
+        var existing = await context.Purchases
+            .Include(p => p.Items)
+            .FirstOrDefaultAsync(p => p.Id == id)
+            ?? throw new InvalidOperationException("Purchase not found.");
+
+        if (!request.Items.Any())
+            throw new InvalidOperationException("At least one item is required.");
+
+        var margin = await inventoryService.GetDefaultMarginPercentAsync();
+
+        // Reverse original stock for items no longer in the edit
+        var existingItemIds = existing.Items.Select(i => i.Id).ToHashSet();
+        var newItemIds = request.Items.Where(i => i.Id > 0).Select(i => i.Id).ToHashSet();
+        var removedItems = existing.Items.Where(i => !newItemIds.Contains(i.Id)).ToList();
+
+        foreach (var removed in removedItems)
+        {
+            await inventoryService.AdjustStockAsync(new StockAdjustmentRequest
+            {
+                MedicineId = removed.MedicineId,
+                QuantityChange = -removed.Quantity,
+                Reference = $"Purchase #{id} edit — removed item"
+            });
+        }
+
+        // Update header fields
+        existing.PurchaseDate = request.PurchaseDate;
+        existing.SupplierName = request.SupplierName.Trim();
+        existing.SupplierPhone = request.SupplierPhone?.Trim();
+        existing.InvoiceNumber = request.InvoiceNumber?.Trim();
+        existing.Notes = request.Notes?.Trim();
+
+        decimal total = 0;
+        var updatedItems = new List<PurchaseItem>();
+
+        foreach (var line in request.Items)
+        {
+            var medicine = await context.Medicines.FindAsync(line.MedicineId)
+                ?? throw new InvalidOperationException($"Medicine ID {line.MedicineId} not found.");
+
+            if (line.Quantity <= 0)
+                throw new InvalidOperationException($"Quantity must be > 0 for '{medicine.Name}'.");
+
+            var mrp = line.MRP > 0 ? line.MRP : InventoryService.CalculateMrp(line.PurchasePrice, margin);
+
+            if (line.Id > 0 && existingItemIds.Contains(line.Id))
+            {
+                // Existing item: adjust stock difference
+                var orig = existing.Items.First(i => i.Id == line.Id);
+                int diff = line.Quantity - orig.Quantity;
+                if (diff != 0)
+                {
+                    await inventoryService.AdjustStockAsync(new StockAdjustmentRequest
+                    {
+                        MedicineId = medicine.Id,
+                        QuantityChange = diff,
+                        Reference = $"Purchase #{id} edit — qty change"
+                    });
+                }
+
+                orig.Quantity = line.Quantity;
+                orig.PurchasePrice = line.PurchasePrice;
+                orig.MRP = mrp;
+                orig.BatchNumber = line.BatchNumber?.Trim();
+                orig.ExpiryDate = line.ExpiryDate;
+                updatedItems.Add(orig);
+            }
+            else
+            {
+                // New item
+                var newItem = new PurchaseItem
+                {
+                    MedicineId = medicine.Id,
+                    MedicineName = medicine.Name,
+                    Quantity = line.Quantity,
+                    PurchasePrice = line.PurchasePrice,
+                    MRP = mrp,
+                    BatchNumber = line.BatchNumber?.Trim(),
+                    ExpiryDate = line.ExpiryDate
+                };
+                updatedItems.Add(newItem);
+
+                await inventoryService.RecordPurchaseAsync(new PurchaseEntryRequest
+                {
+                    MedicineId = medicine.Id,
+                    Quantity = line.Quantity,
+                    PurchasePrice = line.PurchasePrice > 0 ? line.PurchasePrice : null,
+                    BatchNumber = line.BatchNumber,
+                    PurchaseSource = request.SupplierName,
+                    ExpiryDate = line.ExpiryDate
+                });
+            }
+
+            total += line.Quantity * line.PurchasePrice;
+        }
+
+        // Remove deleted items from DB
+        context.PurchaseItems.RemoveRange(removedItems);
+
+        // Replace items collection
+        existing.Items.Clear();
+        foreach (var item in updatedItems)
+            existing.Items.Add(item);
+
+        existing.TotalAmount = total;
+        await context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var purchase = await context.Purchases
+            .Include(p => p.Items)
+            .FirstOrDefaultAsync(p => p.Id == id)
+            ?? throw new InvalidOperationException("Purchase not found.");
+
+        // Reverse stock
+        foreach (var item in purchase.Items)
+        {
+            await inventoryService.AdjustStockAsync(new StockAdjustmentRequest
+            {
+                MedicineId = item.MedicineId,
+                QuantityChange = -item.Quantity,
+                Reference = $"Purchase #{id} deleted"
+            });
+        }
+
+        context.Purchases.Remove(purchase);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task<List<string>> GetSuppliersAsync()
+    {
+        return await context.Purchases
+            .Select(p => p.SupplierName)
+            .Distinct()
+            .OrderBy(s => s)
+            .ToListAsync();
+    }
+}
