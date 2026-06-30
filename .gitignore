@@ -19,10 +19,26 @@ artifacts/
 **/serviceDependencies.local.json
 **/serviceDependencies.local.json.user
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 4d7e872 (file)
 ## Local dev database (publish bundle includes its own)
 PrimeRx/Data/primerx.db
 PrimeRx/Data/*.db-shm
 PrimeRx/Data/*.db-wal
+<<<<<<< HEAD
+
+## Publish output
+publish/
+=======
+# Full publish output (except the final self-contained release)
+publish/*
+!publish/win-x64/
+!publish/win-x64/**
+>>>>>>> 4ca6e08 (Fix: Clean large publish files + improve .gitignore)
+=======
+>>>>>>> 4d7e872 (file)
 
 ## Publish output
 publish/
@@ -33,5 +49,16 @@ ehthumbs.db
 Desktop.ini
 .DS_Store
 
+<<<<<<< HEAD
+<<<<<<< HEAD
 ## Logs
 *.log
+=======
+# Development only
+**/appsettings.Development.json
+**/Properties/launchSettings.json
+>>>>>>> 4ca6e08 (Fix: Clean large publish files + improve .gitignore)
+=======
+## Logs
+*.log
+>>>>>>> 4d7e872 (file)
