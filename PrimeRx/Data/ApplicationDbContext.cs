@@ -23,6 +23,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<PurchaseReturn> PurchaseReturns => Set<PurchaseReturn>();
     public DbSet<PurchaseReturnItem> PurchaseReturnItems => Set<PurchaseReturnItem>();
     public DbSet<CreditNote> CreditNotes => Set<CreditNote>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -178,6 +179,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         modelBuilder.Entity<CreditNote>()
             .HasIndex(c => c.SupplierName);
+
+        // AuditLog indices
+        modelBuilder.Entity<AuditLog>()
+            .HasIndex(a => a.Timestamp);
+
+        modelBuilder.Entity<AuditLog>()
+            .HasIndex(a => a.UserId);
+
+        modelBuilder.Entity<AuditLog>()
+            .HasIndex(a => new { a.EntityType, a.EntityId });
 
         // Set decimal precision globally
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())

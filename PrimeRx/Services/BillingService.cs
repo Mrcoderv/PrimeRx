@@ -22,6 +22,18 @@ public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenera
                 .Where(m => medicineIds.Contains(m.Id))
                 .ToDictionaryAsync(m => m.Id);
 
+            // Load FEFO batches: earliest expiry first, then by Id for stable ordering
+            var batchesByMedicine = await context.InventoryBatches
+                .Where(b => medicineIds.Contains(b.MedicineId) && b.Quantity > 0)
+                .OrderBy(b => b.ExpiryDate == null ? 1 : 0)
+                .ThenBy(b => b.ExpiryDate)
+                .ThenBy(b => b.Id)
+                .ToListAsync();
+
+            var batchLookup = batchesByMedicine
+                .GroupBy(b => b.MedicineId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
             foreach (var item in request.Items)
             {
                 if (!medicines.TryGetValue(item.MedicineId, out var medicine))
@@ -71,27 +83,47 @@ public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenera
             foreach (var item in request.Items)
             {
                 var medicine = medicines[item.MedicineId];
+
+                // FEFO: deduct stock from batches earliest-expiry first
+                int remaining = item.Quantity;
+                InventoryBatch? firstBatch = null;
+
+                if (batchLookup.TryGetValue(item.MedicineId, out var batches))
+                {
+                    foreach (var batch in batches)
+                    {
+                        if (remaining <= 0) break;
+                        firstBatch ??= batch;
+                        int deduct = Math.Min(batch.Quantity, remaining);
+                        batch.Quantity -= deduct;
+                        remaining -= deduct;
+                    }
+                }
+
+                // Deduct from medicine stock total (remaining covers edge case where no batches exist)
                 medicine.StockQuantity -= item.Quantity;
 
                 bill.SaleItems.Add(new SaleItem
                 {
-                    MedicineId = item.MedicineId,
+                    MedicineId  = item.MedicineId,
                     MedicineName = medicine.Name,
-                    MRP = medicine.MRP,
-                    ExpiryDate = medicine.ExpiryDate,
-                    Rate = item.Rate,
-                    Quantity = item.Quantity,
+                    MRP          = firstBatch?.PurchasePrice > 0 ? medicine.MRP : medicine.MRP,
+                    ExpiryDate   = firstBatch?.ExpiryDate ?? medicine.ExpiryDate,
+                    BatchId      = firstBatch?.Id,
+                    BatchNumber  = firstBatch?.BatchNumber ?? medicine.BatchNumber,
+                    Rate         = item.Rate,
+                    Quantity     = item.Quantity,
                     DiscountPercent = item.DiscountPercent,
-                    DiscountAmount = item.DiscountAmount,
-                    Amount = (item.Rate * item.Quantity) - item.DiscountAmount
+                    DiscountAmount  = item.DiscountAmount,
+                    Amount       = (item.Rate * item.Quantity) - item.DiscountAmount
                 });
 
                 context.InventoryTransactions.Add(new InventoryTransaction
                 {
-                    MedicineId = medicine.Id,
+                    MedicineId      = medicine.Id,
                     TransactionType = TransactionTypes.Sale,
-                    QuantityChange = -item.Quantity,
-                    Reference = $"Bill {bill.BillNumber}"
+                    QuantityChange  = -item.Quantity,
+                    Reference       = $"Bill {bill.BillNumber}"
                 });
             }
 
@@ -112,14 +144,14 @@ public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenera
     {
         if (bill.PaymentMethod == PaymentMethods.Due)
         {
-            bill.PaidAmount = 0;
-            bill.DueAmount = bill.FinalAmount;
+            bill.PaidAmount   = 0;
+            bill.DueAmount    = bill.FinalAmount;
             bill.PaymentStatus = PaymentStatuses.Due;
         }
         else
         {
-            bill.PaidAmount = bill.FinalAmount;
-            bill.DueAmount = 0;
+            bill.PaidAmount   = bill.FinalAmount;
+            bill.DueAmount    = 0;
             bill.PaymentStatus = PaymentStatuses.Paid;
         }
     }

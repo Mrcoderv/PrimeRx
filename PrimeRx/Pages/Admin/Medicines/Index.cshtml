@@ -4,51 +4,122 @@
     ViewData["Title"] = "Manage Medicines";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Medicine Management</h2>
-    <a asp-page="/Admin/Medicines/Create" class="btn btn-primary">Add Medicine</a>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Medicine Management</h1>
+        <p class="page-subtitle">Manage your medicine catalog</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-accent" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="bi bi-upload me-1"></i> Import Excel
+        </button>
+        <a asp-page="/Admin/Medicines/Create" class="btn btn-accent">
+            <i class="bi bi-plus me-1"></i> Add Medicine
+        </a>
+    </div>
 </div>
 
 @if (!string.IsNullOrEmpty(Model.Message))
 {
-    <div class="alert alert-success">@Model.Message</div>
+    <div class="alert alert-@(Model.IsError ? "danger" : "success") alert-dismissible fade show">
+        @Model.Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 
-<form method="get" class="mb-3">
-    <div class="input-group">
-        <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Search..." />
-        <button class="btn btn-outline-primary">Search</button>
+<div class="panel-card">
+    <div class="panel-body pt-3">
+        <form method="get" class="mb-3">
+            <div class="input-group">
+                <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Search by name, generic, category..." />
+                <button class="btn btn-outline-accent">Search</button>
+                @if (!string.IsNullOrEmpty(Model.Search))
+                {
+                    <a asp-page="/Admin/Medicines/Index" class="btn btn-outline-secondary">Clear</a>
+                }
+            </div>
+        </form>
     </div>
-</form>
 
-<div class="table-responsive card shadow-sm">
-    <table class="table table-hover mb-0">
-        <thead class="table-light">
-            <tr>
-                <th>Name</th>
-                <th>Generic</th>
-                <th>MRP</th>
-                <th>Stock</th>
-                <th>Category</th>
-                <th>Active</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var m in Model.Medicines)
-            {
+    <div class="table-responsive">
+        <table class="table table-pro mb-0">
+            <thead>
                 <tr>
-                    <td>@m.Name</td>
-                    <td>@m.GenericName</td>
-                    <td>@m.MRP.ToString("N2")</td>
-                    <td>@m.StockQuantity</td>
-                    <td>@m.Category</td>
-                    <td>@(m.IsActive ? "Yes" : "No")</td>
-                    <td>
-                        <a asp-page="/Admin/Medicines/Edit" asp-route-id="@m.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                    </td>
+                    <th>Name</th>
+                    <th>Generic</th>
+                    <th class="text-end">MRP</th>
+                    <th class="text-end">Stock</th>
+                    <th>Category</th>
+                    <th class="text-center">Active</th>
+                    <th class="text-end">Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @if (!Model.Medicines.Any())
+                {
+                    <tr><td colspan="7" class="text-center text-muted py-4">No medicines found.</td></tr>
+                }
+                @foreach (var m in Model.Medicines)
+                {
+                    <tr>
+                        <td><strong>@m.Name</strong></td>
+                        <td class="text-muted">@m.GenericName</td>
+                        <td class="text-end">Rs. @m.MRP.ToString("N2")</td>
+                        <td class="text-end @(m.StockQuantity <= m.LowStockThreshold ? "text-warning fw-bold" : "")">@m.StockQuantity</td>
+                        <td>@m.Category</td>
+                        <td class="text-center">
+                            <span class="badge @(m.IsActive ? "bg-success" : "bg-secondary")">@(m.IsActive ? "Active" : "Inactive")</span>
+                        </td>
+                        <td class="text-end">
+                            <a asp-page="/Admin/Medicines/Edit" asp-route-id="@m.Id" class="btn btn-sm btn-outline-accent">Edit</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-upload me-2"></i>Import Medicines from Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-page-handler="Import" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="alert alert-info small">
+                        <strong>Expected columns (row 1 = headers):</strong><br/>
+                        Name, GenericName, Manufacturer, MRP, PurchasePrice, StockQuantity, Category, LowStockThreshold, DiscountPercent
+                        <br/><br/>
+                        Existing medicines (matched by Name) will be updated; new ones will be added.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Excel File (.xlsx)</label>
+                        <input type="file" name="importFile" class="form-control" accept=".xlsx,.xls" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-accent"><i class="bi bi-upload me-1"></i>Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // If there was an import error/success, re-show modal
+        @if (Model.ShowImportModal)
+        {
+            <text>
+            document.addEventListener('DOMContentLoaded', function() {
+                new bootstrap.Modal(document.getElementById('importModal')).show();
+            });
+            </text>
+        }
+    </script>
+}

@@ -1,0 +1,656 @@
+# PrimeRx – Production Roadmap & Professional Enhancement Plan
+
+*Project:* PrimeRx
+*Repository:* Mrcoderv/PrimeRx
+*Current Status:* Strong foundation with core pharmacy operations implemented
+*Goal:* Transform PrimeRx into a professional, production-ready pharmacy management platform suitable for real-world pharmacy operations.
+
+---
+
+# 1. Existing Strengths
+
+PrimeRx already provides a solid architectural foundation:
+
+* Clean Razor Pages architecture with Service Layer separation.
+* Self-contained Windows deployment ideal for pharmacy environments.
+* SQLite with EF Core for portability and simple maintenance.
+* Core pharmacy modules already implemented:
+
+  * Billing
+  * Inventory
+  * Due Management
+  * Reports
+  * Dashboard
+* PDF invoice generation using QuestPDF.
+* Excel export functionality using EPPlus.
+* Role-based authentication system (Admin and Staff).
+* Lightweight deployment with minimal infrastructure requirements.
+
+---
+
+# 2. Current Limitations
+
+Several areas prevent PrimeRx from being production ready:
+
+## Inventory Model Limitations
+
+* Medicine model is too simplistic.
+* No support for medicine form/type.
+* No support for multiple batches.
+* Weak expiry management.
+* No return-to-supplier workflow.
+
+## Purchasing Workflow Limitations
+
+* Medicines must be entered one by one.
+* No supplier management module.
+* No bulk purchase entry screen.
+* Purchases are not properly tracked historically.
+
+## Operational Limitations
+
+* Limited error handling.
+* Insufficient application logging.
+* No backup or restore mechanism.
+* No audit trail for sensitive operations.
+* Weak multi-user tracking.
+
+## UI Issues
+
+* Medicine search popup/toggle issues.
+* Limited dashboard insights.
+* Workflow inefficiencies during stock entry.
+
+---
+
+# 3. Core Business Features Required
+
+## Supplier Management
+
+### New Entity: Supplier
+
+text
+Supplier
+--------
+Id
+Name
+PAN
+DDARegistrationNumber
+Address
+Phone
+Email
+ContactPerson
+CreditDays
+IsActive
+Notes
+CreatedAt
+UpdatedAt
+
+
+### Pages
+
+text
+/Admin/Suppliers/Index
+/Admin/Suppliers/Create
+/Admin/Suppliers/Edit
+/Admin/Suppliers/Delete
+
+
+### Features
+
+* Search suppliers.
+* Filter active/inactive suppliers.
+* Credit period management.
+* Supplier-wise purchase history.
+* Supplier balance tracking.
+
+---
+
+## Enhanced Medicine Model
+
+Current medicine structure should be replaced with a professional inventory design.
+
+### Medicine
+
+text
+Medicine
+---------
+Id
+BrandName
+GenericName
+Manufacturer
+FormTypeId
+Strength
+Category
+ReorderLevel
+IsActive
+
+
+### Medicine Form Type
+
+Examples:
+
+* Tablet
+* Capsule
+* Syrup
+* Injection
+* Cream
+* Drops
+* Suspension
+* Sachet
+* Inhaler
+* Ointment
+
+### Medicine Batch
+
+text
+MedicineBatch
+-------------
+Id
+MedicineId
+BatchNumber
+ExpiryDate
+PurchaseRate
+MRP
+QuantityAvailable
+SupplierId
+PurchaseItemId
+
+
+Benefits:
+
+* Accurate expiry tracking.
+* FEFO stock deduction.
+* Multiple purchase prices.
+* Batch-specific stock control.
+
+---
+
+## Bulk Purchase Entry
+
+### New Module
+
+text
+/Purchases/Create
+
+
+or
+
+text
+Inventory → New Purchase
+
+
+### Purchase Header
+
+text
+Purchase
+---------
+Id
+SupplierId
+InvoiceNumber
+InvoiceDate
+PaymentType
+TotalAmount
+DiscountAmount
+TaxAmount
+NetAmount
+CreatedBy
+CreatedAt
+
+
+### Purchase Item
+
+text
+PurchaseItem
+------------
+Id
+PurchaseId
+MedicineId
+BatchNumber
+ExpiryDate
+Quantity
+FreeQuantity
+PurchaseRate
+MRP
+DiscountPercent
+TaxPercent
+HSCode
+
+
+### Bulk Entry Features
+
+* Dynamic multi-row entry.
+* Supplier selection dropdown.
+* Quick supplier creation.
+* Automatic medicine creation if not found.
+* Free quantity support.
+* Invoice total auto-calculation.
+* Credit or cash purchase selection.
+* Validation before saving.
+
+### Save Purchase Workflow
+
+1. Create purchase record.
+2. Create purchase items.
+3. Create batch records.
+4. Update inventory quantities.
+5. Generate supplier due if purchase is credit.
+6. Create audit log entry.
+
+---
+
+## Purchase History
+
+### Page
+
+text
+/Purchases/Index
+
+
+### Filters
+
+* Supplier
+* Date range
+* Invoice number
+* Payment status
+
+### Columns
+
+* Date
+* Invoice Number
+* Supplier
+* Total Amount
+* Item Count
+* Payment Status
+
+### Features
+
+* View purchase details.
+* Export PDF.
+* Export Excel.
+* Supplier drill-down.
+
+---
+
+## Supplier Returns & Expired Stock
+
+### Return to Supplier
+
+text
+SupplierReturn
+--------------
+Id
+SupplierId
+Date
+Reason
+Status
+
+
+### Features
+
+* Return expired medicines.
+* Return damaged medicines.
+* Partial batch returns.
+* Supplier credit notes.
+
+### Expired Stock Management
+
+* Expiry alerts.
+* Near-expiry reports.
+* Disposal workflow.
+* Return recommendations.
+
+---
+
+# 4. Integration with Existing Modules
+
+## Due Module
+
+Credit purchases automatically generate:
+
+text
+Supplier Due
+------------
+Supplier
+Invoice Number
+Amount
+Due Date
+Outstanding Balance
+
+
+---
+
+## Inventory Module
+
+Inventory updates occur automatically after purchase posting:
+
+* Batch quantities updated.
+* FEFO stock issue logic.
+* Expiry visibility.
+* Purchase rate history retained.
+
+---
+
+## Reporting Module
+
+Add new reports:
+
+### Purchase Reports
+
+* Supplier purchases.
+* Monthly purchase totals.
+* Purchase trends.
+
+### Inventory Reports
+
+* Expiry report.
+* Near expiry report.
+* Batch report.
+* Stock valuation report.
+
+### Financial Reports
+
+* Supplier dues.
+* VAT/GST reports.
+* Tax reports.
+
+---
+
+# 5. Professional Features
+
+## Audit Logging
+
+Track all sensitive operations.
+
+text
+AuditLog
+--------
+UserId
+Action
+EntityType
+EntityId
+OldValue
+NewValue
+Timestamp
+IPAddress
+
+
+Examples:
+
+* Medicine edited.
+* Purchase deleted.
+* Invoice cancelled.
+* Stock adjusted.
+
+---
+
+## User Activity Logs
+
+Track:
+
+* Login
+* Logout
+* Invoice generation
+* Purchase creation
+* Data exports
+
+---
+
+## Notifications
+
+### Low Stock Alerts
+
+* Dashboard widgets.
+* Notification center.
+
+### Expiry Alerts
+
+* 30 days before expiry.
+* 60 days before expiry.
+* Critical expiry warnings.
+
+---
+
+## Backup & Restore
+
+Features:
+
+* One-click backup.
+* Scheduled backups.
+* Restore wizard.
+* Backup verification.
+
+Database:
+
+text
+primerx.db
+
+
+---
+
+## Import and Export
+
+### Import
+
+* Medicines via Excel.
+* Supplier import.
+* Price updates.
+
+### Export
+
+* Inventory
+* Purchases
+* Sales
+* Reports
+
+---
+
+# 6. Architecture Improvements
+
+## Service Layer Improvements
+
+Current service layer is acceptable but should be standardized.
+
+Recommended structure:
+
+text
+Pages
+ ↓
+DTOs
+ ↓
+Services
+ ↓
+Repositories
+ ↓
+EF Core
+
+
+---
+
+## DTO Usage
+
+Separate:
+
+* Request DTOs
+* Response DTOs
+* View Models
+
+---
+
+## Validation
+
+Implement:
+
+* FluentValidation
+* Server validation
+* Client validation
+
+---
+
+## Logging
+
+Recommended:
+
+* Serilog
+* Rolling log files
+* Exception logging
+* Structured logging
+
+---
+
+## Error Handling
+
+Implement:
+
+* Global exception middleware.
+* User-friendly error pages.
+* Validation summaries.
+
+---
+
+## Testing
+
+Add:
+
+* Unit tests
+* Service tests
+* Repository tests
+
+---
+
+## Configuration Management
+
+Use:
+
+* appsettings.json
+* Environment-specific settings
+* Secret storage
+
+---
+
+# 7. Security Improvements
+
+## Required Security Enhancements
+
+* HTTPS enforcement.
+* Input sanitization.
+* Anti-forgery protection.
+* Rate limiting.
+* Session timeout controls.
+* Strong password policies.
+
+---
+
+## Multi-User Improvements
+
+* Concurrent session handling.
+* Session expiration warnings.
+* Login audit tracking.
+
+---
+
+## Deployment Improvements
+
+* Automatic database backup.
+* Windows service installer.
+* Update scripts.
+* Optional Docker deployment.
+
+---
+
+# 8. Cleanup Tasks
+
+Safe removals:
+
+* Unused .agents folders.
+* Unused .local folders.
+* Obsolete seed data.
+* Deprecated migrations.
+
+---
+
+# 9. Recommended Development Phases
+
+## Phase 1 — Foundation
+
+Highest priority:
+
+* Supplier entity and CRUD.
+* Medicine model redesign.
+* Medicine form types.
+* Multi-batch support.
+* Search and popup fixes.
+
+---
+
+## Phase 2 — Purchasing Workflow
+
+* Bulk purchase module.
+* Purchase history.
+* Credit purchase handling.
+* Due integration.
+* Free quantity support.
+
+---
+
+## Phase 3 — Inventory Professionalization
+
+* Expiry tracking.
+* Supplier returns.
+* Expired stock handling.
+* Low stock notifications.
+* Dashboard improvements.
+
+---
+
+## Phase 4 — Professional Features
+
+* Audit logging.
+* User activity tracking.
+* Backup and restore.
+* Excel import/export improvements.
+* Advanced reporting.
+
+---
+
+## Phase 5 — Production Readiness
+
+* Testing coverage.
+* Security hardening.
+* Deployment scripts.
+* Documentation.
+* Performance optimization.
+
+---
+
+# 10. Immediate Recommendation
+
+The optimal implementation order is:
+
+1. Supplier Management
+2. Medicine Model Upgrade
+3. Multi-Batch Inventory
+4. Bulk Purchase Entry
+5. Purchase History
+6. Supplier Due Integration
+
+These six features unlock the complete pharmacy procurement workflow and provide the largest operational improvement for real pharmacies.
+
+---
+
+# Final Vision
+
+PrimeRx should evolve from a simple pharmacy billing application into a complete pharmacy ERP capable of handling:
+
+* Sales
+* Purchases
+* Suppliers
+* Inventory
+* Batch Tracking
+* Expiry Management
+* Financial Dues
+* Reporting
+* Auditing
+* Compliance
+
+Once these phases are completed, PrimeRx will be suitable for deployment in single-store pharmacies as well as multi-user retail pharmacy environments.

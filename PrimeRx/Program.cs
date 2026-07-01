@@ -7,8 +7,27 @@ using PrimeRx.Helpers;
 using PrimeRx.Middleware;
 using PrimeRx.Models;
 using PrimeRx.Services;
+using Serilog;
+using Serilog.Events;
+
+var logsDir = Path.Combine(AppContext.BaseDirectory, "logs");
+Directory.CreateDirectory(logsDir);
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File(
+        path: Path.Combine(logsDir, "primerx-.log"),
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog();
 
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
@@ -63,6 +82,8 @@ builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<ExpenseService>();
 builder.Services.AddScoped<PurchaseService>();
 builder.Services.AddScoped<PurchaseReturnService>();
+builder.Services.AddScoped<AuditLogService>();
+builder.Services.AddScoped<BackupService>();
 builder.Services.AddSingleton<PdfGenerator>();
 builder.Services.AddScoped<UpdateService>();
 
