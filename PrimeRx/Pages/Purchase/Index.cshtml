@@ -77,7 +77,10 @@
                     <tr>
                         <td>@p.PurchaseDate.ToString("dd MMM yyyy")</td>
                         <td>@(p.InvoiceNumber ?? "—")</td>
-                        <td class="fw-semibold">@p.SupplierName</td>
+                        <td class="fw-semibold">
+                            <a asp-page="/Purchase/Supplier" asp-route-name="@p.SupplierName"
+                               class="text-decoration-none">@p.SupplierName</a>
+                        </td>
                         <td>@(p.SupplierPhone ?? "—")</td>
                         <td class="text-center">
                             <span class="badge bg-secondary">@p.Items.Count</span>
