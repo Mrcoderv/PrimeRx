@@ -22,6 +22,7 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
     public DueCollectionReport? DueReport { get; set; }
     public List<Medicine>? InventoryMedicines { get; set; }
     public List<Medicine>? ExpiryMedicines { get; set; }
+    public PurchaseReportData? PurchaseReport { get; set; }
 
     public string SalesTrendJson { get; private set; } = "[]";
     public string MedicineChartJson { get; private set; } = "[]";
@@ -106,6 +107,27 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         ExpiryMedicines = await reportService.GetExpiryReportAsync();
         ReportTitle = "Expiry Report (Next 90 Days)";
         SummaryText = $"{ExpiryMedicines.Count} medicines expiring soon";
+        return Page();
+    }
+
+    public async Task<IActionResult> OnGetPurchaseReportAsync(DateTime? from, DateTime? to, string? supplier, string format = "view")
+    {
+        await LoadPageDataAsync();
+        ActiveReport = "purchase";
+
+        var fromDate = from ?? DateTime.Today.AddMonths(-1);
+        var toDate = to ?? DateTime.Today;
+
+        var report = await reportService.GetPurchaseReportAsync(fromDate, toDate, supplier);
+
+        if (format == "excel")
+            return File(reportService.ExportPurchaseReportToExcel(report),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"purchase-report-{fromDate:yyyyMMdd}-{toDate:yyyyMMdd}.xlsx");
+
+        PurchaseReport = report;
+        ReportTitle = report.Title;
+        SummaryText = $"Rs. {report.TotalAmount:N2} · {report.PurchaseCount} purchase(s)";
         return Page();
     }
 
