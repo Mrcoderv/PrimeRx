@@ -39,7 +39,7 @@ public class CustomerService(ApplicationDbContext context)
         return await context.Customers
             .Include(c => c.Bills)
             .ThenInclude(b => b.SaleItems)
-            .FirstOrDefaultAsync(c => c.Id == id);
+            .SingleOrDefaultAsync(c => c.Id == id);
     }
 
     /// <summary>
@@ -54,7 +54,7 @@ public class CustomerService(ApplicationDbContext context)
             return new Customer { Name = name ?? "Guest", Phone = null };
         }
 
-        var existing = await context.Customers.FirstOrDefaultAsync(c => c.Phone == phone && c.IsActive);
+        var existing = await context.Customers.SingleOrDefaultAsync(c => c.Phone == phone && c.IsActive);
         if (existing != null)
             return existing;
 

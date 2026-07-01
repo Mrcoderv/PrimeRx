@@ -21,7 +21,7 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
         return await context.Purchases
             .Include(p => p.Items)
                 .ThenInclude(i => i.Medicine)
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .SingleOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<List<Purchase>> GetBySupplierAsync(string supplierName)
@@ -162,7 +162,7 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
     {
         var existing = await context.Purchases
             .Include(p => p.Items)
-            .FirstOrDefaultAsync(p => p.Id == id)
+            .SingleOrDefaultAsync(p => p.Id == id)
             ?? throw new InvalidOperationException("Purchase not found.");
 
         if (!request.Items.Any())
@@ -277,7 +277,7 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
     {
         var purchase = await context.Purchases
             .Include(p => p.Items)
-            .FirstOrDefaultAsync(p => p.Id == id)
+            .SingleOrDefaultAsync(p => p.Id == id)
             ?? throw new InvalidOperationException("Purchase not found.");
 
         // Reverse stock
@@ -317,7 +317,7 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
     {
         var supplier = await context.Suppliers
             .Where(s => s.Name == supplierName && s.IsActive)
-            .FirstOrDefaultAsync();
+            .SingleOrDefaultAsync();
         return supplier?.CreditDays;
     }
 }

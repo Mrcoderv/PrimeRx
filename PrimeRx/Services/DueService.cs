@@ -31,7 +31,7 @@ public class DueService(ApplicationDbContext context)
     {
         var bill = await context.Bills
             .Include(b => b.DuePayments)
-            .FirstOrDefaultAsync(b => b.Id == request.BillId)
+            .SingleOrDefaultAsync(b => b.Id == request.BillId)
             ?? throw new InvalidOperationException("Bill not found.");
 
         if (bill.DueAmount <= 0)

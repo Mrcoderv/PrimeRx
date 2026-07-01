@@ -25,7 +25,7 @@ public class IndexModel(ApplicationDbContext context, UpdateService updateServic
     public async Task OnGetAsync(string? message)
     {
         Message = message;
-        Settings = await context.CompanyProfiles.FirstOrDefaultAsync() ?? new CompanyProfile();
+        Settings = await context.CompanyProfiles.SingleOrDefaultAsync() ?? new CompanyProfile();
         
         // Check for updates when on the updates tab
         if (Tab == "updates")
@@ -71,7 +71,7 @@ public class IndexModel(ApplicationDbContext context, UpdateService updateServic
 
     public async Task<IActionResult> OnPostCheckUpdatesAsync()
     {
-        Settings = await context.CompanyProfiles.FirstOrDefaultAsync() ?? new CompanyProfile();
+        Settings = await context.CompanyProfiles.SingleOrDefaultAsync() ?? new CompanyProfile();
         UpdateInfo = await updateService.CheckForUpdatesAsync();
         Tab = "updates";
         return Page();
@@ -85,7 +85,7 @@ public class IndexModel(ApplicationDbContext context, UpdateService updateServic
         {
             Message = "No update available or download URL not found.";
             Tab = "updates";
-            Settings = await context.CompanyProfiles.FirstOrDefaultAsync() ?? new CompanyProfile();
+            Settings = await context.CompanyProfiles.SingleOrDefaultAsync() ?? new CompanyProfile();
             UpdateInfo = updateInfo;
             return Page();
         }
@@ -98,7 +98,7 @@ public class IndexModel(ApplicationDbContext context, UpdateService updateServic
         {
             Message = "Failed to download update.";
             Tab = "updates";
-            Settings = await context.CompanyProfiles.FirstOrDefaultAsync() ?? new CompanyProfile();
+            Settings = await context.CompanyProfiles.SingleOrDefaultAsync() ?? new CompanyProfile();
             UpdateInfo = updateInfo;
             return Page();
         }
@@ -110,7 +110,7 @@ public class IndexModel(ApplicationDbContext context, UpdateService updateServic
         {
             Message = "Updater executable not found. Please ensure PrimeRxUpdater.exe is in the application directory.";
             Tab = "updates";
-            Settings = await context.CompanyProfiles.FirstOrDefaultAsync() ?? new CompanyProfile();
+            Settings = await context.CompanyProfiles.SingleOrDefaultAsync() ?? new CompanyProfile();
             UpdateInfo = updateInfo;
             return Page();
         }
@@ -137,7 +137,7 @@ public class IndexModel(ApplicationDbContext context, UpdateService updateServic
         {
             Message = $"Failed to start updater: {ex.Message}";
             Tab = "updates";
-            Settings = await context.CompanyProfiles.FirstOrDefaultAsync() ?? new CompanyProfile();
+            Settings = await context.CompanyProfiles.SingleOrDefaultAsync() ?? new CompanyProfile();
             UpdateInfo = updateInfo;
             return Page();
         }

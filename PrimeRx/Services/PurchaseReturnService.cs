@@ -21,7 +21,7 @@ public class PurchaseReturnService(ApplicationDbContext context, InventoryServic
         return await context.PurchaseReturns
             .Include(r => r.Items)
                 .ThenInclude(i => i.Medicine)
-            .FirstOrDefaultAsync(r => r.Id == id);
+            .SingleOrDefaultAsync(r => r.Id == id);
     }
 
     public async Task<List<PurchaseReturn>> GetBySupplierAsync(string supplierName)

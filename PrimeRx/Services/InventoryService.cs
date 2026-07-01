@@ -67,7 +67,7 @@ public class InventoryService(ApplicationDbContext context)
     /// <summary>Default markup margin (%) used to derive MRP from purchase price; falls back to 16% if no profile exists.</summary>
     public async Task<decimal> GetDefaultMarginPercentAsync()
     {
-        var profile = await context.CompanyProfiles.AsNoTracking().FirstOrDefaultAsync();
+        var profile = await context.CompanyProfiles.AsNoTracking().SingleOrDefaultAsync();
         return profile?.DefaultDiscountMarginPercent ?? 16m;
     }
 

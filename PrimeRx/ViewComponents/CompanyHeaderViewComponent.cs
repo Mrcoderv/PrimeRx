@@ -9,7 +9,7 @@ public class CompanyHeaderViewComponent(ApplicationDbContext context) : ViewComp
 {
     public async Task<IViewComponentResult> InvokeAsync()
     {
-        var company = await context.CompanyProfiles.AsNoTracking().FirstOrDefaultAsync()
+        var company = await context.CompanyProfiles.AsNoTracking().SingleOrDefaultAsync()
             ?? new CompanyProfile { Name = "PrimeRx" };
 
         return View(company);

@@ -53,7 +53,7 @@ public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenera
             if (subtotalAfterDiscount < 0)
                 throw new InvalidOperationException("Final amount cannot be negative.");
 
-            var company = await context.CompanyProfiles.FirstOrDefaultAsync();
+            var company = await context.CompanyProfiles.SingleOrDefaultAsync();
             var taxRate = company?.TaxRate ?? 0;
             var taxInclusive = company?.TaxInclusive ?? false;
             decimal taxAmount = 0;
@@ -160,14 +160,14 @@ public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenera
         await context.Bills
             .Include(b => b.SaleItems)
             .Include(b => b.DuePayments)
-            .FirstOrDefaultAsync(b => b.Id == id);
+            .SingleOrDefaultAsync(b => b.Id == id);
 
     public async Task<byte[]> GenerateInvoicePdfAsync(int billId)
     {
         var bill = await GetByIdAsync(billId)
             ?? throw new InvalidOperationException("Bill not found.");
 
-        var company = await context.CompanyProfiles.FirstOrDefaultAsync()
+        var company = await context.CompanyProfiles.SingleOrDefaultAsync()
             ?? new CompanyProfile { Name = "PrimeRx" };
 
         return pdfGenerator.GenerateInvoice(bill, company);

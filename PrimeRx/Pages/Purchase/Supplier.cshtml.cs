@@ -36,7 +36,7 @@ public class SupplierModel(PurchaseService purchaseService, ApplicationDbContext
 
         // Load supplier profile if exists in Suppliers table
         SupplierProfile = await db.Suppliers
-            .FirstOrDefaultAsync(s => s.Name == SupplierName && s.IsActive);
+            .SingleOrDefaultAsync(s => s.Name == SupplierName && s.IsActive);
 
         // Load payables for this supplier
         Payables = await db.Payables
