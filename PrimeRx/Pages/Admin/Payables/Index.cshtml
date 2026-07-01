@@ -123,7 +123,10 @@
                         @foreach (var p in Model.Payables)
                         {
                             <tr class="@(p.IsOverdue ? "table-overdue" : "")">
-                                <td><strong>@p.SupplierName</strong></td>
+                                <td>
+                                    <a asp-page="/Purchase/Supplier" asp-route-name="@p.SupplierName"
+                                       class="fw-bold text-decoration-none">@p.SupplierName</a>
+                                </td>
                                 <td class="text-muted small">@(p.InvoiceNo ?? "—")</td>
                                 <td class="text-muted small">@(p.Description ?? "—")</td>
                                 <td>
