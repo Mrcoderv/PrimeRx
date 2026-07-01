@@ -18,6 +18,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Purchase> Purchases => Set<Purchase>();
     public DbSet<PurchaseItem> PurchaseItems => Set<PurchaseItem>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
+    public DbSet<PurchaseReturn> PurchaseReturns => Set<PurchaseReturn>();
+    public DbSet<PurchaseReturnItem> PurchaseReturnItems => Set<PurchaseReturnItem>();
+    public DbSet<CreditNote> CreditNotes => Set<CreditNote>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -80,6 +83,39 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         modelBuilder.Entity<Supplier>()
             .HasIndex(s => s.Name);
+
+        modelBuilder.Entity<PurchaseReturnItem>()
+            .HasOne(pri => pri.PurchaseReturn)
+            .WithMany(pr => pr.Items)
+            .HasForeignKey(pri => pri.PurchaseReturnId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PurchaseReturnItem>()
+            .HasOne(pri => pri.Medicine)
+            .WithMany()
+            .HasForeignKey(pri => pri.MedicineId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PurchaseReturn>()
+            .HasOne(pr => pr.Purchase)
+            .WithMany()
+            .HasForeignKey(pr => pr.PurchaseId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<PurchaseReturn>()
+            .HasIndex(pr => pr.SupplierName);
+
+        modelBuilder.Entity<PurchaseReturn>()
+            .HasIndex(pr => pr.ReturnDate);
+
+        modelBuilder.Entity<CreditNote>()
+            .HasOne(c => c.PurchaseReturn)
+            .WithMany()
+            .HasForeignKey(c => c.PurchaseReturnId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CreditNote>()
+            .HasIndex(c => c.SupplierName);
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {

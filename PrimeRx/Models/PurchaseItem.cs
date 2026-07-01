@@ -25,5 +25,9 @@ public class PurchaseItem
 
     public DateTime? ExpiryDate { get; set; }
 
-    public decimal Amount => Quantity * PurchasePrice;
+    public int FreeQuantity { get; set; }
+
+    public decimal DiscountPercent { get; set; }
+
+    public decimal Amount => Math.Round(Quantity * PurchasePrice * (1 - DiscountPercent / 100m), 2);
 }

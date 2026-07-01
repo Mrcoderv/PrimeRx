@@ -50,6 +50,9 @@ public class PurchaseEntryRequest
 {
     public int MedicineId { get; set; }
     public int Quantity { get; set; }
+
+    /// <summary>Bonus/free units received alongside the paid quantity. Added to stock but excluded from the amount charged.</summary>
+    public int FreeQuantity { get; set; }
     public string? Reference { get; set; }
 
     public string? BatchNumber { get; set; }

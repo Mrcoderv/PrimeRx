@@ -7,7 +7,7 @@
     'use strict';
 
     // ── State ────────────────────────────────────────────────────────────────
-    let items = [];          // { id, medicineId, medicineName, qty, purchasePrice, mrp, batchNumber, expiryDate }
+    let items = [];          // { id, medicineId, medicineName, qty, freeQty, discountPercent, purchasePrice, mrp, batchNumber, expiryDate }
     let searchResults = [];
     let selectedIndex = -1;
     let searchTimer = null;
@@ -31,6 +31,8 @@
                 medicineId: i.medicineId,
                 medicineName: i.medicineName,
                 qty: i.quantity,
+                freeQty: i.freeQuantity || 0,
+                discountPercent: i.discountPercent || 0,
                 purchasePrice: i.purchasePrice,
                 mrp: i.mrp,
                 batchNumber: i.batchNumber || '',
@@ -118,6 +120,8 @@
             medicineId: m.id,
             medicineName: m.name,
             qty: 1,
+            freeQty: 0,
+            discountPercent: 0,
             purchasePrice: m.purchasePrice || 0,
             mrp: mrp,
             batchNumber: '',
@@ -158,9 +162,19 @@
                            onchange="window.__purchaseUpdateField(${idx},'qty',+this.value||1)" />
                 </td>
                 <td>
+                    <input type="number" class="form-control form-control-sm text-center"
+                           value="${item.freeQty}" min="0" title="Free/Bonus units"
+                           onchange="window.__purchaseUpdateField(${idx},'freeQty',Math.max(0,+this.value||0))" />
+                </td>
+                <td>
                     <input type="number" class="form-control form-control-sm"
                            value="${item.purchasePrice}" min="0" step="0.01"
                            onchange="window.__purchaseUpdatePP(${idx},+this.value||0)" />
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm text-center"
+                           value="${item.discountPercent}" min="0" max="100" step="0.01" title="Discount %"
+                           onchange="window.__purchaseUpdateField(${idx},'discountPercent',Math.min(100,Math.max(0,+this.value||0)))" />
                 </td>
                 <td>
                     <input type="number" class="form-control form-control-sm"
@@ -168,7 +182,7 @@
                            onchange="window.__purchaseUpdateField(${idx},'mrp',+this.value||0)" />
                 </td>
                 <td class="fw-semibold text-end align-middle">
-                    Rs. ${(item.qty * item.purchasePrice).toFixed(2)}
+                    Rs. ${(item.qty * item.purchasePrice * (1 - item.discountPercent / 100)).toFixed(2)}
                 </td>
                 <td class="align-middle">
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.__purchaseRemove(${idx})">
@@ -182,7 +196,7 @@
     }
 
     function updateTotals() {
-        const total = items.reduce((s, i) => s + i.qty * i.purchasePrice, 0);
+        const total = items.reduce((s, i) => s + i.qty * i.purchasePrice * (1 - i.discountPercent / 100), 0);
         const formatted = 'Rs. ' + total.toFixed(2);
         if (totalDisplay) totalDisplay.textContent = formatted;
         if (sidebarTotal) sidebarTotal.textContent = formatted;
@@ -196,6 +210,8 @@
             medicineId: i.medicineId,
             medicineName: i.medicineName,
             quantity: i.qty,
+            freeQuantity: i.freeQty || 0,
+            discountPercent: i.discountPercent || 0,
             purchasePrice: i.purchasePrice,
             mrp: i.mrp,
             batchNumber: i.batchNumber || null,

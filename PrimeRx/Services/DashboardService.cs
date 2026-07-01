@@ -37,6 +37,9 @@ public class DashboardService(ApplicationDbContext context, ReportService report
         var monthExpenses = await expenseService.GetTotalExpensesAsync(monthStart, monthEnd);
         var expensesByCategory = await expenseService.GetExpensesByCategoryAsync(today.Year, today.Month);
 
+        var todayProfit = await reportService.GetProfitLossAsync(today, today);
+        var monthProfit = await reportService.GetProfitLossAsync(monthStart, monthEnd.AddDays(-1));
+
         var monthSales = monthBills.Sum(b => b.FinalAmount);
 
         var staffPerformance = monthBills
@@ -67,6 +70,8 @@ public class DashboardService(ApplicationDbContext context, ReportService report
             MonthExpenses = monthExpenses,
             MonthDiscount = monthBills.Sum(b => b.DiscountAmount),
             MonthNet = monthSales - monthExpenses,
+            TodayProfit = todayProfit.Profit,
+            MonthProfit = monthProfit.Profit,
             ExpensesByCategory = expensesByCategory
                 .Select(kv => new CategoryAmount
                 {
@@ -123,6 +128,8 @@ public class DashboardSummary
     public decimal MonthExpenses { get; set; }
     public decimal MonthDiscount { get; set; }
     public decimal MonthNet { get; set; }
+    public decimal TodayProfit { get; set; }
+    public decimal MonthProfit { get; set; }
     public List<CategoryAmount> ExpensesByCategory { get; set; } = [];
     public List<StaffSalesRow> StaffPerformance { get; set; } = [];
 }

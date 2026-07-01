@@ -8,11 +8,13 @@ public class PurchaseLineItem
     public int MedicineId { get; set; }
     public string MedicineName { get; set; } = string.Empty;
     public int Quantity { get; set; }
+    public int FreeQuantity { get; set; }
     public decimal PurchasePrice { get; set; }
+    public decimal DiscountPercent { get; set; }
     public decimal MRP { get; set; }
     public string? BatchNumber { get; set; }
     public DateTime? ExpiryDate { get; set; }
-    public decimal Amount => Quantity * PurchasePrice;
+    public decimal Amount => Math.Round(Quantity * PurchasePrice * (1 - DiscountPercent / 100m), 2);
 }
 
 public class PurchaseCreateRequest

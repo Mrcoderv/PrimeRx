@@ -68,19 +68,22 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
                 MedicineId = medicine.Id,
                 MedicineName = medicine.Name,
                 Quantity = line.Quantity,
+                FreeQuantity = Math.Max(0, line.FreeQuantity),
                 PurchasePrice = line.PurchasePrice,
+                DiscountPercent = line.DiscountPercent,
                 MRP = mrp,
                 BatchNumber = line.BatchNumber?.Trim(),
                 ExpiryDate = line.ExpiryDate
             });
 
-            total += line.Quantity * line.PurchasePrice;
+            total += Math.Round(line.Quantity * line.PurchasePrice * (1 - line.DiscountPercent / 100m), 2);
 
             // Update stock and batch record
             await inventoryService.RecordPurchaseAsync(new PurchaseEntryRequest
             {
                 MedicineId = medicine.Id,
                 Quantity = line.Quantity,
+                FreeQuantity = Math.Max(0, line.FreeQuantity),
                 PurchasePrice = line.PurchasePrice > 0 ? line.PurchasePrice : null,
                 BatchNumber = line.BatchNumber,
                 PurchaseSource = request.SupplierName,
@@ -99,21 +102,60 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
                 ?? await GetSupplierCreditDaysAsync(request.SupplierName)
                 ?? 30;
 
+            var creditApplied = await ApplyAvailableCreditAsync(request.SupplierName, total);
+
             context.Payables.Add(new Payable
             {
                 SupplierName = request.SupplierName.Trim(),
                 InvoiceNo = request.InvoiceNumber?.Trim(),
                 Amount = total,
-                PaidAmount = 0,
+                PaidAmount = creditApplied,
                 DueDate = DateTime.Today.AddDays(creditDays),
-                Status = PayableStatus.Pending,
-                Description = $"Auto-created from purchase on {request.PurchaseDate:dd MMM yyyy}",
+                Status = creditApplied >= total ? PayableStatus.Paid : PayableStatus.Pending,
+                Description = creditApplied > 0
+                    ? $"Auto-created from purchase on {request.PurchaseDate:dd MMM yyyy} — Rs. {creditApplied:N2} adjusted from available credit notes"
+                    : $"Auto-created from purchase on {request.PurchaseDate:dd MMM yyyy}",
                 CreatedAt = DateTime.Now
             });
         }
 
         await context.SaveChangesAsync();
         return purchase;
+    }
+
+    /// <summary>Applies available (unused) credit notes for a supplier against a new purchase total, oldest first. Returns the amount applied.</summary>
+    private async Task<decimal> ApplyAvailableCreditAsync(string supplierName, decimal total)
+    {
+        var notes = await context.CreditNotes
+            .Where(c => c.SupplierName.ToLower() == supplierName.Trim().ToLower() && c.Status != CreditNoteStatus.FullyUsed)
+            .OrderBy(c => c.CreatedAt)
+            .ToListAsync();
+
+        decimal remaining = total;
+        decimal applied = 0;
+
+        foreach (var note in notes)
+        {
+            if (remaining <= 0) break;
+
+            var take = Math.Min(note.AvailableAmount, remaining);
+            if (take <= 0) continue;
+
+            note.UsedAmount += take;
+            note.Status = note.AvailableAmount <= 0 ? CreditNoteStatus.FullyUsed : CreditNoteStatus.PartiallyUsed;
+
+            applied += take;
+            remaining -= take;
+        }
+
+        return applied;
+    }
+
+    public async Task<decimal> GetAvailableCreditAsync(string supplierName)
+    {
+        return await context.CreditNotes
+            .Where(c => c.SupplierName.ToLower() == supplierName.Trim().ToLower() && c.Status != CreditNoteStatus.FullyUsed)
+            .SumAsync(c => c.Amount - c.UsedAmount);
     }
 
     public async Task UpdateAsync(int id, PurchaseCreateRequest request, string? updatedBy)
@@ -180,6 +222,8 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
 
                 orig.Quantity = line.Quantity;
                 orig.PurchasePrice = line.PurchasePrice;
+                orig.DiscountPercent = line.DiscountPercent;
+                orig.FreeQuantity = Math.Max(0, line.FreeQuantity);
                 orig.MRP = mrp;
                 orig.BatchNumber = line.BatchNumber?.Trim();
                 orig.ExpiryDate = line.ExpiryDate;
@@ -193,7 +237,9 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
                     MedicineId = medicine.Id,
                     MedicineName = medicine.Name,
                     Quantity = line.Quantity,
+                    FreeQuantity = Math.Max(0, line.FreeQuantity),
                     PurchasePrice = line.PurchasePrice,
+                    DiscountPercent = line.DiscountPercent,
                     MRP = mrp,
                     BatchNumber = line.BatchNumber?.Trim(),
                     ExpiryDate = line.ExpiryDate
@@ -204,6 +250,7 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
                 {
                     MedicineId = medicine.Id,
                     Quantity = line.Quantity,
+                    FreeQuantity = Math.Max(0, line.FreeQuantity),
                     PurchasePrice = line.PurchasePrice > 0 ? line.PurchasePrice : null,
                     BatchNumber = line.BatchNumber,
                     PurchaseSource = request.SupplierName,
@@ -211,7 +258,7 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
                 });
             }
 
-            total += line.Quantity * line.PurchasePrice;
+            total += Math.Round(line.Quantity * line.PurchasePrice * (1 - line.DiscountPercent / 100m), 2);
         }
 
         // Remove deleted items from DB

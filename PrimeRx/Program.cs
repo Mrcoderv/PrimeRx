@@ -62,6 +62,7 @@ builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<ExpenseService>();
 builder.Services.AddScoped<PurchaseService>();
+builder.Services.AddScoped<PurchaseReturnService>();
 builder.Services.AddSingleton<PdfGenerator>();
 builder.Services.AddScoped<UpdateService>();
 

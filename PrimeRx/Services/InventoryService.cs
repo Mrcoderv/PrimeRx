@@ -97,7 +97,8 @@ public class InventoryService(ApplicationDbContext context)
         var medicine = await context.Medicines.FindAsync(request.MedicineId)
             ?? throw new InvalidOperationException("Medicine not found.");
 
-        medicine.StockQuantity += request.Quantity;
+        var totalUnits = request.Quantity + Math.Max(0, request.FreeQuantity);
+        medicine.StockQuantity += totalUnits;
 
         if (request.PurchasePrice is > 0)
         {
@@ -119,7 +120,7 @@ public class InventoryService(ApplicationDbContext context)
         {
             MedicineId = medicine.Id,
             BatchNumber = string.IsNullOrWhiteSpace(batchNumber) ? "N/A" : batchNumber,
-            Quantity = request.Quantity,
+            Quantity = totalUnits,
             PurchasePrice = request.PurchasePrice ?? medicine.PurchasePrice,
             PurchaseSource = purchaseSource ?? request.Reference?.Trim() ?? string.Empty,
             ExpiryDate = request.ExpiryDate
@@ -129,16 +130,63 @@ public class InventoryService(ApplicationDbContext context)
         {
             MedicineId = medicine.Id,
             TransactionType = TransactionTypes.Purchase,
-            QuantityChange = request.Quantity,
-            Reference = BuildPurchaseReference(request)
+            QuantityChange = totalUnits,
+            Reference = BuildPurchaseReference(request, totalUnits)
         });
 
         await context.SaveChangesAsync();
     }
 
-    private static string BuildPurchaseReference(PurchaseEntryRequest request)
+    /// <summary>Reduces stock for a purchase return (e.g. expired/damaged goods sent back to a supplier) and finds the best-matching batch to shrink.</summary>
+    public async Task ReturnToSupplierAsync(int medicineId, int quantity, string? batchNumber, string reference)
     {
-        var parts = new List<string> { $"Purchase +{request.Quantity}" };
+        if (quantity <= 0)
+            throw new InvalidOperationException("Return quantity must be greater than zero.");
+
+        var medicine = await context.Medicines.FindAsync(medicineId)
+            ?? throw new InvalidOperationException("Medicine not found.");
+
+        if (medicine.StockQuantity < quantity)
+            throw new InvalidOperationException($"Cannot return {quantity} units of '{medicine.Name}' — only {medicine.StockQuantity} in stock.");
+
+        medicine.StockQuantity -= quantity;
+
+        if (!string.IsNullOrWhiteSpace(batchNumber))
+        {
+            var batch = await context.InventoryBatches
+                .Where(b => b.MedicineId == medicineId && b.BatchNumber == batchNumber.Trim())
+                .OrderByDescending(b => b.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (batch is not null)
+                batch.Quantity = Math.Max(0, batch.Quantity - quantity);
+        }
+
+        context.InventoryTransactions.Add(new InventoryTransaction
+        {
+            MedicineId = medicine.Id,
+            TransactionType = TransactionTypes.Return,
+            QuantityChange = -quantity,
+            Reference = reference
+        });
+
+        await context.SaveChangesAsync();
+    }
+
+    public async Task<List<InventoryBatch>> GetBatchesAsync(int? medicineId = null)
+    {
+        var query = context.InventoryBatches.Include(b => b.Medicine).AsQueryable();
+        if (medicineId.HasValue)
+            query = query.Where(b => b.MedicineId == medicineId.Value);
+
+        return await query.OrderByDescending(b => b.CreatedAt).ToListAsync();
+    }
+
+    private static string BuildPurchaseReference(PurchaseEntryRequest request, int totalUnits)
+    {
+        var parts = new List<string> { $"Purchase +{totalUnits}" };
+        if (request.FreeQuantity > 0)
+            parts.Add($"incl. {request.FreeQuantity} free");
         if (!string.IsNullOrWhiteSpace(request.BatchNumber))
             parts.Add($"Batch {request.BatchNumber.Trim()}");
         var source = request.PurchaseSource?.Trim() ?? request.Reference?.Trim();
