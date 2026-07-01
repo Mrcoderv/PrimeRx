@@ -1,0 +1,310 @@
+@page
+@using PrimeRx.Models
+@model PrimeRx.Pages.Purchase.SupplierModel
+@{
+    ViewData["Title"] = Model.SupplierName + " — Supplier Profile";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <i class="bi bi-building me-2 opacity-60"></i>@Model.SupplierName
+        </h1>
+        <p class="page-subtitle">
+            @if (Model.SupplierProfile != null && !string.IsNullOrEmpty(Model.SupplierProfile.Phone))
+            {
+                <span class="me-3"><i class="bi bi-telephone me-1"></i>@Model.SupplierProfile.Phone</span>
+            }
+            @if (Model.SupplierProfile != null && Model.SupplierProfile.CreditDays > 0)
+            {
+                <span class="me-3"><i class="bi bi-calendar-check me-1"></i>@Model.SupplierProfile.CreditDays-day credit</span>
+            }
+            @if (Model.SupplierProfile == null)
+            {
+                <span class="text-muted">Purchase-only supplier (no profile)</span>
+            }
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        @if (Model.SupplierProfile != null)
+        {
+            <a asp-page="/Admin/Suppliers/Edit" asp-route-id="@Model.SupplierProfile.Id"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Edit Profile
+            </a>
+        }
+        <a asp-page="/Purchase/Index" asp-route-supplier="@Model.SupplierName"
+           class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-list me-1"></i>All Purchases
+        </a>
+        <a asp-page="/Purchase/Create" class="btn btn-accent btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>New Purchase
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-primary">
+            <div class="stat-label">Total Invoices</div>
+            <div class="stat-value">@Model.Purchases.Count</div>
+            <div class="stat-foot">All time</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-info">
+            <div class="stat-label">Total Spend</div>
+            <div class="stat-value">Rs. @Model.TotalSpend.ToString("N0")</div>
+            <div class="stat-foot">@Model.TotalItems units purchased</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card @(Model.PendingPayable > 0 ? "stat-warning" : "stat-success")">
+            <div class="stat-label">Pending Payable</div>
+            <div class="stat-value">Rs. @Model.PendingPayable.ToString("N0")</div>
+            <div class="stat-foot">
+                @if (Model.OverdueCount > 0)
+                {
+                    <span>@Model.OverdueCount overdue</span>
+                }
+                else if (Model.PendingPayable == 0)
+                {
+                    <span>All settled</span>
+                }
+                else
+                {
+                    <span>@Model.Payables.Count(p => p.Status != PayableStatus.Paid) pending</span>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-success">
+            <div class="stat-label">Avg Invoice</div>
+            <div class="stat-value">Rs. @Model.AvgInvoice.ToString("N0")</div>
+            <div class="stat-foot">Per purchase</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left: Purchase History -->
+    <div class="col-lg-8">
+        <div class="panel-card">
+            <div class="panel-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Invoice History</h5>
+                <span class="badge bg-secondary">@Model.Purchases.Count invoice(s)</span>
+            </div>
+            <div class="p-0 panel-body-flush">
+                @if (!Model.Purchases.Any())
+                {
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-inbox display-6 d-block mb-2 opacity-40"></i>
+                        No purchases recorded for this supplier.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-pro mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Invoice #</th>
+                                    <th class="text-center">Items</th>
+                                    <th class="text-end">Amount</th>
+                                    <th>Recorded By</th>
+                                    <th style="width:90px"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Model.Purchases)
+                                {
+                                    <tr>
+                                        <td>@p.PurchaseDate.ToString("dd MMM yyyy")</td>
+                                        <td class="text-muted small">@(p.InvoiceNumber ?? "—")</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary">@p.Items.Count</span>
+                                        </td>
+                                        <td class="text-end fw-semibold">Rs. @p.TotalAmount.ToString("N2")</td>
+                                        <td><small class="text-muted">@(p.CreatedBy ?? "—")</small></td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a asp-page="/Purchase/Edit" asp-route-id="@p.Id"
+                                                   class="btn btn-sm btn-outline-primary" title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#items-@p.Id"
+                                                        title="View items">
+                                                    <i class="bi bi-chevron-down"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="collapse" id="items-@p.Id">
+                                        <td colspan="6" class="p-0">
+                                            <div class="px-4 py-2" style="background:var(--rx-surface-alt)">
+                                                @if (!string.IsNullOrEmpty(p.Notes))
+                                                {
+                                                    <p class="text-muted small mb-2">
+                                                        <i class="bi bi-chat-left-text me-1"></i>@p.Notes
+                                                    </p>
+                                                }
+                                                <table class="table table-sm mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Medicine</th>
+                                                            <th>Batch</th>
+                                                            <th>Expiry</th>
+                                                            <th class="text-center">Qty</th>
+                                                            <th class="text-end">Price</th>
+                                                            <th class="text-end">MRP</th>
+                                                            <th class="text-end">Amount</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var item in p.Items)
+                                                        {
+                                                            <tr>
+                                                                <td>@item.MedicineName</td>
+                                                                <td class="text-muted">@(item.BatchNumber ?? "—")</td>
+                                                                <td>
+                                                                    @if (item.ExpiryDate.HasValue)
+                                                                    {
+                                                                        var d = (item.ExpiryDate.Value - DateTime.Today).Days;
+                                                                        <span class="@(d < 30 ? "text-danger fw-semibold" : d < 90 ? "text-warning" : "")">
+                                                                            @item.ExpiryDate.Value.ToString("MMM yyyy")
+                                                                        </span>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <span class="text-muted">—</span>
+                                                                    }
+                                                                </td>
+                                                                <td class="text-center">@item.Quantity</td>
+                                                                <td class="text-end">Rs. @item.PurchasePrice.ToString("N2")</td>
+                                                                <td class="text-end">Rs. @item.MRP.ToString("N2")</td>
+                                                                <td class="text-end fw-semibold">Rs. @item.Amount.ToString("N2")</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                    <tfoot>
+                                                        <tr>
+                                                            <td colspan="3" class="text-end fw-semibold text-muted">Invoice total</td>
+                                                            <td class="text-center fw-semibold">@p.Items.Sum(i => i.Quantity)</td>
+                                                            <td colspan="2"></td>
+                                                            <td class="text-end fw-bold">Rs. @p.TotalAmount.ToString("N2")</td>
+                                                        </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="report-total-row">
+                                    <td colspan="3" class="text-end"><strong>All-time total</strong></td>
+                                    <td class="text-end fw-bold">Rs. @Model.TotalSpend.ToString("N2")</td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Payables + Top Medicines -->
+    <div class="col-lg-4">
+
+        <!-- Payables card -->
+        <div class="panel-card mb-4">
+            <div class="panel-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Payables</h5>
+                @if (Model.Payables.Any(p => p.Status != PayableStatus.Paid))
+                {
+                    <a asp-page="/Admin/Payables/Index" asp-route-supplier="@Model.SupplierName"
+                       class="btn btn-sm btn-outline-accent">Manage</a>
+                }
+            </div>
+            <div class="panel-body p-0">
+                @if (!Model.Payables.Any())
+                {
+                    <div class="text-center text-muted py-4 px-3 small">
+                        <i class="bi bi-check-circle d-block mb-1 fs-4 opacity-40"></i>
+                        No payables on record.
+                    </div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var pay in Model.Payables)
+                        {
+                            <li class="list-group-item px-3 py-2 @(pay.IsOverdue ? "list-group-item-danger" : "")">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="small fw-semibold">@(pay.InvoiceNo ?? "Manual entry")</div>
+                                        <div class="text-muted" style="font-size:0.75rem">
+                                            Due @pay.DueDate.ToString("dd MMM yyyy")
+                                            @if (pay.IsOverdue)
+                                            {
+                                                <span class="badge bg-danger ms-1">Overdue</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="text-end ms-2">
+                                        <div class="small fw-bold @(pay.PendingAmount > 0 ? "text-danger" : "text-success")">
+                                            Rs. @pay.PendingAmount.ToString("N0")
+                                        </div>
+                                        @{
+                                            var cls = pay.Status switch { "Paid" => "bg-success", "Partial" => "bg-warning text-dark", _ => "bg-secondary" };
+                                        }
+                                        <span class="badge @cls" style="font-size:0.65rem">@pay.Status</span>
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                    <div class="px-3 py-2 border-top d-flex justify-content-between small">
+                        <span class="text-muted">Total pending</span>
+                        <strong class="text-danger">Rs. @Model.PendingPayable.ToString("N2")</strong>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Top Medicines card -->
+        @if (Model.TopMedicines.Any())
+        {
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h5 class="mb-0"><i class="bi bi-capsule me-2"></i>Top Medicines Purchased</h5>
+                </div>
+                <div class="panel-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @{ var rank = 1; }
+                        @foreach (var med in Model.TopMedicines)
+                        {
+                            <li class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-secondary" style="min-width:24px;text-align:center">@rank</span>
+                                    <div>
+                                        <div class="small fw-semibold">@med.Name</div>
+                                        <div class="text-muted" style="font-size:0.75rem">@med.Qty units</div>
+                                    </div>
+                                </div>
+                                <span class="small fw-bold">Rs. @med.Spend.ToString("N0")</span>
+                            </li>
+                            rank++;
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+</div>
