@@ -31,7 +31,7 @@ public class IndexModel(UserManager<IdentityUser> userManager) : PageModel
 
         var user = new IdentityUser
         {
-            UserName = NewStaff.Email,
+            UserName = NewStaff.Username,
             Email = NewStaff.Email,
             EmailConfirmed = true
         };
@@ -45,7 +45,7 @@ public class IndexModel(UserManager<IdentityUser> userManager) : PageModel
         }
 
         await userManager.AddToRoleAsync(user, AppRoles.Staff);
-        return RedirectToPage(new { message = "Staff account created." });
+        return RedirectToPage(new { message = "Staff account created successfully." });
     }
 
     private async Task LoadUsersAsync()
@@ -58,7 +58,8 @@ public class IndexModel(UserManager<IdentityUser> userManager) : PageModel
             var roles = await userManager.GetRolesAsync(user);
             StaffUsers.Add(new StaffUserView
             {
-                Email = user.Email ?? user.UserName ?? "",
+                Username = user.UserName ?? "",
+                Email = user.Email ?? "",
                 Roles = roles.ToList()
             });
         }
@@ -66,6 +67,10 @@ public class IndexModel(UserManager<IdentityUser> userManager) : PageModel
 
     public class NewStaffInput
     {
+        [Required]
+        [Display(Name = "Username")]
+        public string Username { get; set; } = string.Empty;
+
         [Required]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
@@ -82,6 +87,7 @@ public class IndexModel(UserManager<IdentityUser> userManager) : PageModel
 
     public class StaffUserView
     {
+        public string Username { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public List<string> Roles { get; set; } = [];
     }
