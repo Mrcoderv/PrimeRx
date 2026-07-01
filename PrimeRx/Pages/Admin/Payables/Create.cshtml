@@ -5,17 +5,23 @@
     ViewData["Title"] = "Add Payable";
 }
 
-<div class="d-flex align-items-center gap-3 mb-4">
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Add Payable</h1>
+        <p class="page-subtitle">Manually record an amount owed to a supplier</p>
+    </div>
     <a asp-page="/Admin/Payables/Index" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i>Back
+        <i class="bi bi-arrow-left me-1"></i>Back to Payables
     </a>
-    <h2 class="mb-0">Add Payable</h2>
 </div>
 
-<div class="card shadow-sm border-0" style="max-width:560px;">
-    <div class="card-body">
+<div class="panel-card" style="max-width:580px;">
+    <div class="panel-header">
+        <h5><i class="bi bi-credit-card me-2"></i>Payable Details</h5>
+    </div>
+    <div class="panel-body">
         <form method="post">
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
 
             <div class="mb-3">
                 <label asp-for="Input.SupplierName" class="form-label"></label>
@@ -41,13 +47,13 @@
                     <span asp-validation-for="Input.DueDate" class="text-danger small"></span>
                 </div>
             </div>
-            <div class="mb-3">
+            <div class="mb-4">
                 <label asp-for="Input.Description" class="form-label"></label>
                 <textarea asp-for="Input.Description" class="form-control" rows="2"
                           placeholder="Optional notes about this payable"></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">
+            <button type="submit" class="btn btn-accent w-100">
                 <i class="bi bi-plus-circle me-1"></i>Save Payable
             </button>
         </form>
