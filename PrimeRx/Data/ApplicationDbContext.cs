@@ -8,11 +8,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<CompanyProfile> CompanyProfiles => Set<CompanyProfile>();
     public DbSet<Medicine> Medicines => Set<Medicine>();
+    public DbSet<MedicineForm> MedicineForms => Set<MedicineForm>();
     public DbSet<Bill> Bills => Set<Bill>();
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
     public DbSet<DuePayment> DuePayments => Set<DuePayment>();
     public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
     public DbSet<InventoryBatch> InventoryBatches => Set<InventoryBatch>();
+    public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<Payable> Payables => Set<Payable>();
     public DbSet<Purchase> Purchases => Set<Purchase>();
@@ -26,8 +28,33 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         base.OnModelCreating(modelBuilder);
 
+        // Medicine indices
         modelBuilder.Entity<Medicine>()
             .HasIndex(m => m.Name);
+
+        // MedicineForm indices and relationships
+        modelBuilder.Entity<MedicineForm>()
+            .HasOne(mf => mf.Medicine)
+            .WithMany()
+            .HasForeignKey(mf => mf.MedicineId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MedicineForm>()
+            .HasIndex(mf => new { mf.MedicineId, mf.FormType });
+
+        // Customer indices
+        modelBuilder.Entity<Customer>()
+            .HasIndex(c => c.Phone);
+
+        modelBuilder.Entity<Customer>()
+            .HasIndex(c => c.Name);
+
+        // Bill relationships and indices
+        modelBuilder.Entity<Bill>()
+            .HasOne(b => b.Customer)
+            .WithMany(c => c.Bills)
+            .HasForeignKey(b => b.CustomerId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Bill>()
             .HasIndex(b => b.CustomerPhone);
@@ -36,33 +63,63 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasIndex(b => b.BillNumber)
             .IsUnique();
 
+        modelBuilder.Entity<Bill>()
+            .HasIndex(b => b.BillDate);
+
+        // SaleItem relationships
         modelBuilder.Entity<SaleItem>()
             .HasOne(s => s.Bill)
             .WithMany(b => b.SaleItems)
             .HasForeignKey(s => s.BillId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<SaleItem>()
+            .HasOne(s => s.Medicine)
+            .WithMany()
+            .HasForeignKey(s => s.MedicineId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<SaleItem>()
+            .HasOne(s => s.Batch)
+            .WithMany()
+            .HasForeignKey(s => s.BatchId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // DuePayment relationships
         modelBuilder.Entity<DuePayment>()
             .HasOne(d => d.Bill)
             .WithMany(b => b.DuePayments)
             .HasForeignKey(d => d.BillId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // InventoryTransaction relationships
         modelBuilder.Entity<InventoryTransaction>()
             .HasOne(t => t.Medicine)
             .WithMany()
             .HasForeignKey(t => t.MedicineId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // InventoryBatch relationships
         modelBuilder.Entity<InventoryBatch>()
             .HasOne(b => b.Medicine)
             .WithMany()
             .HasForeignKey(b => b.MedicineId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<InventoryBatch>()
+            .HasOne(b => b.MedicineForm)
+            .WithMany(mf => mf.Batches)
+            .HasForeignKey(b => b.MedicineFormId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<InventoryBatch>()
+            .HasIndex(b => new { b.MedicineId, b.ExpiryDate });
+
+        // Expense indices
         modelBuilder.Entity<Expense>()
             .HasIndex(e => e.ExpenseDate);
 
+        // PurchaseItem relationships
         modelBuilder.Entity<PurchaseItem>()
             .HasOne(pi => pi.Purchase)
             .WithMany(p => p.Items)
@@ -75,15 +132,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(pi => pi.MedicineId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Purchase indices
         modelBuilder.Entity<Purchase>()
             .HasIndex(p => p.PurchaseDate);
 
         modelBuilder.Entity<Purchase>()
             .HasIndex(p => p.SupplierName);
 
+        // Supplier indices
         modelBuilder.Entity<Supplier>()
             .HasIndex(s => s.Name);
 
+        // PurchaseReturnItem relationships
         modelBuilder.Entity<PurchaseReturnItem>()
             .HasOne(pri => pri.PurchaseReturn)
             .WithMany(pr => pr.Items)
@@ -96,6 +156,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(pri => pri.MedicineId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // PurchaseReturn relationships and indices
         modelBuilder.Entity<PurchaseReturn>()
             .HasOne(pr => pr.Purchase)
             .WithMany()
@@ -108,6 +169,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<PurchaseReturn>()
             .HasIndex(pr => pr.ReturnDate);
 
+        // CreditNote relationships
         modelBuilder.Entity<CreditNote>()
             .HasOne(c => c.PurchaseReturn)
             .WithMany()
@@ -117,6 +179,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<CreditNote>()
             .HasIndex(c => c.SupplierName);
 
+        // Set decimal precision globally
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             foreach (var property in entityType.GetProperties().Where(p => p.ClrType == typeof(decimal)))
