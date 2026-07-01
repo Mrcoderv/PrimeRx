@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -10,7 +11,29 @@ namespace PrimeRx.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Create Customers table
+            migrationBuilder.DropIndex(
+                name: "IX_InventoryBatches_MedicineId",
+                table: "InventoryBatches");
+
+            migrationBuilder.AddColumn<int>(
+                name: "BatchId",
+                table: "SaleItems",
+                type: "INTEGER",
+                nullable: true);
+
+            migrationBuilder.AddColumn<int>(
+                name: "MedicineFormId",
+                table: "InventoryBatches",
+                type: "INTEGER",
+                nullable: false,
+                defaultValue: 0);
+
+            migrationBuilder.AddColumn<int>(
+                name: "CustomerId",
+                table: "Bills",
+                type: "INTEGER",
+                nullable: true);
+
             migrationBuilder.CreateTable(
                 name: "Customers",
                 columns: table => new
@@ -33,18 +56,6 @@ namespace PrimeRx.Data.Migrations
                     table.PrimaryKey("PK_Customers", x => x.Id);
                 });
 
-            // Create indices on Customers
-            migrationBuilder.CreateIndex(
-                name: "IX_Customers_Name",
-                table: "Customers",
-                column: "Name");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Customers_Phone",
-                table: "Customers",
-                column: "Phone");
-
-            // Create MedicineForms table
             migrationBuilder.CreateTable(
                 name: "MedicineForms",
                 columns: table => new
@@ -73,30 +84,24 @@ namespace PrimeRx.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_MedicineForms_MedicineId_FormType",
-                table: "MedicineForms",
-                columns: new[] { "MedicineId", "FormType" });
+                name: "IX_SaleItems_BatchId",
+                table: "SaleItems",
+                column: "BatchId");
 
-            // Add MedicineFormId to InventoryBatches
-            migrationBuilder.AddColumn<int>(
-                name: "MedicineFormId",
+            migrationBuilder.CreateIndex(
+                name: "IX_SaleItems_MedicineId",
+                table: "SaleItems",
+                column: "MedicineId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InventoryBatches_MedicineFormId",
                 table: "InventoryBatches",
-                type: "INTEGER",
-                nullable: false,
-                defaultValue: 0);
+                column: "MedicineFormId");
 
-            // Add index on InventoryBatches (MedicineId, ExpiryDate)
             migrationBuilder.CreateIndex(
                 name: "IX_InventoryBatches_MedicineId_ExpiryDate",
                 table: "InventoryBatches",
                 columns: new[] { "MedicineId", "ExpiryDate" });
-
-            // Add CustomerId and BatchId to Bills
-            migrationBuilder.AddColumn<int>(
-                name: "CustomerId",
-                table: "Bills",
-                type: "INTEGER",
-                nullable: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Bills_BillDate",
@@ -108,6 +113,21 @@ namespace PrimeRx.Data.Migrations
                 table: "Bills",
                 column: "CustomerId");
 
+            migrationBuilder.CreateIndex(
+                name: "IX_Customers_Name",
+                table: "Customers",
+                column: "Name");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Customers_Phone",
+                table: "Customers",
+                column: "Phone");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MedicineForms_MedicineId_FormType",
+                table: "MedicineForms",
+                columns: new[] { "MedicineId", "FormType" });
+
             migrationBuilder.AddForeignKey(
                 name: "FK_Bills_Customers_CustomerId",
                 table: "Bills",
@@ -116,17 +136,13 @@ namespace PrimeRx.Data.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.SetNull);
 
-            // Add BatchId to SaleItems
-            migrationBuilder.AddColumn<int>(
-                name: "BatchId",
-                table: "SaleItems",
-                type: "INTEGER",
-                nullable: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SaleItems_BatchId",
-                table: "SaleItems",
-                column: "BatchId");
+            migrationBuilder.AddForeignKey(
+                name: "FK_InventoryBatches_MedicineForms_MedicineFormId",
+                table: "InventoryBatches",
+                column: "MedicineFormId",
+                principalTable: "MedicineForms",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_SaleItems_InventoryBatches_BatchId",
@@ -136,19 +152,6 @@ namespace PrimeRx.Data.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.SetNull);
 
-            // Add Medicine FK to SaleItems if not already there
-            migrationBuilder.AddColumn<int>(
-                name: "MedicineId",
-                table: "SaleItems",
-                type: "INTEGER",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SaleItems_MedicineId",
-                table: "SaleItems",
-                column: "MedicineId");
-
             migrationBuilder.AddForeignKey(
                 name: "FK_SaleItems_Medicines_MedicineId",
                 table: "SaleItems",
@@ -156,24 +159,18 @@ namespace PrimeRx.Data.Migrations
                 principalTable: "Medicines",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
-
-            // Add foreign key for InventoryBatch.MedicineFormId
-            migrationBuilder.AddForeignKey(
-                name: "FK_InventoryBatches_MedicineForms_MedicineFormId",
-                table: "InventoryBatches",
-                column: "MedicineFormId",
-                principalTable: "MedicineForms",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            // Drop foreign keys
             migrationBuilder.DropForeignKey(
                 name: "FK_Bills_Customers_CustomerId",
                 table: "Bills");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_InventoryBatches_MedicineForms_MedicineFormId",
+                table: "InventoryBatches");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_SaleItems_InventoryBatches_BatchId",
@@ -183,24 +180,52 @@ namespace PrimeRx.Data.Migrations
                 name: "FK_SaleItems_Medicines_MedicineId",
                 table: "SaleItems");
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_InventoryBatches_MedicineForms_MedicineFormId",
+            migrationBuilder.DropTable(
+                name: "Customers");
+
+            migrationBuilder.DropTable(
+                name: "MedicineForms");
+
+            migrationBuilder.DropIndex(
+                name: "IX_SaleItems_BatchId",
+                table: "SaleItems");
+
+            migrationBuilder.DropIndex(
+                name: "IX_SaleItems_MedicineId",
+                table: "SaleItems");
+
+            migrationBuilder.DropIndex(
+                name: "IX_InventoryBatches_MedicineFormId",
                 table: "InventoryBatches");
 
-            // Drop tables and columns
-            migrationBuilder.DropTable(name: "Customers");
-            migrationBuilder.DropTable(name: "MedicineForms");
+            migrationBuilder.DropIndex(
+                name: "IX_InventoryBatches_MedicineId_ExpiryDate",
+                table: "InventoryBatches");
 
-            migrationBuilder.DropIndex(name: "IX_Bills_BillDate", table: "Bills");
-            migrationBuilder.DropIndex(name: "IX_Bills_CustomerId", table: "Bills");
-            migrationBuilder.DropIndex(name: "IX_InventoryBatches_MedicineId_ExpiryDate", table: "InventoryBatches");
-            migrationBuilder.DropIndex(name: "IX_SaleItems_BatchId", table: "SaleItems");
-            migrationBuilder.DropIndex(name: "IX_SaleItems_MedicineId", table: "SaleItems");
+            migrationBuilder.DropIndex(
+                name: "IX_Bills_BillDate",
+                table: "Bills");
 
-            migrationBuilder.DropColumn(name: "CustomerId", table: "Bills");
-            migrationBuilder.DropColumn(name: "MedicineFormId", table: "InventoryBatches");
-            migrationBuilder.DropColumn(name: "BatchId", table: "SaleItems");
-            migrationBuilder.DropColumn(name: "MedicineId", table: "SaleItems");
+            migrationBuilder.DropIndex(
+                name: "IX_Bills_CustomerId",
+                table: "Bills");
+
+            migrationBuilder.DropColumn(
+                name: "BatchId",
+                table: "SaleItems");
+
+            migrationBuilder.DropColumn(
+                name: "MedicineFormId",
+                table: "InventoryBatches");
+
+            migrationBuilder.DropColumn(
+                name: "CustomerId",
+                table: "Bills");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InventoryBatches_MedicineId",
+                table: "InventoryBatches",
+                column: "MedicineId");
         }
     }
 }
