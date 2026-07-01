@@ -57,5 +57,5 @@ public class MedicineForm
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     // Relations: One MedicineForm has many batches
-    public virtual ICollection<MedicineBatch> Batches { get; set; } = [];
+    public virtual ICollection<InventoryBatch> Batches { get; set; } = [];
 }
