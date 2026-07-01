@@ -353,6 +353,7 @@ body.app-body {
 .stat-info    { background: linear-gradient(135deg,#0369a1,#0ea5e9); }
 .stat-warning { background: linear-gradient(135deg,#b45309,#f59e0b); }
 .stat-success { background: linear-gradient(135deg,#047857,#10b981); }
+.stat-danger  { background: linear-gradient(135deg,#991b1b,#ef4444); }
 
 .stat-label {
   font-size: 0.8rem;
@@ -448,6 +449,7 @@ body.app-body {
 .table-pro tbody td strong { color: var(--rx-heading); }
 .table-pro tbody tr:hover td { color: var(--rx-heading); }
 .table-pro tfoot td { color: var(--rx-text); }
+.table-pro tbody tr.table-overdue td { background: rgba(239,68,68,0.07); }
 
 .table {
   color: var(--rx-table-color);
