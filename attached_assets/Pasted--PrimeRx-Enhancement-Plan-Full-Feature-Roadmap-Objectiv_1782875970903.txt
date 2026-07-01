@@ -1,0 +1,84 @@
+# PrimeRx Enhancement Plan - Full Feature Roadmap
+
+## Objective
+Transform PrimeRx into a more powerful pharmacy management system with efficient bulk purchase entry, advanced inventory (multi-batch), expiry/return handling, free item support, and improved dashboard.
+
+## Current Limitations
+- One-by-one medicine entry
+- Limited batch/expiry tracking per medicine
+- No easy return of expired stock to supplier
+- No free item handling in purchases
+- Basic dashboard
+
+## Proposed Features
+
+### 1. Supplier Management (Admin Only)
+- New `Supplier` model (Name, PAN, DDA Reg No., Address, Phone, Email, Credit Days, Contact Person, etc.)
+- Pages: List, Add New Supplier, Edit
+- Quick "Add New" link from Purchase form
+
+### 2. Advanced Multi-Batch Inventory
+- One medicine can have **multiple batches** with:
+  - Batch Number
+  - Expiry Date
+  - Quantity
+  - Purchase Price
+- Inventory view shows batch-wise breakdown
+- Expiry alerts (near expiry + expired)
+
+### 3. Bulk Purchase Entry (Major Feature)
+- Dynamic table to add multiple medicines at once (like your current Expert software)
+- Fields per row: Medicine Name, Generic, Manufacturer, Batch No., Expiry Date, Qty, Free Qty, Purchase Rate, MRP, Discount %
+- Auto-create new medicine if not found
+- Supplier selection + Invoice No., Date, Total calculation
+- Support for **Free/Bonus items**
+- Save as Cash or Credit → Auto create Due entry
+
+### 4. Expired / Return Management
+- In Inventory / Batch view: **"Return to Supplier"** or **"Resell to Seller"** button
+- Deducts quantity from inventory
+- Creates return record / credit note to supplier
+
+### 5. Purchase History & Reports
+- Dedicated Purchases section
+- Filter by Supplier, Date, Invoice
+- View full transaction with batch details
+- Export options
+
+### 6. Dashboard Enhancements
+- **Daily Summary Cards**:
+  - Daily Sales
+  - Daily Profit
+  - Daily Expenses
+- **Monthly Summary Cards**:
+  - Monthly Sales
+  - Monthly Profit
+  - Monthly Expenses
+  - Net Sales
+- Clean, visual cards with mini charts
+
+### 7. Integration & Others
+- All purchases update Inventory in real-time (batch-wise)
+- Due module automatically updated for credit purchases
+- Role-based access (Admin can manage suppliers)
+
+## Priority Order
+1. Supplier Management
+2. Multi-Batch Inventory updates
+3. Bulk Purchase Entry (with Free items)
+4. Return to Supplier functionality
+5. Dashboard Daily/Monthly cards
+6. Purchase History page
+
+## Technical Notes
+- New Models: `Supplier`, `Purchase`, `PurchaseItem`, `BatchStock`
+- Extend existing `Medicine` and `Inventory` logic
+- Use JavaScript for dynamic rows in Bulk Purchase
+- Update Services (InventoryService, PurchaseService, DashboardService)
+
+## Next Steps
+- Confirm database changes (migrations)
+- Start implementation with Supplier + Multi-Batch
+
+**Status**: Planning Complete  
+**Goal**: Make full dealer bill entry fast, accurate, and complete.
