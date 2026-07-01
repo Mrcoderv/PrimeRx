@@ -92,6 +92,26 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
         purchase.TotalAmount = total;
 
         context.Purchases.Add(purchase);
+
+        if (request.PaymentType == "Credit" && total > 0)
+        {
+            int creditDays = request.CreditDays
+                ?? await GetSupplierCreditDaysAsync(request.SupplierName)
+                ?? 30;
+
+            context.Payables.Add(new Payable
+            {
+                SupplierName = request.SupplierName.Trim(),
+                InvoiceNo = request.InvoiceNumber?.Trim(),
+                Amount = total,
+                PaidAmount = 0,
+                DueDate = DateTime.Today.AddDays(creditDays),
+                Status = PayableStatus.Pending,
+                Description = $"Auto-created from purchase on {request.PurchaseDate:dd MMM yyyy}",
+                CreatedAt = DateTime.Now
+            });
+        }
+
         await context.SaveChangesAsync();
         return purchase;
     }
@@ -230,10 +250,27 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
 
     public async Task<List<string>> GetSuppliersAsync()
     {
-        return await context.Purchases
+        var fromSupplierTable = await context.Suppliers
+            .Where(s => s.IsActive)
+            .Select(s => s.Name)
+            .ToListAsync();
+
+        var fromPurchases = await context.Purchases
             .Select(p => p.SupplierName)
             .Distinct()
-            .OrderBy(s => s)
             .ToListAsync();
+
+        return fromSupplierTable
+            .Union(fromPurchases)
+            .OrderBy(s => s)
+            .ToList();
+    }
+
+    public async Task<int?> GetSupplierCreditDaysAsync(string supplierName)
+    {
+        var supplier = await context.Suppliers
+            .Where(s => s.Name == supplierName && s.IsActive)
+            .FirstOrDefaultAsync();
+        return supplier?.CreditDays;
     }
 }

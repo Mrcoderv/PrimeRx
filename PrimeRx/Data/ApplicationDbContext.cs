@@ -17,6 +17,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Payable> Payables => Set<Payable>();
     public DbSet<Purchase> Purchases => Set<Purchase>();
     public DbSet<PurchaseItem> PurchaseItems => Set<PurchaseItem>();
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -76,6 +77,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         modelBuilder.Entity<Purchase>()
             .HasIndex(p => p.SupplierName);
+
+        modelBuilder.Entity<Supplier>()
+            .HasIndex(s => s.Name);
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {

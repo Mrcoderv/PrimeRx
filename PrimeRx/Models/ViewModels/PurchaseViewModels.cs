@@ -28,5 +28,9 @@ public class PurchaseCreateRequest
 
     public string? Notes { get; set; }
 
+    public string PaymentType { get; set; } = "Cash";
+
+    public int? CreditDays { get; set; }
+
     public List<PurchaseLineItem> Items { get; set; } = [];
 }

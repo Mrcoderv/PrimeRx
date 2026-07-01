@@ -2,6 +2,9 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using PrimeRx.Data;
+using PrimeRx.Models;
 using PrimeRx.Models.ViewModels;
 using PrimeRx.Services;
 
@@ -10,7 +13,8 @@ namespace PrimeRx.Pages.Purchase;
 public class CreateModel(
     PurchaseService purchaseService,
     InventoryService inventoryService,
-    UserManager<IdentityUser> userManager) : PageModel
+    UserManager<IdentityUser> userManager,
+    ApplicationDbContext db) : PageModel
 {
     [BindProperty]
     public PurchaseCreateRequest Input { get; set; } = new();
@@ -19,13 +23,13 @@ public class CreateModel(
     public string ItemsJson { get; set; } = "[]";
 
     public decimal MarginPercent { get; set; } = 16m;
-    public List<string> KnownSuppliers { get; set; } = [];
+    public List<Supplier> KnownSuppliers { get; set; } = [];
     public string? ErrorMessage { get; set; }
 
     public async Task OnGetAsync()
     {
         MarginPercent = await inventoryService.GetDefaultMarginPercentAsync();
-        KnownSuppliers = await purchaseService.GetSuppliersAsync();
+        KnownSuppliers = await db.Suppliers.Where(s => s.IsActive).OrderBy(s => s.Name).ToListAsync();
         Input.PurchaseDate = DateTime.Today;
     }
 
@@ -68,7 +72,12 @@ public class CreateModel(
             var user = await userManager.GetUserAsync(User);
             var purchase = await purchaseService.CreateAsync(Input, user?.UserName);
 
-            return RedirectToPage("/Purchase/Index", new { msg = $"Purchase recorded — {purchase.Items.Count} item(s) from {purchase.SupplierName}." });
+            var creditNote = Input.PaymentType == "Credit"
+                ? " — a payable has been recorded in Payables."
+                : string.Empty;
+
+            return RedirectToPage("/Purchase/Index",
+                new { msg = $"Purchase recorded — {purchase.Items.Count} item(s) from {purchase.SupplierName}{creditNote}" });
         }
         catch (Exception ex)
         {

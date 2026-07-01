@@ -1,0 +1,139 @@
+@page
+@model PrimeRx.Pages.Admin.Suppliers.IndexModel
+@{
+    ViewData["Title"] = "Manage Suppliers";
+}
+
+<div class="page-header mb-3">
+    <div>
+        <h1 class="page-title">Suppliers</h1>
+        <p class="page-subtitle">Manage your pharmaceutical suppliers and distributors</p>
+    </div>
+    <a asp-page="/Admin/Suppliers/Add" class="btn btn-accent"><i class="bi bi-plus-lg me-1"></i>Add Supplier</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @Model.Message <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="panel-card mb-3">
+    <div class="panel-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Search by name, phone, contact person…" />
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="All" selected="@(Model.Status == "All")">All Suppliers</option>
+                    <option value="Active" selected="@(Model.Status == "Active")">Active Only</option>
+                    <option value="Inactive" selected="@(Model.Status == "Inactive")">Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
+                <a asp-page="/Admin/Suppliers/Index" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="panel-card">
+    <div class="panel-header">@Model.Suppliers.Count supplier(s)</div>
+    <div class="table-responsive">
+        <table class="table table-pro mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Contact Person</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th class="text-center">Credit Days</th>
+                    <th>PAN</th>
+                    <th class="text-center">Status</th>
+                    <th style="width:100px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Suppliers.Any())
+                {
+                    <tr><td colspan="8" class="text-center text-muted py-4">No suppliers found</td></tr>
+                }
+                @foreach (var s in Model.Suppliers)
+                {
+                    <tr class="@(!s.IsActive ? "opacity-50" : "")">
+                        <td>
+                            <div class="fw-semibold">@s.Name</div>
+                            @if (!string.IsNullOrEmpty(s.DdaRegNo))
+                            {
+                                <small class="text-muted">DDA: @s.DdaRegNo</small>
+                            }
+                        </td>
+                        <td>@(s.ContactPerson ?? "—")</td>
+                        <td>@(s.Phone ?? "—")</td>
+                        <td><small>@(s.Email ?? "—")</small></td>
+                        <td class="text-center">@s.CreditDays days</td>
+                        <td><small>@(s.PAN ?? "—")</small></td>
+                        <td class="text-center">
+                            @if (s.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a asp-page="/Admin/Suppliers/Edit" asp-route-id="@s.Id"
+                                   class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="confirmDelete(@s.Id, '@s.Name.Replace("'","\\'")')"
+                                        title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Supplier?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="deleteModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" asp-page-handler="Delete" id="deleteForm">
+                    <input type="hidden" name="id" id="deleteId" />
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function confirmDelete(id, name) {
+    document.getElementById('deleteId').value = id;
+    document.getElementById('deleteModalBody').innerHTML =
+        `<p>Delete supplier <strong>${name}</strong>?</p><p class="text-muted small mb-0">This only removes the supplier record. Purchase history is not affected.</p>`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+}
