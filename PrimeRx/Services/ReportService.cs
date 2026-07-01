@@ -123,6 +123,115 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
             .OrderBy(m => m.ExpiryDate)
             .ToListAsync();
 
+    public async Task<PurchaseReportData> GetPurchaseReportAsync(DateTime? from = null, DateTime? to = null, string? supplier = null)
+    {
+        var query = context.Purchases
+            .Include(p => p.Items)
+            .AsQueryable();
+
+        if (from.HasValue)
+            query = query.Where(p => p.PurchaseDate >= from.Value.Date);
+        if (to.HasValue)
+            query = query.Where(p => p.PurchaseDate < to.Value.Date.AddDays(1));
+        if (!string.IsNullOrWhiteSpace(supplier))
+            query = query.Where(p => p.SupplierName.ToLower().Contains(supplier.ToLower()));
+
+        var purchases = await query.OrderByDescending(p => p.PurchaseDate).ToListAsync();
+
+        var supplierBreakdown = purchases
+            .GroupBy(p => p.SupplierName)
+            .Select(g => new SupplierSpendRow
+            {
+                SupplierName = g.Key,
+                PurchaseCount = g.Count(),
+                TotalSpend = g.Sum(p => p.TotalAmount)
+            })
+            .OrderByDescending(s => s.TotalSpend)
+            .ToList();
+
+        var topMedicines = purchases
+            .SelectMany(p => p.Items)
+            .GroupBy(i => i.MedicineName)
+            .Select(g => new PurchaseMedicineRow
+            {
+                MedicineName = g.Key,
+                TotalQuantity = g.Sum(i => i.Quantity),
+                TotalSpend = g.Sum(i => i.Quantity * i.PurchasePrice)
+            })
+            .OrderByDescending(m => m.TotalSpend)
+            .Take(20)
+            .ToList();
+
+        var fromLabel = from.HasValue ? from.Value.ToString("dd MMM yyyy") : "All time";
+        var toLabel = to.HasValue ? to.Value.ToString("dd MMM yyyy") : "Today";
+
+        return new PurchaseReportData
+        {
+            Title = $"Purchase Report — {fromLabel} to {toLabel}",
+            Purchases = purchases,
+            TotalAmount = purchases.Sum(p => p.TotalAmount),
+            PurchaseCount = purchases.Count,
+            SupplierBreakdown = supplierBreakdown,
+            TopMedicines = topMedicines
+        };
+    }
+
+    public byte[] ExportPurchaseReportToExcel(PurchaseReportData report)
+    {
+        using var package = new ExcelPackage();
+
+        var sheet = package.Workbook.Worksheets.Add("Purchases");
+        sheet.Cells[1, 1].Value = report.Title;
+        sheet.Cells[2, 1].Value = "Date";
+        sheet.Cells[2, 2].Value = "Invoice #";
+        sheet.Cells[2, 3].Value = "Supplier";
+        sheet.Cells[2, 4].Value = "Items";
+        sheet.Cells[2, 5].Value = "Total (Rs.)";
+        sheet.Cells[2, 6].Value = "Recorded By";
+
+        var row = 3;
+        foreach (var p in report.Purchases)
+        {
+            sheet.Cells[row, 1].Value = p.PurchaseDate.ToString("dd-MM-yyyy");
+            sheet.Cells[row, 2].Value = p.InvoiceNumber ?? "—";
+            sheet.Cells[row, 3].Value = p.SupplierName;
+            sheet.Cells[row, 4].Value = p.Items.Count;
+            sheet.Cells[row, 5].Value = p.TotalAmount;
+            sheet.Cells[row, 6].Value = p.CreatedBy ?? "—";
+            row++;
+        }
+        sheet.Cells[row + 1, 4].Value = "Total:";
+        sheet.Cells[row + 1, 5].Value = report.TotalAmount;
+
+        var supplierSheet = package.Workbook.Worksheets.Add("By Supplier");
+        supplierSheet.Cells[1, 1].Value = "Supplier";
+        supplierSheet.Cells[1, 2].Value = "Purchases";
+        supplierSheet.Cells[1, 3].Value = "Total Spend (Rs.)";
+        row = 2;
+        foreach (var s in report.SupplierBreakdown)
+        {
+            supplierSheet.Cells[row, 1].Value = s.SupplierName;
+            supplierSheet.Cells[row, 2].Value = s.PurchaseCount;
+            supplierSheet.Cells[row, 3].Value = s.TotalSpend;
+            row++;
+        }
+
+        var medSheet = package.Workbook.Worksheets.Add("Top Medicines");
+        medSheet.Cells[1, 1].Value = "Medicine";
+        medSheet.Cells[1, 2].Value = "Quantity Purchased";
+        medSheet.Cells[1, 3].Value = "Total Spend (Rs.)";
+        row = 2;
+        foreach (var m in report.TopMedicines)
+        {
+            medSheet.Cells[row, 1].Value = m.MedicineName;
+            medSheet.Cells[row, 2].Value = m.TotalQuantity;
+            medSheet.Cells[row, 3].Value = m.TotalSpend;
+            row++;
+        }
+
+        return package.GetAsByteArray();
+    }
+
     public byte[] ExportSalesToExcel(SalesReportData report)
     {
         using var package = new ExcelPackage();
@@ -293,6 +402,30 @@ public class ProfitLossReport
     public decimal Expenses { get; set; }
     public decimal Profit { get; set; }
     public int BillCount { get; set; }
+}
+
+public class PurchaseReportData
+{
+    public string Title { get; set; } = string.Empty;
+    public List<Purchase> Purchases { get; set; } = [];
+    public decimal TotalAmount { get; set; }
+    public int PurchaseCount { get; set; }
+    public List<SupplierSpendRow> SupplierBreakdown { get; set; } = [];
+    public List<PurchaseMedicineRow> TopMedicines { get; set; } = [];
+}
+
+public class SupplierSpendRow
+{
+    public string SupplierName { get; set; } = string.Empty;
+    public int PurchaseCount { get; set; }
+    public decimal TotalSpend { get; set; }
+}
+
+public class PurchaseMedicineRow
+{
+    public string MedicineName { get; set; } = string.Empty;
+    public int TotalQuantity { get; set; }
+    public decimal TotalSpend { get; set; }
 }
 
 public class DueCollectionReport
