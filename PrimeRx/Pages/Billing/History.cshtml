@@ -28,6 +28,7 @@
                 <th>Phone</th>
                 <th>Amount</th>
                 <th>Payment</th>
+                <th>Staff</th>
                 <th>Status</th>
                 <th></th>
             </tr>
@@ -42,6 +43,7 @@
                     <td>@bill.CustomerPhone</td>
                     <td>@bill.FinalAmount.ToString("N2")</td>
                     <td>@bill.PaymentMethod</td>
+                    <td><strong>@(bill.StaffName ?? "Admin")</strong></td>
                     <td>
                         <span class="badge @(bill.PaymentStatus == "Paid" ? "bg-success" : bill.PaymentStatus == "Due" ? "bg-danger" : "bg-warning")">
                             @bill.PaymentStatus
