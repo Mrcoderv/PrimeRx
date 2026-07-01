@@ -1,11 +1,24 @@
 namespace PrimeRx.Models;
 
+/// <summary>
+/// Represents one line item on a bill.
+/// Tracks which batch was sold for traceability.
+/// </summary>
 public class SaleItem
 {
     public int Id { get; set; }
     public int BillId { get; set; }
-    public Bill Bill { get; set; } = null!;
+    public virtual Bill Bill { get; set; } = null!;
+
     public int MedicineId { get; set; }
+    public virtual Medicine Medicine { get; set; } = null!;
+
+    /// <summary>
+    /// Reference to the batch sold (for traceability)
+    /// </summary>
+    public int? BatchId { get; set; }
+    public virtual InventoryBatch? Batch { get; set; }
+
     public string MedicineName { get; set; } = string.Empty;
     public string? PackSize { get; set; }
     public string? BatchNumber { get; set; }

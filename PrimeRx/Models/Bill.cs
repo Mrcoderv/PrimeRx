@@ -13,6 +13,12 @@ public class Bill
 
     public string? CustomerPhone { get; set; }
 
+    /// <summary>
+    /// Foreign key to Customer entity (optional for guest purchases)
+    /// </summary>
+    public int? CustomerId { get; set; }
+    public virtual Customer? Customer { get; set; }
+
     public decimal TotalAmount { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal TaxAmount { get; set; }
