@@ -6,7 +6,7 @@ using PrimeRx.Models.ViewModels;
 
 namespace PrimeRx.Services;
 
-public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenerator)
+public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenerator, BackupService backupService)
 {
     public async Task<Bill> CreateBillAsync(CreateBillRequest request, string? staffId, string? staffName)
     {
@@ -130,6 +130,19 @@ public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenera
             context.Bills.Add(bill);
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
+
+            try
+            {
+                var billCount = await context.Bills.CountAsync();
+                if (billCount > 0 && billCount % 10 == 0)
+                {
+                    await backupService.CreateBackupAsync();
+                }
+            }
+            catch
+            {
+                // Silently ignore backup errors so billing doesn't fail after transaction commit
+            }
 
             return bill;
         }

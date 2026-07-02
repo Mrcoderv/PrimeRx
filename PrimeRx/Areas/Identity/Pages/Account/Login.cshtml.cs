@@ -21,7 +21,7 @@ public class LoginModel(SignInManager<IdentityUser> signInManager, ILogger<Login
     public class InputModel
     {
         [Required]
-        [EmailAddress]
+        [Display(Name = "Email or Username")]
         public string Email { get; set; } = string.Empty;
 
         [Required]
@@ -50,8 +50,21 @@ public class LoginModel(SignInManager<IdentityUser> signInManager, ILogger<Login
         if (!ModelState.IsValid)
             return Page();
 
+        // Find user by email first, or fallback to username
+        var user = await signInManager.UserManager.FindByEmailAsync(Input.Email);
+        if (user == null)
+        {
+            user = await signInManager.UserManager.FindByNameAsync(Input.Email);
+        }
+
+        if (user == null)
+        {
+            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+            return Page();
+        }
+
         var result = await signInManager.PasswordSignInAsync(
-            Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+            user.UserName!, Input.Password, Input.RememberMe, lockoutOnFailure: false);
 
         if (result.Succeeded)
         {

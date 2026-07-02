@@ -6,7 +6,7 @@ using PrimeRx.Models;
 
 namespace PrimeRx.Pages.Admin.Users;
 
-public class IndexModel(UserManager<IdentityUser> userManager) : PageModel
+public class IndexModel(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager) : PageModel
 {
     [BindProperty]
     public NewStaffInput NewStaff { get; set; } = new();
@@ -46,6 +46,64 @@ public class IndexModel(UserManager<IdentityUser> userManager) : PageModel
 
         await userManager.AddToRoleAsync(user, AppRoles.Staff);
         return RedirectToPage(new { message = "Staff account created successfully." });
+    }
+
+    public async Task<IActionResult> OnPostSwitchToStaffAsync(string email)
+    {
+        if (!User.IsInRole(AppRoles.Admin))
+        {
+            return Forbid();
+        }
+
+        var targetUser = await userManager.FindByEmailAsync(email);
+        if (targetUser == null)
+        {
+            ErrorMessage = "User not found.";
+            await LoadUsersAsync();
+            return Page();
+        }
+
+        // Sign out current admin user
+        await signInManager.SignOutAsync();
+
+        // Sign in as target staff user
+        await signInManager.SignInAsync(targetUser, isPersistent: false);
+
+        // Redirect to Billing page (default for staff)
+        return RedirectToPage("/Billing/Index");
+    }
+
+    public async Task<IActionResult> OnPostDeleteStaffAsync(string email)
+    {
+        if (!User.IsInRole(AppRoles.Admin))
+        {
+            return Forbid();
+        }
+
+        var targetUser = await userManager.FindByEmailAsync(email);
+        if (targetUser == null)
+        {
+            ErrorMessage = "User not found.";
+            await LoadUsersAsync();
+            return Page();
+        }
+
+        if (await userManager.IsInRoleAsync(targetUser, AppRoles.Admin))
+        {
+            ErrorMessage = "Cannot delete an Administrator account.";
+            await LoadUsersAsync();
+            return Page();
+        }
+
+        var result = await userManager.DeleteAsync(targetUser);
+        if (!result.Succeeded)
+        {
+            ErrorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
+            await LoadUsersAsync();
+            return Page();
+        }
+
+        return RedirectToPage(new { message = "Staff account deleted successfully." });
     }
 
     private async Task LoadUsersAsync()

@@ -5,7 +5,7 @@ using PrimeRx.Models.ViewModels;
 
 namespace PrimeRx.Services;
 
-public class PurchaseService(ApplicationDbContext context, InventoryService inventoryService)
+public class PurchaseService(ApplicationDbContext context, InventoryService inventoryService, BackupService backupService)
 {
     public async Task<List<Purchase>> GetAllAsync(int limit = 100)
     {
@@ -120,6 +120,16 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
         }
 
         await context.SaveChangesAsync();
+
+        try
+        {
+            await backupService.CreateBackupAsync();
+        }
+        catch
+        {
+            // Silently ignore backup errors so purchase operation doesn't fail
+        }
+
         return purchase;
     }
 
@@ -271,6 +281,15 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
 
         existing.TotalAmount = total;
         await context.SaveChangesAsync();
+
+        try
+        {
+            await backupService.CreateBackupAsync();
+        }
+        catch
+        {
+            // Silently ignore backup errors so purchase operation doesn't fail
+        }
     }
 
     public async Task DeleteAsync(int id)
@@ -293,6 +312,15 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
 
         context.Purchases.Remove(purchase);
         await context.SaveChangesAsync();
+
+        try
+        {
+            await backupService.CreateBackupAsync();
+        }
+        catch
+        {
+            // Silently ignore backup errors so purchase operation doesn't fail
+        }
     }
 
     public async Task<List<string>> GetSuppliersAsync()
