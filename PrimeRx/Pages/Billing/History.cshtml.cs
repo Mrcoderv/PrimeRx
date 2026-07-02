@@ -13,6 +13,7 @@ public class HistoryModel(ApplicationDbContext context) : PageModel
     public async Task OnGetAsync(string? search)
     {
         Search = search;
+
         var query = context.Bills.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -21,9 +22,13 @@ public class HistoryModel(ApplicationDbContext context) : PageModel
             query = query.Where(b =>
                 b.BillNumber.ToLower().Contains(term) ||
                 b.CustomerName.ToLower().Contains(term) ||
-                b.CustomerPhone.Contains(term));
+                (b.CustomerPhone ?? "").Contains(term) ||
+                (b.StaffName ?? "").ToLower().Contains(term));
         }
 
-        Bills = await query.OrderByDescending(b => b.BillDate).Take(100).ToListAsync();
+        Bills = await query
+            .OrderByDescending(b => b.BillDate)
+            .Take(100)
+            .ToListAsync();
     }
 }
