@@ -45,11 +45,60 @@
     </div>
 </form>
 
+@section Styles {
+    <style>
+        .toggle-batches-btn {
+            font-size: 1rem;
+            transition: transform 0.2s ease;
+            box-shadow: none !important;
+            padding: 0.25rem 0.5rem;
+        }
+        .toggle-batches-btn:hover {
+            transform: scale(1.15);
+        }
+        .batch-detail-row {
+            background-color: var(--rx-table-head-bg) !important;
+        }
+        .batch-detail-card {
+            border: 1px solid var(--rx-border) !important;
+            border-radius: 12px !important;
+            background: var(--rx-dropdown-bg) !important;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        .batch-table {
+            background: transparent !important;
+            --bs-table-bg: transparent !important;
+        }
+        .batch-table th {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--rx-text-muted) !important;
+            border-bottom: 2px solid var(--rx-border) !important;
+            background: transparent !important;
+        }
+        .batch-table td {
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--rx-table-border) !important;
+            background: transparent !important;
+        }
+        /* Highlight row if expired or near expiry */
+        .batch-row-expired {
+            background-color: rgba(239, 68, 68, 0.08) !important;
+        }
+        .batch-row-warning {
+            background-color: rgba(245, 158, 11, 0.05) !important;
+        }
+    </style>
+}
+
 <div class="panel-card">
     <div class="table-responsive">
         <table class="table table-pro mb-0">
             <thead>
                 <tr>
+                    <th style="width: 45px;"></th>
                     <th>Medicine</th>
                     <th>Generic</th>
                     <th>Category</th>
@@ -69,6 +118,11 @@
                 {
                     var lowStock = m.StockQuantity <= m.LowStockThreshold;
                     <tr>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-link text-decoration-none toggle-batches-btn" data-medicine-id="@m.Id" type="button" title="View batches">
+                                <i class="bi bi-chevron-right text-primary"></i>
+                            </button>
+                        </td>
                         <td><strong>@m.Name</strong></td>
                         <td>@m.GenericName</td>
                         <td>@m.Category</td>
@@ -88,8 +142,92 @@
                             </td>
                         }
                     </tr>
+                    <tr id="batches-@m.Id" class="d-none batch-detail-row">
+                        <td colspan="@(User.IsInRole("Admin") ? 10 : 9)" class="px-4 py-3">
+                            <div class="card batch-detail-card p-3">
+                                <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                                    <i class="bi bi-layers text-primary"></i>
+                                    Batches for @m.Name
+                                </h6>
+                                @if (Model.MedicineBatches.TryGetValue(m.Id, out var batches) && batches.Any())
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-sm batch-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Batch Number</th>
+                                                    <th class="text-center">Qty in Batch</th>
+                                                    <th class="text-end">Purchase Price</th>
+                                                    <th>Expiry</th>
+                                                    <th>Received</th>
+                                                    <th>Source</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var b in batches.OrderBy(x => x.ExpiryDate ?? DateTime.MaxValue))
+                                                {
+                                                    var daysLeft = b.ExpiryDate.HasValue ? (b.ExpiryDate.Value - DateTime.Today).Days : (int?)null;
+                                                    var isExpired = daysLeft.HasValue && daysLeft.Value < 0;
+                                                    var isSoonExpiring = daysLeft.HasValue && daysLeft.Value >= 0 && daysLeft.Value < 90;
+                                                    
+                                                    var rowClass = isExpired ? "batch-row-expired" : (isSoonExpiring ? "batch-row-warning" : "");
+                                                    var badgeClass = isExpired ? "bg-danger text-white" : (isSoonExpiring ? "bg-warning text-dark" : "bg-success text-white");
+                                                    
+                                                    <tr class="@rowClass">
+                                                        <td class="fw-semibold">@b.BatchNumber</td>
+                                                        <td class="text-center fw-bold">@b.Quantity</td>
+                                                        <td class="text-end">Rs. @b.PurchasePrice.ToString("N2")</td>
+                                                        <td>
+                                                            @if (b.ExpiryDate.HasValue)
+                                                            {
+                                                                <span class="badge @badgeClass">
+                                                                    @b.ExpiryDate.Value.ToString("dd-MM-yyyy")
+                                                                    @(isExpired ? " (Expired)" : isSoonExpiring ? " (Soon)" : "")
+                                                                </span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="text-muted">—</span>
+                                                            }
+                                                        </td>
+                                                        <td><small class="text-muted">@b.CreatedAt.ToString("dd-MM-yyyy")</small></td>
+                                                        <td>@(string.IsNullOrWhiteSpace(b.PurchaseSource) ? "—" : b.PurchaseSource)</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-muted py-2 small">
+                                        <i class="bi bi-info-circle me-1"></i>No batches found for this medicine.
+                                    </div>
+                                }
+                            </div>
+                        </td>
+                    </tr>
                 }
             </tbody>
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.toggle-batches-btn').click(function () {
+                var medicineId = $(this).data('medicine-id');
+                var targetRow = $('#batches-' + medicineId);
+                var icon = $(this).find('i');
+                
+                targetRow.toggleClass('d-none');
+                if (targetRow.hasClass('d-none')) {
+                    icon.removeClass('bi-chevron-down').addClass('bi-chevron-right');
+                } else {
+                    icon.removeClass('bi-chevron-right').addClass('bi-chevron-down');
+                }
+            });
+        });
+    </script>
+}

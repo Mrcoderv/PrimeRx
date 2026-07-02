@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace PrimeRx.Data.Migrations
 {
+    /// <inheritdoc />
     public partial class AddMedicineFormType : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -15,6 +17,7 @@ namespace PrimeRx.Data.Migrations
                 nullable: true);
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
