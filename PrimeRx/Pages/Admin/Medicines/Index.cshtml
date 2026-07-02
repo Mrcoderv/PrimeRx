@@ -10,6 +10,9 @@
         <p class="page-subtitle">Manage your medicine catalog</p>
     </div>
     <div class="d-flex gap-2">
+        <a asp-page-handler="Export" class="btn btn-outline-secondary">
+            <i class="bi bi-download me-1"></i> Export Excel
+        </a>
         <button class="btn btn-outline-accent" data-bs-toggle="modal" data-bs-target="#importModal">
             <i class="bi bi-upload me-1"></i> Import Excel
         </button>
@@ -46,10 +49,12 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Generic</th>
+                    <th>Generic Name</th>
+                    <th>Manufacturer</th>
+                    <th>Form / Type</th>
                     <th class="text-end">MRP</th>
+                    <th class="text-end">Purchase Price</th>
                     <th class="text-end">Stock</th>
-                    <th>Category</th>
                     <th class="text-center">Active</th>
                     <th class="text-end">Actions</th>
                 </tr>
@@ -57,16 +62,20 @@
             <tbody>
                 @if (!Model.Medicines.Any())
                 {
-                    <tr><td colspan="7" class="text-center text-muted py-4">No medicines found.</td></tr>
+                    <tr><td colspan="9" class="text-center text-muted py-4">No medicines found.</td></tr>
                 }
                 @foreach (var m in Model.Medicines)
                 {
                     <tr>
                         <td><strong>@m.Name</strong></td>
                         <td class="text-muted">@m.GenericName</td>
+                        <td class="text-muted">@m.Manufacturer</td>
+                        <td>@if (!string.IsNullOrEmpty(m.FormType)) {
+                            <span class="badge bg-secondary bg-opacity-50 text-body">@m.FormType</span>
+                        }</td>
                         <td class="text-end">Rs. @m.MRP.ToString("N2")</td>
+                        <td class="text-end text-muted">Rs. @m.PurchasePrice.ToString("N2")</td>
                         <td class="text-end @(m.StockQuantity <= m.LowStockThreshold ? "text-warning fw-bold" : "")">@m.StockQuantity</td>
-                        <td>@m.Category</td>
                         <td class="text-center">
                             <span class="badge @(m.IsActive ? "bg-success" : "bg-secondary")">@(m.IsActive ? "Active" : "Inactive")</span>
                         </td>
@@ -92,9 +101,10 @@
                 <div class="modal-body">
                     <div class="alert alert-info small">
                         <strong>Expected columns (row 1 = headers):</strong><br/>
-                        Name, GenericName, Manufacturer, MRP, PurchasePrice, StockQuantity, Category, LowStockThreshold, DiscountPercent
+                        Name, GenericName, Manufacturer, FormType, MRP, PurchasePrice, StockQuantity, Category, LowStockThreshold, DiscountPercent
                         <br/><br/>
                         Existing medicines (matched by Name) will be updated; new ones will be added.
+                        Download the current catalog using <strong>Export Excel</strong> to see the exact format.
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Excel File (.xlsx)</label>

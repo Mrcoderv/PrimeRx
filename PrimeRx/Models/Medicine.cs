@@ -19,6 +19,9 @@ public class Medicine
     public bool IsActive { get; set; } = true;
     public decimal DiscountPercent { get; set; } = 0;
 
+    /// <summary>Form type: Tablet, Syrup, Capsule, Injection, Eye Drop, etc.</summary>
+    public string? FormType { get; set; }
+
     // Latest batch / supplier recorded for this medicine (see InventoryBatch for full history).
     public string? BatchNumber { get; set; }
     public string? PurchaseSource { get; set; }

@@ -28,6 +28,52 @@ public class IndexModel(InventoryService inventoryService, ApplicationDbContext 
         return RedirectToPage(new { message = "Medicine deactivated." });
     }
 
+    public async Task<IActionResult> OnGetExportAsync()
+    {
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+        var medicines = await inventoryService.GetAllAsync(null, includeInactive: true);
+
+        using var package = new ExcelPackage();
+        var ws = package.Workbook.Worksheets.Add("Medicines");
+
+        // Header row
+        string[] headers = ["Name", "GenericName", "Manufacturer", "FormType",
+                             "MRP", "PurchasePrice", "StockQuantity", "Category",
+                             "LowStockThreshold", "DiscountPercent", "IsActive"];
+        for (int c = 0; c < headers.Length; c++)
+        {
+            ws.Cells[1, c + 1].Value = headers[c];
+            ws.Cells[1, c + 1].Style.Font.Bold = true;
+        }
+
+        // Data rows
+        int row = 2;
+        foreach (var m in medicines)
+        {
+            ws.Cells[row, 1].Value  = m.Name;
+            ws.Cells[row, 2].Value  = m.GenericName;
+            ws.Cells[row, 3].Value  = m.Manufacturer;
+            ws.Cells[row, 4].Value  = m.FormType;
+            ws.Cells[row, 5].Value  = m.MRP;
+            ws.Cells[row, 6].Value  = m.PurchasePrice;
+            ws.Cells[row, 7].Value  = m.StockQuantity;
+            ws.Cells[row, 8].Value  = m.Category;
+            ws.Cells[row, 9].Value  = m.LowStockThreshold;
+            ws.Cells[row, 10].Value = m.DiscountPercent;
+            ws.Cells[row, 11].Value = m.IsActive ? "Yes" : "No";
+            row++;
+        }
+
+        ws.Cells[ws.Dimension.Address].AutoFitColumns();
+
+        var bytes = package.GetAsByteArray();
+        var fileName = $"MedicineCatalog_{DateTime.Today:yyyyMMdd}.xlsx";
+        return File(bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName);
+    }
+
     public async Task<IActionResult> OnPostImportAsync(IFormFile? importFile)
     {
         if (importFile == null || importFile.Length == 0)
@@ -93,12 +139,14 @@ public class IndexModel(InventoryService inventoryService, ApplicationDbContext 
                 if (allMedicines.TryGetValue(key, out var existing))
                 {
                     // Update existing
-                    var gen = Cell(row, "GenericName");
-                    var mfr = Cell(row, "Manufacturer");
-                    var cat = Cell(row, "Category");
-                    if (!string.IsNullOrEmpty(gen)) existing.GenericName = gen;
-                    if (!string.IsNullOrEmpty(mfr)) existing.Manufacturer = mfr;
-                    if (!string.IsNullOrEmpty(cat)) existing.Category = cat;
+                    var gen  = Cell(row, "GenericName");
+                    var mfr  = Cell(row, "Manufacturer");
+                    var form = Cell(row, "FormType");
+                    var cat  = Cell(row, "Category");
+                    if (!string.IsNullOrEmpty(gen))  existing.GenericName  = gen;
+                    if (!string.IsNullOrEmpty(mfr))  existing.Manufacturer = mfr;
+                    if (!string.IsNullOrEmpty(form)) existing.FormType     = form;
+                    if (!string.IsNullOrEmpty(cat))  existing.Category     = cat;
                     if (mrp > 0) existing.MRP = mrp;
                     if (purchasePrice > 0) existing.PurchasePrice = purchasePrice;
                     if (stock > 0) existing.StockQuantity = stock;
@@ -112,9 +160,10 @@ public class IndexModel(InventoryService inventoryService, ApplicationDbContext 
                     var medicine = new Medicine
                     {
                         Name              = name,
-                        GenericName       = Cell(row, "GenericName") is { Length: > 0 } g ? g : null,
+                        GenericName       = Cell(row, "GenericName")  is { Length: > 0 } g  ? g  : null,
                         Manufacturer      = Cell(row, "Manufacturer") is { Length: > 0 } m2 ? m2 : null,
-                        Category          = Cell(row, "Category") is { Length: > 0 } c ? c : null,
+                        FormType          = Cell(row, "FormType")     is { Length: > 0 } ft ? ft : null,
+                        Category          = Cell(row, "Category")     is { Length: > 0 } c  ? c  : null,
                         MRP               = mrp,
                         PurchasePrice     = purchasePrice,
                         StockQuantity     = stock,

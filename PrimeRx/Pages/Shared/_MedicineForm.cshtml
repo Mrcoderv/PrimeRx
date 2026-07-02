@@ -15,6 +15,30 @@
         <input asp-for="Manufacturer" class="form-control" />
     </div>
     <div class="col-md-6">
+        <label asp-for="FormType" class="form-label">Form / Type</label>
+        <input asp-for="FormType" class="form-control" list="formTypeList"
+               placeholder="e.g. Tablet, Syrup, Capsule…" autocomplete="off" />
+        <datalist id="formTypeList">
+            <option value="Tablet" />
+            <option value="Capsule" />
+            <option value="Syrup" />
+            <option value="Suspension" />
+            <option value="Injection" />
+            <option value="Eye Drop" />
+            <option value="Ear Drop" />
+            <option value="Nasal Drop" />
+            <option value="Ointment" />
+            <option value="Cream" />
+            <option value="Gel" />
+            <option value="Lotion" />
+            <option value="Powder" />
+            <option value="Inhaler" />
+            <option value="Patch" />
+            <option value="Suppository" />
+            <option value="Solution" />
+        </datalist>
+    </div>
+    <div class="col-md-6">
         <label asp-for="Category" class="form-label">Category</label>
         <input asp-for="Category" class="form-control" placeholder="e.g. Analgesic" />
     </div>

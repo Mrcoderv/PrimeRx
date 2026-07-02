@@ -684,6 +684,9 @@ namespace PrimeRx.Data.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("FormType")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("PurchaseSource")
                         .HasColumnType("TEXT");
 
