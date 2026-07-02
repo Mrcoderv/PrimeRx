@@ -11,6 +11,7 @@ public class BillLineItem
     public int AvailableStock { get; set; }
     public decimal DiscountPercent { get; set; }
     public decimal DiscountAmount { get; set; }
+    public int? SelectedBatchId { get; set; }
 
     public decimal LineTotal => (Rate * Quantity) - DiscountAmount;
 }

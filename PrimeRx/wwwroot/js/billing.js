@@ -2,6 +2,7 @@
 (function () {
     const items = [];
     let itemIndex = 0;
+    let lastAddedTr = null;
 
     const itemsBody = document.getElementById('itemsBody');
     const emptyRow = document.getElementById('emptyRow');
@@ -38,7 +39,8 @@
             quantity: i.quantity,
             availableStock: i.availableStock,
             discountPercent: i.discountPercent,
-            discountAmount: i.discountAmount
+            discountAmount: i.discountAmount,
+            selectedBatchId: i.batchId ?? null
         })));
 
         generateBtn.disabled = items.length === 0;
@@ -60,7 +62,9 @@
             quantity: 1,
             availableStock: medicine.stockQuantity,
             discountPercent: medicine.discountPercent || 0,
-            discountAmount: 0
+            discountAmount: 0,
+            batchId: null,
+            batchNumber: null
         });
 
         renderRow(items[items.length - 1]);
@@ -70,15 +74,29 @@
     function renderRow(item) {
         const tr = document.createElement('tr');
         tr.dataset.index = item.index;
-        tr.innerHTML = `
-            <td>${item.medicineName}<br><small>Stock: ${item.availableStock}</small></td>
+
+        const nameTd = document.createElement('td');
+        nameTd.innerHTML = `${item.medicineName}<br><small class="text-muted">Stock: ${item.availableStock}</small><br>`;
+        const batchBtn = document.createElement('button');
+        batchBtn.type = 'button';
+        batchBtn.className = 'batch-btn';
+        batchBtn.title = 'Change batch';
+        batchBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17h7m-3.5-3.5v7"/></svg><span class="batch-label">Auto batch</span> ▾`;
+        nameTd.appendChild(batchBtn);
+
+        tr.appendChild(nameTd);
+        tr.innerHTML += `
             <td><input type="number" class="form-control form-control-sm rate-input" value="${item.rate}" step="0.01" min="0"></td>
             <td><input type="number" class="form-control form-control-sm qty-input" value="${item.quantity}" min="1" max="${item.availableStock}"></td>
             <td><input type="number" class="form-control form-control-sm disc-percent-input" value="${item.discountPercent}" step="0.1" min="0" max="100"></td>
             <td class="disc-amount">${formatMoney(item.discountAmount)}</td>
             <td class="line-total">${formatMoney(item.rate * item.quantity - item.discountAmount)}</td>
-            <td><button type="button" class="btn btn-sm btn-outline-danger remove-btn">&times;</button></td>
-        `;
+            <td><button type="button" class="btn btn-sm btn-outline-danger remove-btn">&times;</button></td>`;
+
+        tr.querySelector('.batch-btn').addEventListener('click', e => {
+            e.stopPropagation();
+            openBatchPicker(e.currentTarget, item, tr);
+        });
 
         tr.querySelector('.rate-input').addEventListener('input', e => {
             item.rate = parseFloat(e.target.value) || 0;
@@ -112,10 +130,15 @@
             const i = items.findIndex(x => x.index === item.index);
             if (i >= 0) items.splice(i, 1);
             tr.remove();
+            if (lastAddedTr === tr) lastAddedTr = null;
             recalcTotals();
         });
 
         itemsBody.appendChild(tr);
+
+        lastAddedTr = tr;
+        tr.classList.add('row-just-added');
+        setTimeout(() => tr.classList.remove('row-just-added'), 600);
     }
 
     function updateLineTotal(tr, item) {
@@ -124,6 +147,113 @@
         item.discountAmount = discountAmount;
         tr.querySelector('.disc-amount').textContent = formatMoney(discountAmount);
         tr.querySelector('.line-total').textContent = formatMoney(gross - discountAmount);
+    }
+
+    // ── Batch picker ────────────────────────────────────────────────────────
+    function escHtml(s) {
+        return String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+    }
+
+    function updateBatchDisplay(tr, item) {
+        const btn = tr.querySelector('.batch-btn');
+        if (!btn) return;
+        const label = btn.querySelector('.batch-label');
+        if (item.batchId) {
+            label.textContent = item.batchNumber || 'Batch #' + item.batchId;
+            btn.classList.add('has-batch');
+        } else {
+            label.textContent = 'Auto batch';
+            btn.classList.remove('has-batch');
+        }
+        recalcTotals();
+    }
+
+    let closeBatchPickerOutside = null;
+
+    function closeBatchPicker() {
+        const existing = document.getElementById('batchPickerPopup');
+        if (existing) existing.remove();
+        if (closeBatchPickerOutside) {
+            document.removeEventListener('mousedown', closeBatchPickerOutside);
+            closeBatchPickerOutside = null;
+        }
+    }
+
+    function openBatchPicker(btn, item, tr) {
+        closeBatchPicker();
+
+        const picker = document.createElement('div');
+        picker.id = 'batchPickerPopup';
+        picker.className = 'batch-picker';
+
+        const rect = btn.getBoundingClientRect();
+        const viewH = window.innerHeight;
+        const spaceBelow = viewH - rect.bottom - 8;
+        if (spaceBelow >= 120) {
+            picker.style.top  = (rect.bottom + 4) + 'px';
+        } else {
+            picker.style.bottom = (viewH - rect.top + 4) + 'px';
+        }
+        picker.style.left = rect.left + 'px';
+
+        picker.innerHTML = `<div class="batch-picker-header">Select Batch — ${escHtml(item.medicineName)}</div>
+            <div class="batch-picker-loading"><div class="bp-spinner"></div> Loading batches…</div>`;
+        document.body.appendChild(picker);
+
+        fetch(`?handler=Batches&medicineId=${item.medicineId}`, { headers: { Accept: 'application/json' } })
+            .then(r => r.json())
+            .then(batches => {
+                const body = document.createElement('div');
+
+                const autoRow = document.createElement('div');
+                autoRow.className = 'batch-picker-row' + (!item.batchId ? ' selected' : '');
+                autoRow.innerHTML = `<span class="bp-number">Auto (FEFO)</span><span class="bp-qty">—</span><span class="bp-expiry">Earliest expiry first</span>${!item.batchId ? '<span class="bp-check">✓</span>' : '<span></span>'}`;
+                autoRow.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    item.batchId = null; item.batchNumber = null;
+                    updateBatchDisplay(tr, item);
+                    closeBatchPicker();
+                });
+                body.appendChild(autoRow);
+
+                if (!batches.length) {
+                    const empty = document.createElement('div');
+                    empty.className = 'batch-picker-empty';
+                    empty.textContent = 'No batches with stock found';
+                    body.appendChild(empty);
+                } else {
+                    batches.forEach(b => {
+                        const row = document.createElement('div');
+                        row.className = 'batch-picker-row' + (b.id === item.batchId ? ' selected' : '');
+                        row.innerHTML = `<span class="bp-number">${escHtml(b.batchNumber)}</span><span class="bp-qty">${b.quantity} units</span><span class="bp-expiry">${escHtml(b.expiryDate || 'No expiry')}</span>${b.id === item.batchId ? '<span class="bp-check">✓</span>' : '<span></span>'}`;
+                        row.addEventListener('mousedown', e => {
+                            e.preventDefault();
+                            item.batchId = b.id;
+                            item.batchNumber = b.batchNumber;
+                            const qtyInput = tr.querySelector('.qty-input');
+                            if (parseInt(qtyInput.value) > b.quantity) {
+                                qtyInput.value = b.quantity;
+                                item.quantity = b.quantity;
+                            }
+                            qtyInput.max = b.quantity;
+                            updateBatchDisplay(tr, item);
+                            updateLineTotal(tr, item);
+                            closeBatchPicker();
+                        });
+                        body.appendChild(row);
+                    });
+                }
+
+                picker.querySelector('.batch-picker-loading').replaceWith(body);
+            })
+            .catch(() => {
+                picker.querySelector('.batch-picker-loading').textContent = 'Failed to load batches.';
+            });
+
+        closeBatchPickerOutside = e => {
+            if (!picker.contains(e.target) && e.target !== btn) closeBatchPicker();
+        };
+        setTimeout(() => document.addEventListener('mousedown', closeBatchPickerOutside), 10);
     }
 
     // Conditional validation for CustomerPhone field when payment is Due
@@ -398,7 +528,24 @@
             return;
         }
         if (!isOpen) {
-            if (e.key === 'Enter') e.preventDefault();
+            if (e.key === 'Enter') { e.preventDefault(); return; }
+
+            // Quick-qty shortcut: 1–9 while popup is closed and input is empty
+            if (/^[1-9]$/.test(e.key) && !e.ctrlKey && !e.altKey && !e.metaKey
+                    && !searchInput.value && lastAddedTr && document.contains(lastAddedTr)) {
+                e.preventDefault();
+                const item = items.find(x => x.index === Number(lastAddedTr.dataset.index));
+                const qtyInput = lastAddedTr.querySelector('.qty-input');
+                if (item && qtyInput) {
+                    const n = Math.min(parseInt(e.key), item.availableStock);
+                    qtyInput.value = n;
+                    item.quantity = n;
+                    updateLineTotal(lastAddedTr, item);
+                    recalcTotals();
+                    qtyInput.classList.add('qty-flash');
+                    setTimeout(() => qtyInput.classList.remove('qty-flash'), 400);
+                }
+            }
             return;
         }
         if (e.key === 'ArrowDown') {

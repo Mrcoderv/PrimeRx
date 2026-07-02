@@ -35,15 +35,28 @@ public class IndexModel(
         return new JsonResult(results.Select(m => new
         {
             id = m.Id,
-            text = string.IsNullOrWhiteSpace(m.GenericName)
-                ? $"{m.Name} — Rs.{m.MRP:N2} · Stock: {m.StockQuantity}"
-                : $"{m.Name} ({m.GenericName}) — Rs.{m.MRP:N2} · Stock: {m.StockQuantity}",
             name = m.Name,
             genericName = m.GenericName,
             mrp = m.MRP,
             stockQuantity = m.StockQuantity,
             discountPercent = m.DiscountPercent
         }));
+    }
+
+    public async Task<IActionResult> OnGetBatchesAsync(int medicineId)
+    {
+        var batches = await inventoryService.GetBatchesAsync(medicineId);
+        return new JsonResult(batches
+            .Where(b => b.Quantity > 0)
+            .Select(b => new
+            {
+                id = b.Id,
+                batchNumber = b.BatchNumber,
+                quantity = b.Quantity,
+                expiryDate = b.ExpiryDate.HasValue
+                    ? b.ExpiryDate.Value.ToString("MMM yyyy")
+                    : (string?)null
+            }));
     }
 
     public async Task<IActionResult> OnPostAsync()

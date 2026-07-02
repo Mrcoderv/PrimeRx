@@ -90,7 +90,15 @@ public class BillingService(ApplicationDbContext context, PdfGenerator pdfGenera
 
                 if (batchLookup.TryGetValue(item.MedicineId, out var batches))
                 {
-                    foreach (var batch in batches)
+                    // If the user explicitly chose a batch, put it first; fall back to FEFO order
+                    var orderedBatches = item.SelectedBatchId.HasValue
+                        ? batches.OrderBy(b => b.Id == item.SelectedBatchId.Value ? 0 : 1)
+                                 .ThenBy(b => b.ExpiryDate == null ? 1 : 0)
+                                 .ThenBy(b => b.ExpiryDate)
+                                 .ThenBy(b => b.Id)
+                        : (IEnumerable<InventoryBatch>)batches;
+
+                    foreach (var batch in orderedBatches)
                     {
                         if (remaining <= 0) break;
                         firstBatch ??= batch;
