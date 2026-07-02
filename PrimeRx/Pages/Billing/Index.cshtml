@@ -36,26 +36,29 @@
                 <div class="panel-card mb-3">
                     <div class="panel-body">
                         <label class="form-label billing-label">Search Medicine</label>
-                        <div class="position-relative">
-                            <input type="text" id="medicineSearchText"
-                                   class="form-control medicine-search-input"
-                                   placeholder="Type medicine name or code..."
-                                   autocomplete="off">
-                            <div id="medicineSearchDropdown"
-                                 class="medicine-dropdown"
-                                 style="display:none;">
-                                <div class="medicine-dropdown-header">
-                                    <span style="width:52%">NAME</span>
-                                    <span style="width:16%">BATCH</span>
-                                    <span style="width:14%">STOCK</span>
-                                    <span style="width:18%">RATE</span>
-                                </div>
-                                <div class="medicine-dropdown-body" id="medicineDropdownBody"></div>
-                                <div class="medicine-dropdown-footer">
-                                    <span>↑ ↓ Navigate</span>
-                                    <span>Enter Select</span>
-                                    <span>Esc Close</span>
-                                </div>
+                        <input type="text" id="medicineSearchText"
+                               class="form-control medicine-search-input"
+                               placeholder="Type medicine name or code..."
+                               autocomplete="off"
+                               role="combobox"
+                               aria-expanded="false"
+                               aria-autocomplete="list"
+                               aria-controls="medicinePopup">
+                        <div id="medicinePopup"
+                             class="medicine-popup"
+                             role="listbox"
+                             style="display:none;">
+                            <div class="medicine-popup-header">
+                                <span class="mpc-name">Name</span>
+                                <span class="mpc-batch">Batch</span>
+                                <span class="mpc-stock">Stock</span>
+                                <span class="mpc-rate">Rate</span>
+                            </div>
+                            <div class="medicine-popup-body" id="medicinePopupBody"></div>
+                            <div class="medicine-popup-footer">
+                                <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+                                <span><kbd>Enter</kbd> Add</span>
+                                <span><kbd>Esc</kbd> Close</span>
                             </div>
                         </div>
                     </div>

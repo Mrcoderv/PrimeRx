@@ -148,15 +148,16 @@
     paymentMethod?.addEventListener('change', updateCustomerPhoneRequirement);
     updateCustomerPhoneRequirement();
 
-    // ── Inline suggestion dropdown ──────────────────────────────────────────
+    // ── Floating medicine search popup ─────────────────────────────────────
     const searchInput = document.getElementById('medicineSearchText');
-    const dropdown = document.getElementById('medicineSearchDropdown');
-    const dropdownBody = document.getElementById('medicineDropdownBody');
+    const popup       = document.getElementById('medicinePopup');
+    const popupBody   = document.getElementById('medicinePopupBody');
 
-    let dropdownItems = [];
+    let popupItems  = [];
     let activeIndex = -1;
     let debounceTimer = null;
-    let fetchSeq = 0;
+    let fetchSeq    = 0;
+    let isOpen      = false;
 
     function escapeHtml(s) {
         return String(s ?? '')
@@ -167,47 +168,99 @@
             .replaceAll("'", '&#039;');
     }
 
-    function closeDropdown() {
-        dropdown.style.display = 'none';
-        dropdownItems = [];
-        activeIndex = -1;
+    function positionPopup() {
+        const rect = searchInput.getBoundingClientRect();
+        const viewH = window.innerHeight;
+        const popH  = Math.min(420, viewH * 0.6);
+        const spaceBelow = viewH - rect.bottom - 8;
+        const spaceAbove = rect.top - 8;
+
+        popup.style.left  = rect.left + 'px';
+        popup.style.width = rect.width + 'px';
+
+        if (spaceBelow >= 160 || spaceBelow >= spaceAbove) {
+            popup.style.top    = (rect.bottom + 4) + 'px';
+            popup.style.bottom = 'auto';
+            popupBody.style.maxHeight = Math.min(340, spaceBelow - 80) + 'px';
+        } else {
+            popup.style.bottom = (viewH - rect.top + 4) + 'px';
+            popup.style.top    = 'auto';
+            popupBody.style.maxHeight = Math.min(340, spaceAbove - 80) + 'px';
+        }
     }
 
-    function openDropdown() {
-        dropdown.style.display = '';
+    function openPopup() {
+        positionPopup();
+        popup.style.display = '';
+        searchInput.setAttribute('aria-expanded', 'true');
+        isOpen = true;
+    }
+
+    function closePopup() {
+        popup.style.display = 'none';
+        searchInput.setAttribute('aria-expanded', 'false');
+        popupItems  = [];
+        activeIndex = -1;
+        isOpen      = false;
     }
 
     function setActiveRow(i) {
-        activeIndex = i;
-        const rows = dropdownBody.querySelectorAll('.medicine-dropdown-row');
+        const count = popupItems.length;
+        if (!count) return;
+        activeIndex = ((i % count) + count) % count;
+        const rows = popupBody.querySelectorAll('.medicine-popup-row');
         rows.forEach((r, idx) => {
-            r.classList.toggle('active', idx === i);
-            if (idx === i) r.scrollIntoView({ block: 'nearest' });
+            r.classList.toggle('active', idx === activeIndex);
+            if (idx === activeIndex) r.scrollIntoView({ block: 'nearest' });
         });
     }
 
-    function renderDropdown(medicines) {
-        dropdownBody.innerHTML = '';
+    function stockBadge(qty) {
+        const n = Number(qty || 0);
+        let cls = '';
+        if (n <= 5)  cls = 'low';
+        else if (n <= 20) cls = 'medium';
+        return `<span class="mpc-stock-badge ${cls}">${n}</span>`;
+    }
 
-        if (!medicines.length) {
-            dropdownBody.innerHTML = '<div class="medicine-dropdown-empty">No medicines found</div>';
-            openDropdown();
-            return;
-        }
+    function renderLoading() {
+        popupBody.innerHTML = `
+            <div class="medicine-popup-loading">
+                <div class="spinner"></div>
+                <span>Searching…</span>
+            </div>`;
+        openPopup();
+    }
+
+    function renderEmpty() {
+        popupBody.innerHTML = `
+            <div class="medicine-popup-empty">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                No medicines found
+            </div>`;
+        openPopup();
+    }
+
+    function renderPopup(medicines) {
+        popupBody.innerHTML = '';
+
+        if (!medicines.length) { renderEmpty(); return; }
 
         const frag = document.createDocumentFragment();
-        medicines.forEach((m, i) => {
+        medicines.forEach((m) => {
             const row = document.createElement('div');
-            row.className = 'medicine-dropdown-row';
+            row.className = 'medicine-popup-row';
+            row.setAttribute('role', 'option');
             row.innerHTML = `
-                <span class="med-col-name">
-                    <span class="med-name">${escapeHtml(m.name)}</span>
-                    ${m.genericName ? `<span class="med-generic">${escapeHtml(m.genericName)}</span>` : ''}
+                <span class="mpc-name">
+                    <span class="mpc-med-name">${escapeHtml(m.name)}</span>
+                    ${m.genericName ? `<span class="mpc-med-generic">${escapeHtml(m.genericName)}</span>` : ''}
                 </span>
-                <span class="med-col-batch">${escapeHtml(m.batch || '—')}</span>
-                <span class="med-col-stock">${Number(m.stockQuantity || 0)}</span>
-                <span class="med-col-rate">Rs. ${Number(m.mrp || 0).toFixed(2)}</span>
-            `;
+                <span class="mpc-batch">${escapeHtml(m.batch || '—')}</span>
+                <span class="mpc-stock">${stockBadge(m.stockQuantity)}</span>
+                <span class="mpc-rate">₹${Number(m.mrp || 0).toFixed(2)}</span>`;
             row.addEventListener('mousedown', e => {
                 e.preventDefault();
                 selectMedicine(m);
@@ -215,10 +268,10 @@
             frag.appendChild(row);
         });
 
-        dropdownBody.appendChild(frag);
-        activeIndex = 0;
+        popupBody.appendChild(frag);
+        activeIndex = -1;
         setActiveRow(0);
-        openDropdown();
+        openPopup();
     }
 
     function selectMedicine(medicine) {
@@ -230,22 +283,24 @@
             stockQuantity: Number(medicine.stockQuantity || 0),
             discountPercent: Number(medicine.discountPercent || 0)
         });
-        closeDropdown();
+        closePopup();
         searchInput.value = '';
         searchInput.focus();
     }
 
     function selectActive() {
-        if (activeIndex < 0 || activeIndex >= dropdownItems.length) return;
-        selectMedicine(dropdownItems[activeIndex]);
+        if (activeIndex < 0 || activeIndex >= popupItems.length) return;
+        selectMedicine(popupItems[activeIndex]);
     }
 
     function fetchAndRender(term) {
         const query = (term || '').trim();
-        if (!query) { closeDropdown(); return; }
+        if (!query) { closePopup(); return; }
 
         fetchSeq++;
         const seq = fetchSeq;
+
+        renderLoading();
 
         fetch(`?handler=Search&term=${encodeURIComponent(query)}`, {
             headers: { 'Accept': 'application/json' }
@@ -253,7 +308,7 @@
             .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
             .then(results => {
                 if (seq !== fetchSeq) return;
-                dropdownItems = (results || []).slice(0, 10).map(m => ({
+                popupItems = (results || []).slice(0, 10).map(m => ({
                     id: String(m.id ?? m.Id),
                     name: m.name ?? m.Name,
                     genericName: m.genericName ?? m.GenericName,
@@ -262,12 +317,12 @@
                     discountPercent: Number(m.discountPercent ?? m.DiscountPercent ?? 0),
                     batch: m.batch ?? m.Batch
                 }));
-                renderDropdown(dropdownItems);
+                renderPopup(popupItems);
             })
             .catch(() => {
                 if (seq !== fetchSeq) return;
-                dropdownItems = [];
-                renderDropdown([]);
+                popupItems = [];
+                renderEmpty();
             });
     }
 
@@ -283,21 +338,21 @@
     searchInput.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             e.preventDefault();
-            closeDropdown();
+            closePopup();
             return;
         }
-        if (dropdown.style.display === 'none') {
+        if (!isOpen) {
             if (e.key === 'Enter') e.preventDefault();
             return;
         }
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            if (dropdownItems.length) setActiveRow(Math.min(dropdownItems.length - 1, activeIndex + 1));
+            setActiveRow(activeIndex + 1);
             return;
         }
         if (e.key === 'ArrowUp') {
             e.preventDefault();
-            if (dropdownItems.length) setActiveRow(Math.max(0, activeIndex - 1));
+            setActiveRow(activeIndex - 1);
             return;
         }
         if (e.key === 'Enter') {
@@ -308,11 +363,14 @@
 
     searchInput.addEventListener('blur', () => {
         setTimeout(() => {
-            if (!dropdown.contains(document.activeElement)) closeDropdown();
+            if (!popup.contains(document.activeElement)) closePopup();
         }, 150);
     });
 
     document.addEventListener('mousedown', e => {
-        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) closeDropdown();
+        if (!searchInput.contains(e.target) && !popup.contains(e.target)) closePopup();
     });
+
+    window.addEventListener('resize', () => { if (isOpen) positionPopup(); });
+    window.addEventListener('scroll', () => { if (isOpen) positionPopup(); }, true);
 })();
