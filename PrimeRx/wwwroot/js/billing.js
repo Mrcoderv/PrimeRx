@@ -159,6 +159,57 @@
     let fetchSeq    = 0;
     let isOpen      = false;
 
+    const RECENT_KEY = 'primerx_recent_meds';
+    const RECENT_MAX = 8;
+
+    function loadRecent() {
+        try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); }
+        catch { return []; }
+    }
+
+    function saveRecent(m) {
+        const list = loadRecent().filter(r => String(r.id) !== String(m.id));
+        list.unshift({
+            id: m.id, name: m.name, genericName: m.genericName,
+            mrp: m.mrp, stockQuantity: m.stockQuantity,
+            discountPercent: m.discountPercent, batch: m.batch
+        });
+        try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, RECENT_MAX))); }
+        catch { }
+    }
+
+    function showRecent() {
+        const list = loadRecent();
+        if (!list.length) { closePopup(); return; }
+        popupBody.innerHTML = `
+            <div class="medicine-popup-section">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                Recently Used
+            </div>`;
+        popupItems = list;
+        const frag = document.createDocumentFragment();
+        list.forEach(m => {
+            const row = document.createElement('div');
+            row.className = 'medicine-popup-row';
+            row.setAttribute('role', 'option');
+            row.innerHTML = `
+                <span class="mpc-name">
+                    <span class="mpc-med-name">${escapeHtml(m.name)}</span>
+                    ${m.genericName ? `<span class="mpc-med-generic">${escapeHtml(m.genericName)}</span>` : ''}
+                </span>
+                <span class="mpc-batch">${escapeHtml(m.batch || '—')}</span>
+                <span class="mpc-stock">${stockBadge(m.stockQuantity)}</span>
+                <span class="mpc-rate">₹${Number(m.mrp || 0).toFixed(2)}</span>`;
+            row.addEventListener('mousedown', e => { e.preventDefault(); selectMedicine(m); });
+            frag.appendChild(row);
+        });
+        popupBody.appendChild(frag);
+        activeIndex = -1;
+        openPopup();
+    }
+
     function escapeHtml(s) {
         return String(s ?? '')
             .replaceAll('&', '&amp;')
@@ -276,6 +327,7 @@
 
     function selectMedicine(medicine) {
         if (!medicine) return;
+        saveRecent(medicine);
         addItem({
             id: Number(medicine.id),
             name: medicine.name,
@@ -328,11 +380,15 @@
 
     searchInput.addEventListener('input', () => {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => fetchAndRender(searchInput.value), 180);
+        const q = searchInput.value.trim();
+        if (!q) { debounceTimer = setTimeout(() => showRecent(), 80); return; }
+        debounceTimer = setTimeout(() => fetchAndRender(q), 180);
     });
 
     searchInput.addEventListener('focus', () => {
-        if (searchInput.value.trim()) fetchAndRender(searchInput.value);
+        const q = searchInput.value.trim();
+        if (q) fetchAndRender(q);
+        else showRecent();
     });
 
     searchInput.addEventListener('keydown', e => {

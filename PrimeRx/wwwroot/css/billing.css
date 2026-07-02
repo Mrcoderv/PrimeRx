@@ -129,6 +129,27 @@
   opacity: 0.4;
 }
 
+/* ── Section label (e.g. "Recently Used") ────────────────── */
+.medicine-popup-section {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.9rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--rx-text-muted);
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  user-select: none;
+}
+[data-bs-theme="light"] .medicine-popup-section {
+  background: #f8fafc;
+  border-bottom-color: rgba(0,0,0,0.05);
+}
+.medicine-popup-section svg { opacity: 0.55; flex-shrink: 0; }
+
 /* ── Result rows ──────────────────────────────────────────── */
 .medicine-popup-row {
   display: flex;

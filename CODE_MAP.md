@@ -352,7 +352,7 @@ Stock audit: MedicineId, TransactionType (Sale/Purchase/Adjustment), QuantityCha
 | Page | Route | Handler | Description |
 |------|-------|---------|-------------|
 | **Billing/Index** | `/Billing` | `OnGet` | Shows billing form; displays success message after bill creation |
-| | | `OnGetSearchAsync` | JSON API for TomSelect medicine autocomplete |
+| | | `OnGetSearchAsync` | JSON API: returns medicine search results for the floating popup (name, genericName, mrp, stockQuantity, discountPercent) |
 | | | `OnPostAsync` | Creates bill via `BillingService.CreateBillAsync` |
 | | | `OnGetDownloadPdfAsync` | Downloads invoice PDF for a bill |
 | **Billing/History** | `/Billing/History` | `OnGetAsync` | Lists past bills with optional search |
@@ -450,6 +450,33 @@ Reports/Index OnGetDailySalesAsync (format=view|pdf|excel)
   → excel: ReportService.ExportSalesToExcel
 ```
 
+### 5. Medicine Search Floating Popup (client-side)
+
+```
+User focuses empty search input
+  → billing.js showRecent()
+    → reads localStorage key "primerx_recent_meds" (max 8 entries)
+    → renders "Recently Used" section in popup
+
+User types in search input (≥1 char, debounced 180ms)
+  → billing.js fetchAndRender(term)
+    → shows spinner immediately
+    → GET /Billing?handler=Search&term=…
+      → InventoryService.SearchMedicinesAsync(term)
+    → renders up to 10 result rows with stock badge
+
+User selects result (click or Enter)
+  → billing.js selectMedicine(m)
+    → saveRecent(m) — prepends to localStorage, deduplicates, trims to 8
+    → addItem(m) — adds row to bill table, recalculates totals
+    → closes popup, clears input, refocuses
+
+Popup positioning
+  → position: fixed, coordinates computed from searchInput.getBoundingClientRect()
+  → flips above input if insufficient space below
+  → repositions on window resize / scroll
+```
+
 ---
 
 ## Authorization Matrix
@@ -475,7 +502,6 @@ Reports/Index OnGetDailySalesAsync (format=view|pdf|excel)
 | QuestPDF | PdfGenerator, ReportService | PDF invoices & reports |
 | EPPlus | ReportService | Excel exports |
 | Chart.js | Dashboard, Reports | Sales & medicine charts |
-| Tom Select | Billing | Medicine autocomplete |
 | Bootstrap 5 | All pages | UI framework |
 
 ---
@@ -491,4 +517,32 @@ Migrations apply automatically on app startup via `Program.cs`.
 
 ---
 
-*Last updated: June 2026 — PrimeRx v1*
+## Client-Side Modules
+
+### billing.js (`wwwroot/js/billing.js`)
+
+| Function | Purpose |
+|----------|---------|
+| `addItem(medicine)` | Adds medicine to in-memory `items[]`, calls `renderRow` and `recalcTotals` |
+| `renderRow(item)` | Builds a table `<tr>` with rate/qty/discount inputs and a remove button |
+| `updateLineTotal(tr, item)` | Recomputes discount amount and line total for one row |
+| `recalcTotals()` | Sums subtotal, discount, total; serialises `items[]` into the hidden `#itemsJson` field |
+| `positionPopup()` | Computes `top/left/width` for the floating popup via `getBoundingClientRect()`; flips above if insufficient space below |
+| `openPopup()` | Positions and shows the popup; sets `aria-expanded` |
+| `closePopup()` | Hides popup, resets `popupItems`, `activeIndex`, `isOpen` |
+| `setActiveRow(i)` | Wraps index arithmetically, toggles `.active` class, scrolls row into view |
+| `stockBadge(qty)` | Returns a coloured `<span>` badge: green (>20), amber (6–20), red (≤5) |
+| `renderLoading()` | Shows spinner row while fetch is in-flight |
+| `renderEmpty()` | Shows "No medicines found" state with icon |
+| `renderPopup(medicines)` | Renders up to 10 result rows and activates first row |
+| `loadRecent()` | Reads `primerx_recent_meds` from `localStorage` (array of medicine objects) |
+| `saveRecent(m)` | Deduplicates by id, prepends medicine, trims to 8, writes back to `localStorage` |
+| `showRecent()` | Renders "Recently Used" section header + recent list; called on focus/empty input |
+| `selectMedicine(medicine)` | Saves to recents, calls `addItem`, clears input, closes popup |
+| `fetchAndRender(term)` | Debounced fetch to `?handler=Search&term=…`; shows loading → results or empty |
+
+**localStorage key:** `primerx_recent_meds` — JSON array of up to 8 medicine objects `{ id, name, genericName, mrp, stockQuantity, discountPercent, batch }`.
+
+---
+
+*Last updated: July 2026 — PrimeRx v1*
