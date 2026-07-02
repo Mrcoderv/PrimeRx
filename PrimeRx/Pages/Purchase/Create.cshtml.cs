@@ -42,6 +42,7 @@ public class CreateModel(
             name = m.Name,
             genericName = m.GenericName,
             stockQuantity = m.StockQuantity,
+            lowStockThreshold = m.LowStockThreshold,
             purchasePrice = m.PurchasePrice,
             mrp = m.MRP
         }));

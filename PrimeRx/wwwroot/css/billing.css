@@ -270,6 +270,45 @@
   color: #475569;
 }
 
+/* ── Purchase search — low-stock badges ──────────────────── */
+.low-stock-row {
+  border-left: 3px solid #f59e0b !important;
+  padding-left: calc(0.6rem - 3px) !important;
+  background: rgba(245,158,11,0.06) !important;
+}
+.low-stock-row:hover { background: rgba(245,158,11,0.14) !important; }
+.purchase-stock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  padding: 0.15em 0.45em;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.purchase-stock-badge.low-stock {
+  background: rgba(245,158,11,0.18);
+  color: #f59e0b;
+  border: 1px solid rgba(245,158,11,0.3);
+}
+.purchase-stock-badge.out-of-stock {
+  background: rgba(239,68,68,0.14);
+  color: #f87171;
+  border: 1px solid rgba(239,68,68,0.28);
+}
+[data-bs-theme="light"] .purchase-stock-badge.low-stock {
+  background: #fef3c7; color: #b45309; border-color: #fde68a;
+}
+[data-bs-theme="light"] .purchase-stock-badge.out-of-stock {
+  background: #fee2e2; color: #dc2626; border-color: #fecaca;
+}
+.purchase-stock-ok {
+  font-size: 0.82rem;
+  color: #6ee7b7;
+}
+[data-bs-theme="light"] .purchase-stock-ok { color: #16a34a; }
+
 /* ── Batch button on bill rows ────────────────────────────── */
 .batch-btn {
   display: inline-flex;

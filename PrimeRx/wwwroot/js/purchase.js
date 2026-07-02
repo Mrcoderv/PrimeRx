@@ -73,13 +73,20 @@
     function renderDropdown() {
         if (!searchResults.length) { hideDropdown(); return; }
         selectedIndex = -1;
-        dropdownBody.innerHTML = searchResults.map((m, i) =>
-            `<div class="medicine-dropdown-item" data-idx="${i}">
+        dropdownBody.innerHTML = searchResults.map((m, i) => {
+            const isLow = m.stockQuantity <= (m.lowStockThreshold ?? 10);
+            const isOut = m.stockQuantity === 0;
+            const stockBadge = isOut
+                ? `<span class="purchase-stock-badge out-of-stock">Out of stock</span>`
+                : isLow
+                    ? `<span class="purchase-stock-badge low-stock">⚠ Low: ${m.stockQuantity}</span>`
+                    : `<span class="purchase-stock-ok">${m.stockQuantity}</span>`;
+            return `<div class="medicine-dropdown-item${isLow ? ' low-stock-row' : ''}" data-idx="${i}">
                 <span style="width:55%">${esc(m.name)}${m.genericName ? `<br><small class="text-muted">${esc(m.genericName)}</small>` : ''}</span>
                 <span style="width:25%"><small class="text-muted">${m.purchasePrice > 0 ? 'Rs.'+m.purchasePrice.toFixed(2) : '—'}</small></span>
-                <span style="width:20%"><small>${m.stockQuantity}</small></span>
-            </div>`
-        ).join('');
+                <span style="width:20%">${stockBadge}</span>
+            </div>`;
+        }).join('');
         dropdownBody.querySelectorAll('.medicine-dropdown-item').forEach(el => {
             el.addEventListener('mousedown', e => { e.preventDefault(); selectMedicine(searchResults[+el.dataset.idx]); });
         });
