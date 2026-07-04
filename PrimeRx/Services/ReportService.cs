@@ -113,11 +113,8 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
 
     public async Task<List<SupplierProfitRow>> GetSupplierProfitReportAsync()
     {
-        var items = await context.PurchaseItems
+        var result = await context.PurchaseItems
             .Include(pi => pi.Purchase)
-            .ToListAsync();
-
-        return items
             .GroupBy(pi => pi.Purchase.SupplierName)
             .Select(g => new SupplierProfitRow
             {
@@ -127,8 +124,9 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
                 TotalCost      = g.Sum(pi => pi.Quantity * pi.PurchasePrice),
                 TotalMrpValue  = g.Sum(pi => pi.Quantity * pi.MRP),
             })
-            .OrderByDescending(r => r.PotentialProfit)
-            .ToList();
+            .ToListAsync();
+
+        return result.OrderByDescending(r => r.PotentialProfit).ToList();
     }
 
     public async Task<List<MonthlySupplierPurchaseRow>> GetMonthlyPurchaseBySupplierAsync(int year)
@@ -392,6 +390,116 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
         return package.GetAsByteArray();
     }
 
+    public byte[] ExportProfitLossToExcel(ProfitLossReport report)
+    {
+        using var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("Profit & Loss");
+        sheet.Cells[1, 1].Value = "Metric";
+        sheet.Cells[1, 2].Value = "Amount (Rs.)";
+        sheet.Cells[2, 1].Value = "Revenue";
+        sheet.Cells[2, 2].Value = report.Revenue;
+        sheet.Cells[3, 1].Value = "Cost of Goods";
+        sheet.Cells[3, 2].Value = report.Cost;
+        sheet.Cells[4, 1].Value = "Expenses";
+        sheet.Cells[4, 2].Value = report.Expenses;
+        sheet.Cells[5, 1].Value = "Net Profit";
+        sheet.Cells[5, 2].Value = report.Profit;
+        return package.GetAsByteArray();
+    }
+
+    public byte[] ExportDueCollectionToExcel(DueCollectionReport report)
+    {
+        using var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("Due Collection");
+        sheet.Cells[1, 1].Value = "Bill ID";
+        sheet.Cells[1, 2].Value = "Payment Date";
+        sheet.Cells[1, 3].Value = "Amount Paid";
+        sheet.Cells[1, 4].Value = "Method";
+        sheet.Cells[1, 5].Value = "Remarks";
+        var row = 2;
+        foreach (var p in report.Payments)
+        {
+            sheet.Cells[row, 1].Value = p.BillId;
+            sheet.Cells[row, 2].Value = p.PaymentDate.ToString("dd-MM-yyyy");
+            sheet.Cells[row, 3].Value = p.AmountPaid;
+            sheet.Cells[row, 4].Value = p.PaymentMethod;
+            sheet.Cells[row, 5].Value = p.Remarks ?? "—";
+            row++;
+        }
+        sheet.Cells[row + 1, 3].Value = report.TotalCollected;
+        return package.GetAsByteArray();
+    }
+
+    public byte[] ExportExpiryToExcel(List<Medicine> medicines)
+    {
+        using var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("Expiry Alert");
+        sheet.Cells[1, 1].Value = "Medicine";
+        sheet.Cells[1, 2].Value = "Stock";
+        sheet.Cells[1, 3].Value = "Expiry Date";
+        sheet.Cells[1, 4].Value = "Manufacturer";
+        var row = 2;
+        foreach (var m in medicines)
+        {
+            sheet.Cells[row, 1].Value = m.Name;
+            sheet.Cells[row, 2].Value = m.StockQuantity;
+            sheet.Cells[row, 3].Value = m.ExpiryDate?.ToString("dd-MM-yyyy");
+            sheet.Cells[row, 4].Value = m.Manufacturer ?? "—";
+            row++;
+        }
+        return package.GetAsByteArray();
+    }
+
+    public byte[] ExportSupplierProfitToExcel(List<SupplierProfitRow> rows)
+    {
+        using var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("Supplier Profit");
+        sheet.Cells[1, 1].Value = "Supplier";
+        sheet.Cells[1, 2].Value = "Purchases";
+        sheet.Cells[1, 3].Value = "Total Units";
+        sheet.Cells[1, 4].Value = "Total Cost (Rs.)";
+        sheet.Cells[1, 5].Value = "MRP Value (Rs.)";
+        sheet.Cells[1, 6].Value = "Potential Profit (Rs.)";
+        sheet.Cells[1, 7].Value = "Margin %";
+        var row = 2;
+        foreach (var r in rows)
+        {
+            sheet.Cells[row, 1].Value = r.SupplierName;
+            sheet.Cells[row, 2].Value = r.PurchaseCount;
+            sheet.Cells[row, 3].Value = r.TotalUnits;
+            sheet.Cells[row, 4].Value = r.TotalCost;
+            sheet.Cells[row, 5].Value = r.TotalMrpValue;
+            sheet.Cells[row, 6].Value = r.PotentialProfit;
+            sheet.Cells[row, 7].Value = r.MarginPercent;
+            row++;
+        }
+        return package.GetAsByteArray();
+    }
+
+    public byte[] ExportSupplierPayablesToExcel(SupplierPayableReport report)
+    {
+        using var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("Payables");
+        sheet.Cells[1, 1].Value = "Supplier";
+        sheet.Cells[1, 2].Value = "Entries";
+        sheet.Cells[1, 3].Value = "Total (Rs.)";
+        sheet.Cells[1, 4].Value = "Paid (Rs.)";
+        sheet.Cells[1, 5].Value = "Pending (Rs.)";
+        sheet.Cells[1, 6].Value = "Overdue";
+        var row = 2;
+        foreach (var s in report.Suppliers)
+        {
+            sheet.Cells[row, 1].Value = s.SupplierName;
+            sheet.Cells[row, 2].Value = s.PayableCount;
+            sheet.Cells[row, 3].Value = s.TotalAmount;
+            sheet.Cells[row, 4].Value = s.PaidAmount;
+            sheet.Cells[row, 5].Value = s.PendingAmount;
+            sheet.Cells[row, 6].Value = s.OverdueCount;
+            row++;
+        }
+        return package.GetAsByteArray();
+    }
+
     public byte[] ExportSalesToPdf(SalesReportData report)
     {
         return Document.Create(container =>
@@ -408,6 +516,8 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
                         c.RelativeColumn(2);
                         c.RelativeColumn(2);
                         c.RelativeColumn(1);
+                        c.RelativeColumn(1);
+                        c.RelativeColumn(1);
                     });
 
                     table.Header(h =>
@@ -416,6 +526,8 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
                         h.Cell().Text("Customer").Bold();
                         h.Cell().Text("Date").Bold();
                         h.Cell().Text("Amount").Bold();
+                        h.Cell().Text("Payment").Bold();
+                        h.Cell().Text("Status").Bold();
                     });
 
                     foreach (var bill in report.Bills)
@@ -424,9 +536,183 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
                         table.Cell().Text(bill.CustomerName);
                         table.Cell().Text(bill.BillDate.ToString("dd-MM-yyyy"));
                         table.Cell().Text(bill.FinalAmount.ToString("N2"));
+                        table.Cell().Text(bill.PaymentMethod);
+                        table.Cell().Text(bill.PaymentStatus);
                     }
                 });
                 page.Footer().AlignRight().Text($"Total: {report.TotalSales:N2}");
+            });
+        }).GeneratePdf();
+    }
+
+    public byte[] ExportProfitLossToPdf(ProfitLossReport report)
+    {
+        return Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(40);
+                page.Header().Text("Profit & Loss Report").Bold().FontSize(16);
+                page.Content().PaddingVertical(10).Table(table =>
+                {
+                    table.ColumnsDefinition(c => { c.RelativeColumn(3); c.RelativeColumn(2); });
+                    table.Header(h =>
+                    {
+                        h.Cell().Text("Metric").Bold();
+                        h.Cell().Text("Amount (Rs.)").Bold().AlignRight();
+                    });
+                    table.Cell().Text("Revenue");
+                    table.Cell().Text(report.Revenue.ToString("N2")).AlignRight();
+                    table.Cell().Text("Cost of Goods");
+                    table.Cell().Text(report.Cost.ToString("N2")).AlignRight();
+                    table.Cell().Text("Expenses");
+                    table.Cell().Text(report.Expenses.ToString("N2")).AlignRight();
+                    table.Cell().Text("Net Profit");
+                    table.Cell().Text(report.Profit.ToString("N2")).AlignRight();
+                });
+            });
+        }).GeneratePdf();
+    }
+
+    public byte[] ExportDueCollectionToPdf(DueCollectionReport report)
+    {
+        return Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(40);
+                page.Header().Text("Due Collection Report").Bold().FontSize(16);
+                page.Content().PaddingVertical(10).Table(table =>
+                {
+                    table.ColumnsDefinition(c =>
+                    {
+                        c.RelativeColumn(1);
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(1);
+                    });
+                    table.Header(h =>
+                    {
+                        h.Cell().Text("Bill ID").Bold();
+                        h.Cell().Text("Date").Bold();
+                        h.Cell().Text("Method").Bold();
+                        h.Cell().Text("Amount").Bold().AlignRight();
+                    });
+                    foreach (var p in report.Payments)
+                    {
+                        table.Cell().Text(p.BillId.ToString());
+                        table.Cell().Text(p.PaymentDate.ToString("dd-MM-yyyy"));
+                        table.Cell().Text(p.PaymentMethod);
+                        table.Cell().Text(p.AmountPaid.ToString("N2")).AlignRight();
+                    }
+                });
+                page.Footer().AlignRight().Text($"Total Collected: {report.TotalCollected:N2}");
+            });
+        }).GeneratePdf();
+    }
+
+    public byte[] ExportInventoryToPdf(List<Medicine> medicines)
+    {
+        return Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(40);
+                page.Header().Text("Inventory Report").Bold().FontSize(16);
+                page.Content().PaddingVertical(10).Table(table =>
+                {
+                    table.ColumnsDefinition(c =>
+                    {
+                        c.RelativeColumn(3);
+                        c.RelativeColumn(1);
+                        c.RelativeColumn(1);
+                        c.RelativeColumn(1);
+                    });
+                    table.Header(h =>
+                    {
+                        h.Cell().Text("Medicine").Bold();
+                        h.Cell().Text("Stock").Bold().AlignRight();
+                        h.Cell().Text("MRP").Bold().AlignRight();
+                        h.Cell().Text("Expiry").Bold();
+                    });
+                    foreach (var m in medicines)
+                    {
+                        table.Cell().Text(m.Name);
+                        table.Cell().Text(m.StockQuantity.ToString()).AlignRight();
+                        table.Cell().Text(m.MRP.ToString("N2")).AlignRight();
+                        table.Cell().Text(m.ExpiryDate?.ToString("dd-MM-yyyy") ?? "—");
+                    }
+                });
+            });
+        }).GeneratePdf();
+    }
+
+    public byte[] ExportExpiryToPdf(List<Medicine> medicines)
+    {
+        return Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(40);
+                page.Header().Text("Expiry Alert Report").Bold().FontSize(16);
+                page.Content().PaddingVertical(10).Table(table =>
+                {
+                    table.ColumnsDefinition(c =>
+                    {
+                        c.RelativeColumn(3);
+                        c.RelativeColumn(1);
+                        c.RelativeColumn(2);
+                    });
+                    table.Header(h =>
+                    {
+                        h.Cell().Text("Medicine").Bold();
+                        h.Cell().Text("Stock").Bold().AlignRight();
+                        h.Cell().Text("Expiry Date").Bold();
+                    });
+                    foreach (var m in medicines)
+                    {
+                        table.Cell().Text(m.Name);
+                        table.Cell().Text(m.StockQuantity.ToString()).AlignRight();
+                        table.Cell().Text(m.ExpiryDate?.ToString("dd-MM-yyyy") ?? "—");
+                    }
+                });
+            });
+        }).GeneratePdf();
+    }
+
+    public byte[] ExportPurchaseReportToPdf(PurchaseReportData report)
+    {
+        return Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(40);
+                page.Header().Text(report.Title).Bold().FontSize(16);
+                page.Content().PaddingVertical(10).Table(table =>
+                {
+                    table.ColumnsDefinition(c =>
+                    {
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(1);
+                        c.RelativeColumn(1);
+                    });
+                    table.Header(h =>
+                    {
+                        h.Cell().Text("Invoice #").Bold();
+                        h.Cell().Text("Supplier").Bold();
+                        h.Cell().Text("Items").Bold().AlignRight();
+                        h.Cell().Text("Amount").Bold().AlignRight();
+                    });
+                    foreach (var p in report.Purchases)
+                    {
+                        table.Cell().Text(p.InvoiceNumber ?? "—");
+                        table.Cell().Text(p.SupplierName);
+                        table.Cell().Text(p.Items.Count.ToString()).AlignRight();
+                        table.Cell().Text(p.TotalAmount.ToString("N2")).AlignRight();
+                    }
+                });
+                page.Footer().AlignRight().Text($"Total: {report.TotalAmount:N2}");
             });
         }).GeneratePdf();
     }

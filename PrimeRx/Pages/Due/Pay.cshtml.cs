@@ -42,7 +42,9 @@ public class PayModel(DueService dueService, BillingService billingService) : Pa
         {
             ErrorMessage = ex.Message;
             Bill = await billingService.GetByIdAsync(Input.BillId);
-            PaymentHistory = await dueService.GetPaymentHistoryAsync(Input.BillId);
+            if (Bill is null)
+                ErrorMessage = "Bill not found.";
+            PaymentHistory = Bill is not null ? await dueService.GetPaymentHistoryAsync(Input.BillId) : [];
         }
 
         return Page();

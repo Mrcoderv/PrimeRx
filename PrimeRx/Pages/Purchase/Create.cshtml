@@ -4,6 +4,7 @@
     ViewData["Title"] = "New Purchase";
 }
 
+<div class="billing-page">
 <div class="page-header mb-3">
     <div>
         <h1 class="page-title">New Purchase</h1>
@@ -41,8 +42,8 @@
                                 <th>Medicine</th>
                                 <th style="width:95px">Batch #</th>
                                 <th style="width:115px">Expiry</th>
-                                <th style="width:60px">Qty</th>
-                                <th style="width:60px" title="Free/Bonus units">Free</th>
+                                <th style="width:85px">Qty</th>
+                                <th style="width:85px" title="Free/Bonus units">Free</th>
                                 <th style="width:105px">Purchase Price</th>
                                 <th style="width:75px" title="Discount %">Disc %</th>
                                 <th style="width:95px">MRP</th>
@@ -149,13 +150,20 @@
 </form>
 
 <!-- Floating medicine search popup (position:fixed, z-index:9999) -->
-<div id="medicinePopup" class="medicine-popup" style="display:none;position:fixed;">
+<div id="medicinePopup" class="medicine-popup" role="listbox" style="display:none;">
     <div class="medicine-popup-header">
         <span style="width:55%">MEDICINE</span>
         <span style="width:25%">PRICE</span>
         <span style="width:20%">STOCK</span>
     </div>
     <div id="medicinePopupBody" class="medicine-popup-body"></div>
+    <div class="medicine-popup-footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>Enter</kbd> Select</span>
+        <span><kbd>Esc</kbd> Close</span>
+    </div>
+</div>
+
 </div>
 
 @section Styles {

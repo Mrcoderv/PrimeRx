@@ -30,6 +30,10 @@ public class Bill
     public string? StaffId { get; set; }
     public string? StaffName { get; set; }
 
+    public string Status { get; set; } = BillStatuses.Active;
+    public DateTime? CancelledAt { get; set; }
+    public string? CancelReason { get; set; }
+
     public List<SaleItem> SaleItems { get; set; } = [];
     public List<DuePayment> DuePayments { get; set; } = [];
 }

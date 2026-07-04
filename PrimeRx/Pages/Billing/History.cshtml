@@ -9,6 +9,21 @@
     <a asp-page="/Billing/Index" class="btn btn-primary">New Bill</a>
 </div>
 
+@if (Model.ShowSaved || !string.IsNullOrEmpty(TempData["Success"] as string))
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @(TempData["Success"] ?? "Bill saved successfully.")
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (!string.IsNullOrEmpty(TempData["Error"] as string))
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-4">
         <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Search bill, customer, phone..." />
@@ -36,7 +51,8 @@
         <tbody>
             @foreach (var bill in Model.Bills)
             {
-                <tr>
+                var isCancelled = bill.Status == "Cancelled";
+                <tr class="@(isCancelled ? "text-decoration-line-through text-muted" : "")">
                     <td>@bill.BillNumber</td>
                     <td>@bill.BillDate.ToString("dd-MM-yyyy HH:mm")</td>
                     <td>@bill.CustomerName</td>
@@ -45,15 +61,79 @@
                     <td>@bill.PaymentMethod</td>
                     <td><strong>@(bill.StaffName ?? "Admin")</strong></td>
                     <td>
-                        <span class="badge @(bill.PaymentStatus == "Paid" ? "bg-success" : bill.PaymentStatus == "Due" ? "bg-danger" : "bg-warning")">
-                            @bill.PaymentStatus
-                        </span>
+                        @if (isCancelled)
+                        {
+                            <span class="badge bg-secondary">Cancelled</span>
+                        }
+                        else
+                        {
+                            <span class="badge @(bill.PaymentStatus == "Paid" ? "bg-success" : bill.PaymentStatus == "Due" ? "bg-danger" : "bg-warning")">
+                                @bill.PaymentStatus
+                            </span>
+                        }
                     </td>
                     <td>
-                        <a asp-page="/Billing/Index" asp-page-handler="DownloadPdf" asp-route-billId="@bill.Id" class="btn btn-sm btn-outline-secondary">PDF</a>
+                        <div class="d-flex gap-1">
+                            <a asp-page="/Billing/Index" asp-page-handler="DownloadPdf" asp-route-billId="@bill.Id" class="btn btn-sm btn-outline-secondary" title="Download PDF">PDF</a>
+                            @if (!isCancelled)
+                            {
+                                <a asp-page="/Billing/Edit" asp-route-id="@bill.Id" class="btn btn-sm btn-outline-primary" title="Edit Bill">Edit</a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Cancel Bill"
+                                        data-bs-toggle="modal" data-bs-target="#cancelModal"
+                                        data-bill-id="@bill.Id" data-bill-number="@bill.BillNumber">Cancel</button>
+                            }
+                        </div>
                     </td>
+                </tr>
+            }
+            @if (Model.Bills.Count == 0)
+            {
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">No bills found.</td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="Cancel">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel Bill</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to cancel <strong id="cancelBillNumber"></strong>?</p>
+                    <p class="text-danger small">This will restore the stock for all items in this bill.</p>
+                    <input type="hidden" name="id" id="cancelBillId" />
+                    <div class="mb-3">
+                        <label for="cancelReason" class="form-label">Reason (optional)</label>
+                        <input type="text" name="reason" id="cancelReason" class="form-control" placeholder="e.g. Customer returned items" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger">Confirm Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var cancelModal = document.getElementById('cancelModal');
+        if (cancelModal) {
+            cancelModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var billId = button.getAttribute('data-bill-id');
+                var billNumber = button.getAttribute('data-bill-number');
+                document.getElementById('cancelBillId').value = billId;
+                document.getElementById('cancelBillNumber').textContent = billNumber;
+            });
+        }
+    </script>
+}

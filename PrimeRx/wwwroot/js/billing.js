@@ -9,6 +9,44 @@
     const itemsJson = document.getElementById('itemsJson');
     const generateBtn = document.getElementById('generateBtn');
 
+    // Load initial bill items for edit mode
+    (function loadInitialItems() {
+        const dataEl = document.getElementById('initialBillData');
+        if (!dataEl || !dataEl.textContent) return;
+        try {
+            const initialItems = JSON.parse(dataEl.textContent);
+            if (!initialItems.length) return;
+            initialItems.forEach(itemData => {
+                const idx = itemIndex++;
+                items.push({
+                    index: idx,
+                    medicineId: itemData.medicineId,
+                    medicineName: itemData.medicineName,
+                    rate: itemData.rate,
+                    quantity: itemData.quantity,
+                    availableStock: itemData.availableStock ?? 999,
+                    discountPercent: itemData.discountPercent || 0,
+                    discountAmount: itemData.discountAmount || 0,
+                    batchId: itemData.selectedBatchId || null,
+                    batchNumber: itemData.batchNumber || null
+                });
+                renderRow(items[items.length - 1]);
+                const lastTr = itemsBody.lastElementChild;
+                if (lastTr) {
+                    lastTr.querySelector('.qty-input').value = itemData.quantity;
+                    if (itemData.selectedBatchId) {
+                        const label = lastTr.querySelector('.batch-label');
+                        if (label) label.textContent = itemData.batchNumber || 'Batch #' + itemData.selectedBatchId;
+                        lastTr.querySelector('.batch-btn').classList.add('has-batch');
+                    }
+                }
+            });
+            recalcTotals();
+        } catch (e) {
+            console.error('Failed to load initial bill data', e);
+        }
+    })();
+
     function formatMoney(n) {
         return Number(n).toFixed(2);
     }
@@ -211,6 +249,8 @@
                 autoRow.addEventListener('mousedown', e => {
                     e.preventDefault();
                     item.batchId = null; item.batchNumber = null;
+                    const qtyInput = tr.querySelector('.qty-input');
+                    qtyInput.max = item.availableStock;
                     updateBatchDisplay(tr, item);
                     closeBatchPicker();
                 });
@@ -246,7 +286,8 @@
 
                 picker.querySelector('.batch-picker-loading').replaceWith(body);
             })
-            .catch(() => {
+            .catch(err => {
+                console.error('Failed to load batches', err);
                 picker.querySelector('.batch-picker-loading').textContent = 'Failed to load batches.';
             });
 
@@ -294,7 +335,7 @@
 
     function loadRecent() {
         try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); }
-        catch { return []; }
+        catch (e) { console.error('Failed to load recent medicines', e); return []; }
     }
 
     function saveRecent(m) {
@@ -305,7 +346,7 @@
             discountPercent: m.discountPercent, batch: m.batch
         });
         try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, RECENT_MAX))); }
-        catch { }
+        catch (e) { console.error('Failed to save recent medicines', e); }
     }
 
     function showRecent() {
@@ -501,7 +542,8 @@
                 }));
                 renderPopup(popupItems);
             })
-            .catch(() => {
+            .catch(err => {
+                console.error('Medicine search failed', err);
                 if (seq !== fetchSeq) return;
                 popupItems = [];
                 renderEmpty();

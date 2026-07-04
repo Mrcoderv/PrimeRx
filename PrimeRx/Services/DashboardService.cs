@@ -56,6 +56,7 @@ public class DashboardService(ApplicationDbContext context, ReportService report
         return new DashboardSummary
         {
             TodaySales = todayBills.Sum(b => b.FinalAmount),
+            TodayDiscount = todayBills.Sum(b => b.DiscountAmount),
             MonthSales = monthSales,
             TodayBills = todayBills.Count,
             MonthBills = monthBills.Count,
@@ -113,6 +114,7 @@ public class DashboardService(ApplicationDbContext context, ReportService report
 public class DashboardSummary
 {
     public decimal TodaySales { get; set; }
+    public decimal TodayDiscount { get; set; }
     public decimal MonthSales { get; set; }
     public int TodayBills { get; set; }
     public int MonthBills { get; set; }

@@ -14,8 +14,8 @@ public class InventoryBatch
     /// <summary>
     /// Foreign key to MedicineForm (the variant being stocked)
     /// </summary>
-    public int MedicineFormId { get; set; }
-    public virtual MedicineForm MedicineForm { get; set; } = null!;
+    public int? MedicineFormId { get; set; }
+    public virtual MedicineForm? MedicineForm { get; set; }
 
     /// <summary>
     /// For backward compatibility: also keep MedicineId to locate the parent medicine

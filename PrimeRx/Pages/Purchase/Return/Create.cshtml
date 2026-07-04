@@ -187,6 +187,9 @@
             el.addEventListener('mousedown', e => { e.preventDefault(); selectMedicine(searchResults[+el.dataset.idx]); });
         });
         dropdown.style.display = '';
+        if (searchResults.length > 0) {
+            moveSel(1);
+        }
     }
 
     function moveSel(dir) {

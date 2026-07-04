@@ -123,15 +123,45 @@
             <div class="col-md-6 col-xl-4">
                 <div class="report-action-card">
                     <div class="report-action-title"><i class="bi bi-currency-rupee me-2"></i>Profit &amp; Loss</div>
-                    <p class="text-muted-small mb-2">Revenue vs cost &amp; expenses (30 days)</p>
-                    <a asp-page-handler="ProfitLoss" class="btn btn-accent btn-sm w-100">View Report</a>
+                    <form method="get" asp-page-handler="ProfitLoss">
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label class="form-label small mb-1">From</label>
+                                <input type="date" name="from" value="@DateTime.Today.AddMonths(-1).ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small mb-1">To</label>
+                                <input type="date" name="to" value="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="format" value="view" class="btn btn-accent btn-sm flex-fill">View</button>
+                            <button type="submit" name="format" value="pdf" class="btn btn-outline-accent btn-sm">PDF</button>
+                            <button type="submit" name="format" value="excel" class="btn btn-outline-accent btn-sm">Excel</button>
+                        </div>
+                    </form>
                 </div>
             </div>
             <div class="col-md-6 col-xl-4">
                 <div class="report-action-card">
                     <div class="report-action-title"><i class="bi bi-wallet2 me-2"></i>Due Collection</div>
-                    <p class="text-muted-small mb-2">Collected vs outstanding</p>
-                    <a asp-page-handler="DueCollection" class="btn btn-accent btn-sm w-100">View Report</a>
+                    <form method="get" asp-page-handler="DueCollection">
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label class="form-label small mb-1">From</label>
+                                <input type="date" name="from" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small mb-1">To</label>
+                                <input type="date" name="to" value="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="format" value="view" class="btn btn-accent btn-sm flex-fill">View</button>
+                            <button type="submit" name="format" value="pdf" class="btn btn-outline-accent btn-sm">PDF</button>
+                            <button type="submit" name="format" value="excel" class="btn btn-outline-accent btn-sm">Excel</button>
+                        </div>
+                    </form>
                 </div>
             </div>
             <div class="col-md-6 col-xl-4">
@@ -140,6 +170,7 @@
                     <p class="text-muted-small mb-2">Current stock snapshot</p>
                     <div class="d-flex gap-2">
                         <a asp-page-handler="Inventory" class="btn btn-accent btn-sm flex-fill">View</a>
+                        <a asp-page-handler="Inventory" asp-route-format="pdf" class="btn btn-outline-accent btn-sm">PDF</a>
                         <a asp-page-handler="Inventory" asp-route-format="excel" class="btn btn-outline-accent btn-sm">Excel</a>
                     </div>
                 </div>
@@ -148,7 +179,11 @@
                 <div class="report-action-card">
                     <div class="report-action-title"><i class="bi bi-exclamation-triangle me-2"></i>Expiry Alert</div>
                     <p class="text-muted-small mb-2">Medicines expiring in 90 days</p>
-                    <a asp-page-handler="Expiry" class="btn btn-accent btn-sm w-100">View Report</a>
+                    <div class="d-flex gap-2">
+                        <a asp-page-handler="Expiry" class="btn btn-accent btn-sm flex-fill">View</a>
+                        <a asp-page-handler="Expiry" asp-route-format="pdf" class="btn btn-outline-accent btn-sm">PDF</a>
+                        <a asp-page-handler="Expiry" asp-route-format="excel" class="btn btn-outline-accent btn-sm">Excel</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -174,6 +209,7 @@
                         </div>
                         <div class="d-flex gap-2">
                             <button type="submit" name="format" value="view" class="btn btn-accent btn-sm flex-fill">View</button>
+                            <button type="submit" name="format" value="pdf" class="btn btn-outline-accent btn-sm">PDF</button>
                             <button type="submit" name="format" value="excel" class="btn btn-outline-accent btn-sm">Excel</button>
                         </div>
                     </form>
@@ -187,7 +223,10 @@
                 <div class="report-action-card">
                     <div class="report-action-title"><i class="bi bi-graph-up-arrow me-2"></i>Supplier Profit Analysis</div>
                     <p class="text-muted-small mb-2">Purchase cost vs MRP value per supplier — margin breakdown</p>
-                    <a asp-page-handler="SupplierProfit" class="btn btn-accent btn-sm w-100">View Report</a>
+                    <div class="d-flex gap-2">
+                        <a asp-page-handler="SupplierProfit" class="btn btn-accent btn-sm flex-fill">View</a>
+                        <a asp-page-handler="SupplierProfit" asp-route-format="excel" class="btn btn-outline-accent btn-sm">Excel</a>
+                    </div>
                 </div>
             </div>
             <div class="col-md-6 col-xl-4">
@@ -205,7 +244,10 @@
                 <div class="report-action-card">
                     <div class="report-action-title"><i class="bi bi-credit-card me-2"></i>Payables to Suppliers</div>
                     <p class="text-muted-small mb-2">Outstanding amounts owed to each supplier</p>
-                    <a asp-page-handler="SupplierPayables" class="btn btn-accent btn-sm w-100">View</a>
+                    <div class="d-flex gap-2">
+                        <a asp-page-handler="SupplierPayables" class="btn btn-accent btn-sm flex-fill">View</a>
+                        <a asp-page-handler="SupplierPayables" asp-route-format="excel" class="btn btn-outline-accent btn-sm">Excel</a>
+                    </div>
                 </div>
             </div>
             <div class="col-md-6 col-xl-4">

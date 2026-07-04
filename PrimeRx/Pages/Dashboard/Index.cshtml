@@ -5,188 +5,137 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="page-header">
-    <div>
-        <h1 class="page-title">Business Dashboard</h1>
-        <p class="page-subtitle">Real-time overview of your pharmacy operations</p>
+<div class="dash-container">
+    <div class="dash-header">
+        <div>
+            <h1 class="dash-title">Dashboard</h1>
+            <p class="dash-subtitle">Pharmacy business overview</p>
+        </div>
+        <a asp-page="/Billing/Index" class="dash-btn-primary">
+            <i class="bi bi-plus-lg"></i> New Bill
+        </a>
     </div>
-    <a asp-page="/Billing/Index" class="btn btn-accent btn-lg">
-        <span class="me-1">+</span> New Bill
-    </a>
-</div>
 
-<div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="stat-card stat-primary">
-            <div class="stat-label">Today's Sales</div>
-            <div class="stat-value">Rs. @Model.Summary.TodaySales.ToString("N0")</div>
-            <div class="stat-foot">@Model.Summary.TodayBills bills today</div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card stat-info">
-            <div class="stat-label">Monthly Sales</div>
-            <div class="stat-value">Rs. @Model.Summary.MonthSales.ToString("N0")</div>
-            <div class="stat-foot">@Model.Summary.MonthBills bills this month</div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card stat-warning">
-            <div class="stat-label">Outstanding Due</div>
-            <div class="stat-value">Rs. @Model.Summary.OutstandingDue.ToString("N0")</div>
-            <div class="stat-foot"><a asp-page="/Due/Index" class="text-white text-decoration-underline">Collect payments</a></div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card stat-success">
-            <div class="stat-label">Active Medicines</div>
-            <div class="stat-value">@Model.Summary.TotalMedicines</div>
-            <div class="stat-foot">@Model.Summary.LowStockCount low stock · @Model.Summary.ExpiringCount expiring</div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="stat-card stat-warning">
-            <div class="stat-label">Monthly Expenses</div>
-            <div class="stat-value">Rs. @Model.Summary.MonthExpenses.ToString("N0")</div>
-            <div class="stat-foot">Rs. @Model.Summary.TodayExpenses.ToString("N0") today</div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card stat-info">
-            <div class="stat-label">Discount Given (Month)</div>
-            <div class="stat-value">Rs. @Model.Summary.MonthDiscount.ToString("N0")</div>
-            <div class="stat-foot">across @Model.Summary.MonthBills bills</div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card stat-primary">
-            <div class="stat-label">Net (Month)</div>
-            <div class="stat-value">Rs. @Model.Summary.MonthNet.ToString("N0")</div>
-            <div class="stat-foot">sales − expenses</div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card stat-success">
-            <div class="stat-label">Monthly Profit</div>
-            <div class="stat-value">Rs. @Model.Summary.MonthProfit.ToString("N0")</div>
-            <div class="stat-foot">Today: Rs. @Model.Summary.TodayProfit.ToString("N0")</div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-3 mb-4">
-    <div class="col-lg-8">
-        <div class="panel-card h-100">
-            <div class="panel-header">
-                <h5>Sales Trend (Last 7 Days)</h5>
+    @* ── Stat Cards Row 1: Today ── *@
+    <div class="stat-grid">
+        <div class="stat-card" style="--stat-accent:#3b82f6;--stat-bg:linear-gradient(135deg,#eff6ff,#dbeafe);">
+            <div class="stat-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb);">
+                <i class="bi bi-graph-up-arrow"></i>
             </div>
-            <div class="panel-body chart-panel">
-                <canvas id="dashboardSalesChart" height="120"></canvas>
+            <div class="stat-body">
+                <div class="stat-label">Today's Sales</div>
+                <div class="stat-value">Rs. @Model.Summary.TodaySales.ToString("N0")</div>
+                <div class="stat-footer">@Model.Summary.TodayBills bills</div>
+            </div>
+        </div>
+        <div class="stat-card" style="--stat-accent:#f59e0b;--stat-bg:linear-gradient(135deg,#fffbeb,#fef3c7);">
+            <div class="stat-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                <i class="bi bi-tag"></i>
+            </div>
+            <div class="stat-body">
+                <div class="stat-label">Discount Today</div>
+                <div class="stat-value">Rs. @Model.Summary.TodayDiscount.ToString("N0")</div>
+                <div class="stat-footer">given on today's bills</div>
+            </div>
+        </div>
+        <div class="stat-card" style="--stat-accent:#8b5cf6;--stat-bg:linear-gradient(135deg,#f5f3ff,#ede9fe);">
+            <div class="stat-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">
+                <i class="bi bi-wallet2"></i>
+            </div>
+            <div class="stat-body">
+                <div class="stat-label">Today's Expense</div>
+                <div class="stat-value">Rs. @Model.Summary.TodayExpenses.ToString("N0")</div>
+                <div class="stat-footer">operational costs</div>
+            </div>
+        </div>
+        <div class="stat-card" style="--stat-accent:#10b981;--stat-bg:linear-gradient(135deg,#ecfdf5,#d1fae5);">
+            <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#059669);">
+                <i class="bi bi-piggy-bank"></i>
+            </div>
+            <div class="stat-body">
+                <div class="stat-label">Today's Profit</div>
+                <div class="stat-value">Rs. @Model.Summary.TodayProfit.ToString("N0")</div>
+                <div class="stat-footer">net earnings</div>
+            </div>
+        </div>
+    </div>
+
+    @* ── Stat Cards Row 2: Monthly ── *@
+    <div class="stat-grid">
+        <div class="stat-card" style="--stat-accent:#3b82f6;--stat-bg:linear-gradient(135deg,#eff6ff,#dbeafe);">
+            <div class="stat-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb);">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="stat-body">
+                <div class="stat-label">Monthly Sales</div>
+                <div class="stat-value">Rs. @Model.Summary.MonthSales.ToString("N0")</div>
+                <div class="stat-footer">@Model.Summary.MonthBills bills this month</div>
+            </div>
+        </div>
+        <div class="stat-card" style="--stat-accent:#f59e0b;--stat-bg:linear-gradient(135deg,#fffbeb,#fef3c7);">
+            <div class="stat-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="stat-body">
+                <div class="stat-label">Monthly Discount</div>
+                <div class="stat-value">Rs. @Model.Summary.MonthDiscount.ToString("N0")</div>
+                <div class="stat-footer">across @Model.Summary.MonthBills bills</div>
+            </div>
+        </div>
+        <div class="stat-card" style="--stat-accent:#8b5cf6;--stat-bg:linear-gradient(135deg,#f5f3ff,#ede9fe);">
+            <div class="stat-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="stat-body">
+                <div class="stat-label">Monthly Expenses</div>
+                <div class="stat-value">Rs. @Model.Summary.MonthExpenses.ToString("N0")</div>
+                <div class="stat-footer">this month</div>
+            </div>
+        </div>
+        <div class="stat-card" style="--stat-accent:#10b981;--stat-bg:linear-gradient(135deg,#ecfdf5,#d1fae5);">
+            <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#059669);">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <div class="stat-body">
+                <div class="stat-label">Monthly Profit</div>
+                <div class="stat-value">Rs. @Model.Summary.MonthProfit.ToString("N0")</div>
+                <div class="stat-footer">net earnings</div>
+            </div>
+        </div>
+    </div>
+
+    @* ── Charts Row ── *@
+    <div class="charts-grid">
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h5><i class="bi bi-activity"></i> Sales Trend (7 Days)</h5>
+            </div>
+            <div class="dash-card-body">
+                <canvas id="dashboardSalesChart" height="100"></canvas>
                 <div id="dashSalesEmpty" class="chart-empty d-none">No sales data for the last 7 days.</div>
             </div>
         </div>
-    </div>
-    <div class="col-lg-4">
-        <div class="panel-card h-100">
-            <div class="panel-header">
-                <h5>Top Medicines (30 Days)</h5>
+        <div class="dash-card">
+            <div class="dash-card-header">
+                <h5><i class="bi bi-pie-chart"></i> Top Medicines (30 Days)</h5>
             </div>
-            <div class="panel-body chart-panel">
-                <canvas id="topMedicinesChart" height="200"></canvas>
+            <div class="dash-card-body">
+                <canvas id="topMedicinesChart" height="180"></canvas>
                 <div id="dashMedEmpty" class="chart-empty d-none">No medicine sales data yet.</div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row g-3 mb-4">
-    <div class="col-lg-6">
-        <div class="panel-card h-100">
-            <div class="panel-header d-flex justify-content-between align-items-center">
-                <h5>Expenses by Category (This Month)</h5>
-                <a asp-page="/Admin/Expenses/Index" class="btn btn-sm btn-outline-light">View All</a>
+    @* ── Bottom Row: Tables + Quick Actions ── *@
+    <div class="bottom-grid">
+        @* Recent Bills *@
+        <div class="dash-card">
+            <div class="dash-card-header d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-receipt"></i> Recent Bills</h5>
+                <a asp-page="/Billing/History" class="dash-link">View All <i class="bi bi-arrow-right"></i></a>
             </div>
-            <div class="table-responsive">
-                <table class="table table-pro mb-0">
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th class="text-end">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.Summary.ExpensesByCategory.Count == 0)
-                        {
-                            <tr><td colspan="2" class="text-center text-muted py-3">No expenses recorded this month.</td></tr>
-                        }
-                        else
-                        {
-                            @foreach (var c in Model.Summary.ExpensesByCategory)
-                            {
-                                <tr>
-                                    <td>@c.Label</td>
-                                    <td class="text-end">Rs. @c.Amount.ToString("N2")</td>
-                                </tr>
-                            }
-                            <tr>
-                                <td><strong>Total</strong></td>
-                                <td class="text-end"><strong>Rs. @Model.Summary.MonthExpenses.ToString("N2")</strong></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-6">
-        <div class="panel-card h-100">
-            <div class="panel-header">
-                <h5>Staff Performance (This Month)</h5>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-pro mb-0">
-                    <thead>
-                        <tr>
-                            <th>Staff</th>
-                            <th class="text-center">Bills</th>
-                            <th class="text-end">Sales</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.Summary.StaffPerformance.Count == 0)
-                        {
-                            <tr><td colspan="3" class="text-center text-muted py-3">No sales recorded this month.</td></tr>
-                        }
-                        else
-                        {
-                            @foreach (var s in Model.Summary.StaffPerformance)
-                            {
-                                <tr>
-                                    <td>@s.StaffName</td>
-                                    <td class="text-center">@s.BillCount</td>
-                                    <td class="text-end">Rs. @s.SalesAmount.ToString("N2")</td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-3">
-    <div class="col-lg-8">
-        <div class="panel-card">
-            <div class="panel-header d-flex justify-content-between align-items-center">
-                <h5>Recent Bills</h5>
-                <a asp-page="/Billing/History" class="btn btn-sm btn-outline-light">View All</a>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-pro mb-0">
+            <div class="dash-table-wrap">
+                <table class="dash-table">
                     <thead>
                         <tr>
                             <th>Bill #</th>
@@ -208,131 +157,178 @@
                                         @bill.PaymentStatus
                                     </span>
                                 </td>
-                                <td>@bill.BillDate.ToString("dd-MM-yyyy HH:mm")</td>
+                                <td>@bill.BillDate.ToString("dd-MM-yyyy")</td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
         </div>
-    </div>
-    <div class="col-lg-4">
-        <div class="panel-card mb-3">
-            <div class="panel-header"><h5>Quick Actions</h5></div>
-            <div class="panel-body d-grid gap-2">
-                <a asp-page="/Billing/Index" class="btn btn-accent">Create Bill</a>
-                <a asp-page="/Inventory/AddMedicine" class="btn btn-outline-accent">Add Medicine</a>
-                <a asp-page="/Inventory/Purchase" class="btn btn-outline-accent">Purchase Entry</a>
-                @if (User.IsInRole(AppRoles.Admin))
-                {
-                    <a asp-page="/Admin/Expenses/Create" class="btn btn-outline-accent">Add Expense</a>
-                }
-                <a asp-page="/Due/Index" class="btn btn-outline-accent">Due Collection</a>
-                <a asp-page="/Reports/Index" class="btn btn-outline-accent">Reports & Charts</a>
-            </div>
-        </div>
-        @if (Model.Summary.LowStockCount > 0 || Model.Summary.ExpiringCount > 0)
-        {
-            <div class="panel-card alert-panel">
-                <div class="panel-header"><h5>Alerts</h5></div>
-                <div class="panel-body">
-                    @if (Model.Summary.LowStockCount > 0)
+
+        @* Sidebar *@
+        <div class="dash-sidebar">
+            @* Quick Actions *@
+            <div class="dash-card">
+                <div class="dash-card-header">
+                    <h5><i class="bi bi-lightning"></i> Quick Actions</h5>
+                </div>
+                <div class="dash-card-body dash-actions">
+                    <a asp-page="/Billing/Index" class="dash-action-btn primary">
+                        <i class="bi bi-receipt"></i> Create Bill
+                    </a>
+                    <a asp-page="/Inventory/AddMedicine" class="dash-action-btn">
+                        <i class="bi bi-plus-circle"></i> Add Medicine
+                    </a>
+                    @if (User.IsInRole(AppRoles.Admin))
                     {
-                        <div class="alert-item warning">
-                            <strong>@Model.Summary.LowStockCount</strong> medicines are low on stock
-                        </div>
+                        <a asp-page="/Admin/Expenses/Create" class="dash-action-btn">
+                            <i class="bi bi-cash-stack"></i> Add Expense
+                        </a>
                     }
-                    @if (Model.Summary.ExpiringCount > 0)
-                    {
-                        <div class="alert-item danger">
-                            <strong>@Model.Summary.ExpiringCount</strong> medicines expiring within 90 days
-                        </div>
-                    }
-                    <a asp-page="/Inventory/Index" class="btn btn-sm btn-warning w-100 mt-2">View Inventory</a>
+                    <a asp-page="/Due/Index" class="dash-action-btn">
+                        <i class="bi bi-wallet2"></i> Due Collection
+                    </a>
+                    <a asp-page="/Reports/Index" class="dash-action-btn">
+                        <i class="bi bi-bar-chart"></i> Reports
+                    </a>
                 </div>
             </div>
-        }
+
+            @* Alerts *@
+            @if (Model.Summary.LowStockCount > 0 || Model.Summary.ExpiringCount > 0 || Model.Summary.OutstandingDue > 0)
+            {
+                <div class="dash-card dash-alerts">
+                    <div class="dash-card-header">
+                        <h5><i class="bi bi-bell"></i> Alerts</h5>
+                    </div>
+                    <div class="dash-card-body">
+                        @if (Model.Summary.OutstandingDue > 0)
+                        {
+                            <div class="alert-item warning">
+                                <i class="bi bi-wallet2"></i>
+                                <span><strong>Rs. @Model.Summary.OutstandingDue.ToString("N0")</strong> due pending</span>
+                            </div>
+                        }
+                        @if (Model.Summary.LowStockCount > 0)
+                        {
+                            <div class="alert-item warning">
+                                <i class="bi bi-box-seam"></i>
+                                <span><strong>@Model.Summary.LowStockCount</strong> low stock items</span>
+                            </div>
+                        }
+                        @if (Model.Summary.ExpiringCount > 0)
+                        {
+                            <div class="alert-item danger">
+                                <i class="bi bi-clock-history"></i>
+                                <span><strong>@Model.Summary.ExpiringCount</strong> expiring medicines</span>
+                            </div>
+                        }
+                        <a asp-page="/Inventory/Index" class="dash-action-btn warning w-100 text-center mt-2">
+                            View Inventory
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
 </div>
+
+@section Styles {
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+}
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
         const salesData = @Html.Raw(Model.SalesTrendJson);
         const topMeds = @Html.Raw(Model.MedicineChartJson);
-        const chartGrid = 'rgba(255,255,255,0.08)';
-        const chartFont = '#94a3b8';
 
-        const dashSalesCanvas = document.getElementById('dashboardSalesChart');
-        const dashSalesEmpty = document.getElementById('dashSalesEmpty');
+        // ── Sales Trend Chart ──
+        const salesCanvas = document.getElementById('dashboardSalesChart');
+        const salesEmpty = document.getElementById('dashSalesEmpty');
         if (salesData.length === 0 || salesData.every(x => x.amount === 0)) {
-            dashSalesCanvas.classList.add('d-none');
-            dashSalesEmpty.classList.remove('d-none');
+            salesCanvas.classList.add('d-none');
+            salesEmpty.classList.remove('d-none');
         } else {
-            new Chart(dashSalesCanvas, {
+            new Chart(salesCanvas, {
                 type: 'line',
                 data: {
                     labels: salesData.map(x => x.label),
                     datasets: [{
                         label: 'Sales (Rs.)',
                         data: salesData.map(x => x.amount),
-                        borderColor: '#38bdf8',
-                        backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59,130,246,0.12)',
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#38bdf8'
+                        pointRadius: 5,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        borderWidth: 3
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: true,
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: '#0f2744',
+                            backgroundColor: '#1e293b',
                             titleColor: '#fff',
                             bodyColor: '#cbd5e1',
+                            padding: 12,
+                            cornerRadius: 10,
                             callbacks: { label: ctx => ' Rs. ' + ctx.parsed.y.toLocaleString() }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: { color: chartGrid },
-                            ticks: { color: chartFont, callback: v => 'Rs.' + v }
+                            grid: { color: 'rgba(0,0,0,0.06)' },
+                            ticks: { color: '#94a3b8', callback: v => 'Rs.' + v }
                         },
-                        x: { grid: { display: false }, ticks: { color: chartFont } }
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
                     }
                 }
             });
         }
 
-        const dashMedCanvas = document.getElementById('topMedicinesChart');
-        const dashMedEmpty = document.getElementById('dashMedEmpty');
+        // ── Top Medicines Doughnut ──
+        const medCanvas = document.getElementById('topMedicinesChart');
+        const medEmpty = document.getElementById('dashMedEmpty');
         if (topMeds.length === 0) {
-            dashMedCanvas.classList.add('d-none');
-            dashMedEmpty.classList.remove('d-none');
+            medCanvas.classList.add('d-none');
+            medEmpty.classList.remove('d-none');
         } else {
-            new Chart(dashMedCanvas, {
+            new Chart(medCanvas, {
                 type: 'doughnut',
                 data: {
                     labels: topMeds.map(x => x.medicineName),
                     datasets: [{
                         data: topMeds.map(x => x.totalAmount),
-                        backgroundColor: ['#3b82f6', '#06b6d4', '#6366f1', '#8b5cf6', '#0ea5e9'],
-                        borderColor: '#0f2744',
-                        borderWidth: 2
+                        backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'],
+                        borderColor: '#fff',
+                        borderWidth: 3,
+                        hoverOffset: 8
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: true,
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#cbd5e1', boxWidth: 12, padding: 8, font: { size: 11 } } },
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#64748b', boxWidth: 12, padding: 10, font: { size: 11 } }
+                        },
                         tooltip: {
-                            backgroundColor: '#0f2744',
+                            backgroundColor: '#1e293b',
+                            padding: 12,
+                            cornerRadius: 10,
                             callbacks: { label: ctx => ' Rs. ' + ctx.parsed.toLocaleString() }
                         }
-                    }
+                    },
+                    cutout: '68%'
                 }
             });
         }

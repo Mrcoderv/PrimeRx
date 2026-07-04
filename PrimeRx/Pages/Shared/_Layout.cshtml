@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PrimeRx.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/calculator.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="app-body">
@@ -110,7 +111,7 @@
                     {
                         <!-- Notification bell -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link position-relative" href="#" id="bellDropdown"
+                            <a class="nav-link position-relative dropdown-toggle" href="#" id="bellDropdown"
                                role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
                                 <i class="bi bi-bell"></i>
                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
@@ -152,6 +153,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/calculator.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
     <!-- ── Theme Toggle ─────────────────────────────────── -->
@@ -248,7 +250,8 @@
                         html = '<div class="text-center py-3 text-muted small"><i class="bi bi-check-circle text-success me-1"></i>All clear — no pending alerts</div>';
                     }
                     items.innerHTML = html;
-                } catch {
+                } catch (err) {
+                    console.error('Failed to load notifications', err);
                     items.innerHTML = '<div class="text-center py-3 text-muted small">Could not load notifications</div>';
                 }
             }

@@ -61,6 +61,30 @@ public class InventoryService(ApplicationDbContext context)
 
         context.Medicines.Add(medicine);
         await context.SaveChangesAsync();
+
+        if (medicine.StockQuantity > 0)
+        {
+            context.InventoryBatches.Add(new InventoryBatch
+            {
+                MedicineId = medicine.Id,
+                BatchNumber = string.IsNullOrWhiteSpace(medicine.BatchNumber) ? "INITIAL" : medicine.BatchNumber.Trim(),
+                Quantity = medicine.StockQuantity,
+                PurchasePrice = medicine.PurchasePrice,
+                PurchaseSource = medicine.PurchaseSource ?? string.Empty,
+                ExpiryDate = medicine.ExpiryDate
+            });
+
+            context.InventoryTransactions.Add(new InventoryTransaction
+            {
+                MedicineId = medicine.Id,
+                TransactionType = TransactionTypes.Purchase,
+                QuantityChange = medicine.StockQuantity,
+                Reference = "Initial stock"
+            });
+
+            await context.SaveChangesAsync();
+        }
+
         return medicine;
     }
 
@@ -205,6 +229,30 @@ public class InventoryService(ApplicationDbContext context)
             throw new InvalidOperationException("Stock cannot go below zero.");
 
         medicine.StockQuantity = newStock;
+
+        // Adjust the most recent batch for this medicine
+        var latestBatch = await context.InventoryBatches
+            .Where(b => b.MedicineId == medicine.Id)
+            .OrderByDescending(b => b.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (latestBatch is not null)
+        {
+            var newBatchQty = latestBatch.Quantity + request.QuantityChange;
+            latestBatch.Quantity = Math.Max(0, newBatchQty);
+        }
+        else if (request.QuantityChange > 0)
+        {
+            context.InventoryBatches.Add(new InventoryBatch
+            {
+                MedicineId = medicine.Id,
+                BatchNumber = "ADJ",
+                Quantity = request.QuantityChange,
+                PurchasePrice = medicine.PurchasePrice,
+                PurchaseSource = request.Reference ?? "Stock Adjustment",
+                ExpiryDate = medicine.ExpiryDate
+            });
+        }
 
         context.InventoryTransactions.Add(new InventoryTransaction
         {

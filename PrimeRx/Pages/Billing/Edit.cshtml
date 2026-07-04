@@ -1,36 +1,31 @@
-@page
-@model PrimeRx.Pages.Billing.IndexModel
+@page "{id:int}"
+@model PrimeRx.Pages.Billing.EditModel
 @{
-    ViewData["Title"] = "New Bill";
+    ViewData["Title"] = "Edit Bill";
 }
 
 <div class="billing-page">
     <div class="page-header">
         <div>
-            <h1 class="page-title">Point of Sale</h1>
-            <p class="page-subtitle">Fast billing with medicine search and invoice generation</p>
+            <h1 class="page-title">Edit Bill</h1>
+            <p class="page-subtitle">@Model.Bill?.BillNumber — @Model.Bill?.BillDate.ToString("dd-MM-yyyy HH:mm")</p>
         </div>
-        <a asp-page="/Billing/History" class="btn btn-outline-accent">Bill History</a>
+        <a asp-page="/Billing/History" class="btn btn-outline-accent">Back to History</a>
     </div>
-
-    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
-    {
-        <div class="alert alert-success alert-dismissible fade show">
-            @Model.SuccessMessage
-            @if (Model.LastBillId.HasValue)
-            {
-                <a asp-page-handler="DownloadPdf" asp-route-billId="@Model.LastBillId" class="btn btn-sm btn-success ms-2">Download PDF</a>
-            }
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
 
     @if (!string.IsNullOrEmpty(Model.ErrorMessage))
     {
         <div class="alert alert-danger">@Model.ErrorMessage</div>
     }
 
+    @if (Model.Bill?.Status == "Cancelled")
+    {
+        <div class="alert alert-warning">This bill was cancelled and cannot be edited.</div>
+    }
+    else
+    {
     <form method="post" id="billingForm">
+        <input type="hidden" name="id" value="@Model.Bill!.Id" />
         <div class="row g-3">
             <div class="col-lg-8">
                 <div class="panel-card mb-3">
@@ -81,7 +76,7 @@
                             </thead>
                             <tbody id="itemsBody">
                                 <tr id="emptyRow">
-                                    <td colspan="7" class="billing-empty-msg">Search and add medicines above</td>
+                                    <td colspan="6" class="billing-empty-msg">Search and add medicines above</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -120,13 +115,17 @@
                         <div class="billing-total-row billing-total-final"><span>Total</span><span id="totalDisplay">0.00</span></div>
 
                         <input type="hidden" asp-for="Input.ItemsJson" id="itemsJson" />
-                        <button type="submit" class="btn btn-accent btn-lg w-100 mt-3" id="generateBtn" disabled>Generate Bill</button>
+                        <button type="submit" class="btn btn-accent btn-lg w-100 mt-3" id="generateBtn">Save Changes</button>
                     </div>
                 </div>
             </div>
         </div>
     </form>
+    }
+
 </div>
+
+<script id="initialBillData" type="application/json">@Html.Raw(Model.InitialItemsJson)</script>
 
 @section Styles {
     <link rel="stylesheet" href="~/css/billing.css" asp-append-version="true" />
@@ -136,4 +135,3 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/billing.js" asp-append-version="true"></script>
 }
-

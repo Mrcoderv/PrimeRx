@@ -71,7 +71,7 @@
             const res = await fetch(`?handler=Search&term=${encodeURIComponent(term)}`);
             searchResults = await res.json();
             renderPopup();
-        } catch { hidePopup(); }
+        } catch (err) { console.error('Medicine search failed', err); hidePopup(); }
     }
 
     function showLoadingPopup() {
@@ -122,14 +122,11 @@
         });
         popupBody.appendChild(frag);
 
-        popupBody.innerHTML += `<div class="medicine-popup-footer">
-            <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
-            <span><kbd>Enter</kbd> Select</span>
-            <span><kbd>Esc</kbd> Close</span>
-        </div>`;
-
         positionPopup();
         popup.style.display = '';
+        if (searchResults.length > 0) {
+            moveSel(1);
+        }
     }
 
     function positionPopup() {

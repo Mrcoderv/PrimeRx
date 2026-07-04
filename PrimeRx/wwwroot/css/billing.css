@@ -426,7 +426,10 @@
   --bs-table-hover-color: var(--rx-heading);
   margin-bottom: 0;
 }
-.billing-page .table-responsive { overflow: visible !important; }
+.billing-page .table-responsive { overflow: visible; }
+@media (max-width: 768px) {
+  .billing-page .table-responsive { overflow-x: auto; }
+}
 
 .billing-page #itemsTable thead th {
   background: var(--rx-table-head-bg) !important;

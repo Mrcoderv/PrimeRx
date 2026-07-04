@@ -15,6 +15,12 @@ public static class PaymentMethods
     public static readonly string[] All = [Cash, Online, Due];
 }
 
+public static class BillStatuses
+{
+    public const string Active = "Active";
+    public const string Cancelled = "Cancelled";
+}
+
 public static class PaymentStatuses
 {
     public const string Paid = "Paid";

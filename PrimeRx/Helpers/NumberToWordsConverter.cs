@@ -46,6 +46,21 @@ public static class NumberToWordsConverter
         return words.Trim();
     }
 
+    public static string ToWords(decimal amount)
+    {
+        long rupees = (long)Math.Floor(amount);
+        int paise = (int)Math.Round((amount - rupees) * 100);
+
+        string result = rupees == 0 ? "Zero" : ToWords(rupees) + " Rupees";
+
+        if (paise > 0)
+            result += " and " + ToWords(paise) + " Paise";
+        else
+            result += " Only";
+
+        return result;
+    }
+
     private static string ConvertToWords(long number)
     {
         if (number < 20)

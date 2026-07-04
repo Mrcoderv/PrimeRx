@@ -60,16 +60,16 @@
     <div class="panel-body">
         <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
             <div>
-                <label class="form-label small mb-1">Supplier</label>
-                <input type="text" name="supplier" value="@Model.SupplierSearch"
+                <label class="form-label small mb-1" for="supplierSearch">Supplier</label>
+                <input type="text" name="supplier" id="supplierSearch" value="@Model.SupplierSearch"
                        placeholder="Search supplier…" class="form-control form-control-sm" style="min-width:180px" />
             </div>
             <div>
-                <label class="form-label small mb-1">Status</label>
-                <select name="filter" class="form-select form-select-sm" style="min-width:130px">
+                <label class="form-label small mb-1" for="filterStatus">Status</label>
+                <select name="filter" id="filterStatus" class="form-select form-select-sm" style="min-width:130px">
                     @foreach (var opt in new[] { "All", "Pending", "Partial", "Overdue", "Paid" })
                     {
-                        <option value="@opt" selected="@(Model.Filter == opt)">@opt</option>
+                        <option value="@opt" selected="@(Model.Filter == opt ? "selected" : null)">@opt</option>
                     }
                 </select>
             </div>
@@ -242,7 +242,8 @@
 @section Scripts {
 <script>
     const payModal = document.getElementById('payModal');
-    payModal.addEventListener('show.bs.modal', e => {
+    if (!payModal) { console.error('payModal not found'); }
+    else payModal.addEventListener('show.bs.modal', e => {
         const btn = e.relatedTarget;
         document.getElementById('payModalId').value = btn.dataset.id;
         document.getElementById('payModalSupplier').textContent = btn.dataset.name;

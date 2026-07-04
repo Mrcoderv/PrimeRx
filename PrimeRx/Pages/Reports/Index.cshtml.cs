@@ -71,23 +71,39 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         return Page();
     }
 
-    public async Task<IActionResult> OnGetProfitLossAsync()
+    public async Task<IActionResult> OnGetProfitLossAsync(DateTime? from, DateTime? to, string format = "view")
     {
         await LoadPageDataAsync();
         ActiveReport = "pnl";
-        ProfitLoss = await reportService.GetProfitLossAsync(DateTime.Today.AddMonths(-1), DateTime.Today);
-        ReportTitle = "Profit & Loss (Last 30 Days)";
+        var fromDate = from ?? DateTime.Today.AddMonths(-1);
+        var toDate = to ?? DateTime.Today;
+        ProfitLoss = await reportService.GetProfitLossAsync(fromDate, toDate);
+        ReportTitle = $"Profit & Loss ({fromDate:dd MMM yyyy} - {toDate:dd MMM yyyy})";
         SummaryText = ProfitLoss.Profit >= 0 ? $"Net Profit: Rs. {ProfitLoss.Profit:N2}" : $"Net Loss: Rs. {Math.Abs(ProfitLoss.Profit):N2}";
+
+        if (format == "excel")
+            return File(reportService.ExportProfitLossToExcel(ProfitLoss), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "profit-loss.xlsx");
+        if (format == "pdf")
+            return File(reportService.ExportProfitLossToPdf(ProfitLoss), "application/pdf", "profit-loss.pdf");
+
         return Page();
     }
 
-    public async Task<IActionResult> OnGetDueCollectionAsync()
+    public async Task<IActionResult> OnGetDueCollectionAsync(DateTime? from, DateTime? to, string format = "view")
     {
         await LoadPageDataAsync();
         ActiveReport = "due";
-        DueReport = await reportService.GetDueCollectionAsync();
+        DueReport = await reportService.GetDueCollectionAsync(from, to);
         ReportTitle = "Due Collection Report";
+        var period = from.HasValue ? $" ({from:dd MMM yyyy} - {to:dd MMM yyyy ?? DateTime.Today})" : "";
+        ReportTitle += period;
         SummaryText = $"Outstanding: Rs. {DueReport.OutstandingDue:N2}";
+
+        if (format == "excel")
+            return File(reportService.ExportDueCollectionToExcel(DueReport), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "due-collection.xlsx");
+        if (format == "pdf")
+            return File(reportService.ExportDueCollectionToPdf(DueReport), "application/pdf", "due-collection.pdf");
+
         return Page();
     }
 
@@ -98,6 +114,8 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         var medicines = await reportService.GetInventoryReportAsync();
         if (format == "excel")
             return File(reportService.ExportInventoryToExcel(medicines), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "inventory.xlsx");
+        if (format == "pdf")
+            return File(reportService.ExportInventoryToPdf(medicines), "application/pdf", "inventory.pdf");
 
         InventoryMedicines = medicines;
         ReportTitle = "Inventory Report";
@@ -105,13 +123,19 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         return Page();
     }
 
-    public async Task<IActionResult> OnGetExpiryAsync()
+    public async Task<IActionResult> OnGetExpiryAsync(string format = "view")
     {
         await LoadPageDataAsync();
         ActiveReport = "expiry";
         ExpiryMedicines = await reportService.GetExpiryReportAsync();
         ReportTitle = "Expiry Report (Next 90 Days)";
         SummaryText = $"{ExpiryMedicines.Count} medicines expiring soon";
+
+        if (format == "excel")
+            return File(reportService.ExportExpiryToExcel(ExpiryMedicines), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "expiry-alert.xlsx");
+        if (format == "pdf")
+            return File(reportService.ExportExpiryToPdf(ExpiryMedicines), "application/pdf", "expiry-alert.pdf");
+
         return Page();
     }
 
@@ -129,6 +153,10 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
             return File(reportService.ExportPurchaseReportToExcel(report),
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 $"purchase-report-{fromDate:yyyyMMdd}-{toDate:yyyyMMdd}.xlsx");
+        if (format == "pdf")
+            return File(reportService.ExportPurchaseReportToPdf(report),
+                "application/pdf",
+                $"purchase-report-{fromDate:yyyyMMdd}-{toDate:yyyyMMdd}.pdf");
 
         PurchaseReport = report;
         ReportTitle = report.Title;
@@ -136,13 +164,17 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         return Page();
     }
 
-    public async Task<IActionResult> OnGetSupplierProfitAsync()
+    public async Task<IActionResult> OnGetSupplierProfitAsync(string format = "view")
     {
         await LoadPageDataAsync();
         ActiveReport = "supplierprofit";
         SupplierProfit = await reportService.GetSupplierProfitReportAsync();
         ReportTitle = "Supplier-wise Profit Analysis";
         SummaryText = $"{SupplierProfit.Count} suppliers · Total Cost: Rs. {SupplierProfit.Sum(r => r.TotalCost):N2}";
+
+        if (format == "excel")
+            return File(reportService.ExportSupplierProfitToExcel(SupplierProfit), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "supplier-profit.xlsx");
+
         return Page();
     }
 
@@ -157,13 +189,17 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         return Page();
     }
 
-    public async Task<IActionResult> OnGetSupplierPayablesAsync()
+    public async Task<IActionResult> OnGetSupplierPayablesAsync(string format = "view")
     {
         await LoadPageDataAsync();
         ActiveReport = "supplierpayables";
         SupplierPayables = await reportService.GetSupplierPayableReportAsync();
         ReportTitle = "Payables to Suppliers";
         SummaryText = $"Pending: Rs. {SupplierPayables.TotalPending:N2}";
+
+        if (format == "excel")
+            return File(reportService.ExportSupplierPayablesToExcel(SupplierPayables), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "supplier-payables.xlsx");
+
         return Page();
     }
 
