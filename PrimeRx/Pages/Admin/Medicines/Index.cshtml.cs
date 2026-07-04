@@ -28,6 +28,42 @@ public class IndexModel(InventoryService inventoryService, ApplicationDbContext 
         return RedirectToPage(new { message = "Medicine deactivated." });
     }
 
+    public IActionResult OnGetTemplateAsync()
+    {
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        using var package = new ExcelPackage();
+        var ws = package.Workbook.Worksheets.Add("Medicines");
+
+        string[] headers = ["Name", "GenericName", "Manufacturer", "FormType",
+                             "MRP", "PurchasePrice", "StockQuantity", "Category",
+                             "LowStockThreshold", "DiscountPercent"];
+        for (int c = 0; c < headers.Length; c++)
+        {
+            ws.Cells[1, c + 1].Value = headers[c];
+            ws.Cells[1, c + 1].Style.Font.Bold = true;
+            ws.Cells[1, c + 1].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            ws.Cells[1, c + 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(37, 99, 235));
+            ws.Cells[1, c + 1].Style.Font.Color.SetColor(System.Drawing.Color.White);
+        }
+
+        ws.Cells[2, 1].Value = "Paracetamol 500mg";
+        ws.Cells[2, 2].Value = "Paracetamol";
+        ws.Cells[2, 3].Value = "ABC Pharma";
+        ws.Cells[2, 4].Value = "Tablet";
+        ws.Cells[2, 5].Value = 25.00;
+        ws.Cells[2, 6].Value = 18.00;
+        ws.Cells[2, 7].Value = 100;
+        ws.Cells[2, 8].Value = "Analgesic";
+        ws.Cells[2, 9].Value = 10;
+        ws.Cells[2, 10].Value = 0;
+
+        ws.Cells[ws.Dimension.Address].AutoFitColumns();
+        var bytes = package.GetAsByteArray();
+        return File(bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "MedicineImportTemplate.xlsx");
+    }
+
     public async Task<IActionResult> OnGetExportAsync()
     {
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;

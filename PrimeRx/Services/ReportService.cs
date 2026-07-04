@@ -111,6 +111,85 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
         };
     }
 
+    public async Task<List<SupplierProfitRow>> GetSupplierProfitReportAsync()
+    {
+        var items = await context.PurchaseItems
+            .Include(pi => pi.Purchase)
+            .ToListAsync();
+
+        return items
+            .GroupBy(pi => pi.Purchase.SupplierName)
+            .Select(g => new SupplierProfitRow
+            {
+                SupplierName   = g.Key,
+                PurchaseCount  = g.Select(pi => pi.PurchaseId).Distinct().Count(),
+                TotalUnits     = g.Sum(pi => pi.Quantity),
+                TotalCost      = g.Sum(pi => pi.Quantity * pi.PurchasePrice),
+                TotalMrpValue  = g.Sum(pi => pi.Quantity * pi.MRP),
+            })
+            .OrderByDescending(r => r.PotentialProfit)
+            .ToList();
+    }
+
+    public async Task<List<MonthlySupplierPurchaseRow>> GetMonthlyPurchaseBySupplierAsync(int year)
+    {
+        var purchases = await context.Purchases
+            .Where(p => p.PurchaseDate.Year == year)
+            .OrderBy(p => p.PurchaseDate)
+            .ToListAsync();
+
+        return purchases
+            .GroupBy(p => new { p.SupplierName, p.PurchaseDate.Month })
+            .Select(g => new MonthlySupplierPurchaseRow
+            {
+                SupplierName  = g.Key.SupplierName,
+                Year          = year,
+                Month         = g.Key.Month,
+                MonthLabel    = new DateTime(year, g.Key.Month, 1).ToString("MMM yyyy"),
+                PurchaseCount = g.Count(),
+                TotalAmount   = g.Sum(p => p.TotalAmount)
+            })
+            .OrderBy(r => r.Month).ThenBy(r => r.SupplierName)
+            .ToList();
+    }
+
+    public async Task<SupplierPayableReport> GetSupplierPayableReportAsync()
+    {
+        var payables = await context.Payables
+            .OrderBy(p => p.SupplierName).ThenByDescending(p => p.DueDate)
+            .ToListAsync();
+
+        var grouped = payables
+            .GroupBy(p => p.SupplierName)
+            .Select(g => new SupplierPayableSummaryRow
+            {
+                SupplierName  = g.Key,
+                PayableCount  = g.Count(),
+                TotalAmount   = g.Sum(p => p.Amount),
+                PaidAmount    = g.Sum(p => p.PaidAmount),
+                PendingAmount = g.Sum(p => p.PendingAmount),
+                OverdueCount  = g.Count(p => p.IsOverdue)
+            })
+            .OrderByDescending(r => r.PendingAmount)
+            .ToList();
+
+        return new SupplierPayableReport
+        {
+            TotalAmount   = payables.Sum(p => p.Amount),
+            TotalPaid     = payables.Sum(p => p.PaidAmount),
+            TotalPending  = payables.Sum(p => p.PendingAmount),
+            OverdueCount  = payables.Count(p => p.IsOverdue),
+            Suppliers     = grouped,
+            AllPayables   = payables
+        };
+    }
+
+    public async Task<List<AuditLog>> GetAuditReportAsync(int limit = 200) =>
+        await context.AuditLogs
+            .OrderByDescending(a => a.Timestamp)
+            .Take(limit)
+            .ToListAsync();
+
     public async Task<List<Medicine>> GetInventoryReportAsync() =>
         await context.Medicines
             .Where(m => m.IsActive)
@@ -433,4 +512,45 @@ public class DueCollectionReport
     public decimal TotalCollected { get; set; }
     public decimal OutstandingDue { get; set; }
     public List<DuePayment> Payments { get; set; } = [];
+}
+
+public class SupplierProfitRow
+{
+    public string SupplierName { get; set; } = string.Empty;
+    public int PurchaseCount { get; set; }
+    public int TotalUnits { get; set; }
+    public decimal TotalCost { get; set; }
+    public decimal TotalMrpValue { get; set; }
+    public decimal PotentialProfit => TotalMrpValue - TotalCost;
+    public decimal MarginPercent => TotalCost > 0 ? Math.Round(PotentialProfit / TotalCost * 100, 1) : 0;
+}
+
+public class MonthlySupplierPurchaseRow
+{
+    public string SupplierName { get; set; } = string.Empty;
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public string MonthLabel { get; set; } = string.Empty;
+    public int PurchaseCount { get; set; }
+    public decimal TotalAmount { get; set; }
+}
+
+public class SupplierPayableReport
+{
+    public decimal TotalAmount { get; set; }
+    public decimal TotalPaid { get; set; }
+    public decimal TotalPending { get; set; }
+    public int OverdueCount { get; set; }
+    public List<SupplierPayableSummaryRow> Suppliers { get; set; } = [];
+    public List<Payable> AllPayables { get; set; } = [];
+}
+
+public class SupplierPayableSummaryRow
+{
+    public string SupplierName { get; set; } = string.Empty;
+    public int PayableCount { get; set; }
+    public decimal TotalAmount { get; set; }
+    public decimal PaidAmount { get; set; }
+    public decimal PendingAmount { get; set; }
+    public int OverdueCount { get; set; }
 }

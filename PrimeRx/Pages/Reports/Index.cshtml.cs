@@ -24,6 +24,11 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
     public List<Medicine>? ExpiryMedicines { get; set; }
     public PurchaseReportData? PurchaseReport { get; set; }
 
+    public List<SupplierProfitRow>? SupplierProfit { get; set; }
+    public List<MonthlySupplierPurchaseRow>? MonthlySupplierPurchase { get; set; }
+    public SupplierPayableReport? SupplierPayables { get; set; }
+    public List<AuditLog>? AuditLogs { get; set; }
+
     public string SalesTrendJson { get; private set; } = "[]";
     public string MedicineChartJson { get; private set; } = "[]";
     public ReportPageStats Stats { get; private set; } = new();
@@ -128,6 +133,47 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         PurchaseReport = report;
         ReportTitle = report.Title;
         SummaryText = $"Rs. {report.TotalAmount:N2} · {report.PurchaseCount} purchase(s)";
+        return Page();
+    }
+
+    public async Task<IActionResult> OnGetSupplierProfitAsync()
+    {
+        await LoadPageDataAsync();
+        ActiveReport = "supplierprofit";
+        SupplierProfit = await reportService.GetSupplierProfitReportAsync();
+        ReportTitle = "Supplier-wise Profit Analysis";
+        SummaryText = $"{SupplierProfit.Count} suppliers · Total Cost: Rs. {SupplierProfit.Sum(r => r.TotalCost):N2}";
+        return Page();
+    }
+
+    public async Task<IActionResult> OnGetMonthlySupplierAsync(int? year)
+    {
+        await LoadPageDataAsync();
+        ActiveReport = "monthlysupplier";
+        var y = year ?? DateTime.Today.Year;
+        MonthlySupplierPurchase = await reportService.GetMonthlyPurchaseBySupplierAsync(y);
+        ReportTitle = $"Monthly Purchase by Supplier — {y}";
+        SummaryText = $"Total: Rs. {MonthlySupplierPurchase.Sum(r => r.TotalAmount):N2}";
+        return Page();
+    }
+
+    public async Task<IActionResult> OnGetSupplierPayablesAsync()
+    {
+        await LoadPageDataAsync();
+        ActiveReport = "supplierpayables";
+        SupplierPayables = await reportService.GetSupplierPayableReportAsync();
+        ReportTitle = "Payables to Suppliers";
+        SummaryText = $"Pending: Rs. {SupplierPayables.TotalPending:N2}";
+        return Page();
+    }
+
+    public async Task<IActionResult> OnGetAuditReportAsync()
+    {
+        await LoadPageDataAsync();
+        ActiveReport = "audit";
+        AuditLogs = await reportService.GetAuditReportAsync(200);
+        ReportTitle = "Audit Log (Last 200 Entries)";
+        SummaryText = $"{AuditLogs.Count} entries";
         return Page();
     }
 

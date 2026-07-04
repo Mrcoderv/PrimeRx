@@ -1,21 +1,21 @@
 /**
  * purchase.js — Multi-item purchase entry UI
- * Handles medicine search, dynamic items table, and form serialisation.
+ * Handles medicine search (floating popup), dynamic items table, and form serialisation.
  */
 
 (function () {
     'use strict';
 
     // ── State ────────────────────────────────────────────────────────────────
-    let items = [];          // { id, medicineId, medicineName, qty, freeQty, discountPercent, purchasePrice, mrp, batchNumber, expiryDate }
+    let items = [];
     let searchResults = [];
     let selectedIndex = -1;
     let searchTimer = null;
 
     // ── DOM refs ─────────────────────────────────────────────────────────────
     const searchInput   = document.getElementById('medicineSearchText');
-    const dropdown      = document.getElementById('medicineSearchDropdown');
-    const dropdownBody  = document.getElementById('medicineDropdownBody');
+    const popup         = document.getElementById('medicinePopup');
+    const popupBody     = document.getElementById('medicinePopupBody');
     const itemsBody     = document.getElementById('itemsBody');
     const emptyRow      = document.getElementById('emptyRow');
     const totalDisplay  = document.getElementById('totalDisplay');
@@ -23,7 +23,7 @@
     const itemsJsonInput= document.getElementById('itemsJson');
     const saveBtn       = document.getElementById('saveBtn');
 
-    // ── Pre-load existing items (Edit page) ───────────────────────────────────
+    // ── Pre-load existing items (Edit page) ──────────────────────────────────
     if (typeof EXISTING_ITEMS !== 'undefined' && Array.isArray(EXISTING_ITEMS) && EXISTING_ITEMS.length > 0) {
         EXISTING_ITEMS.forEach(i => {
             items.push({
@@ -42,79 +42,136 @@
         renderTable();
     }
 
-    // ── Medicine search ───────────────────────────────────────────────────────
+    // ── Medicine search (floating popup) ─────────────────────────────────────
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimer);
         const term = searchInput.value.trim();
-        if (term.length < 2) { hideDropdown(); return; }
+        if (term.length < 2) { hidePopup(); return; }
         searchTimer = setTimeout(() => fetchMedicines(term), 200);
     });
 
     searchInput.addEventListener('keydown', e => {
-        if (!dropdown.style || dropdown.style.display === 'none') return;
+        if (popup.style.display === 'none') return;
         if (e.key === 'ArrowDown') { e.preventDefault(); moveSel(1); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); moveSel(-1); }
         else if (e.key === 'Enter') { e.preventDefault(); if (selectedIndex >= 0) selectMedicine(searchResults[selectedIndex]); }
-        else if (e.key === 'Escape') hideDropdown();
+        else if (e.key === 'Escape') hidePopup();
     });
 
     document.addEventListener('click', e => {
-        if (!dropdown.contains(e.target) && e.target !== searchInput) hideDropdown();
+        if (!popup.contains(e.target) && e.target !== searchInput) hidePopup();
     });
 
+    window.addEventListener('scroll', () => { if (popup.style.display !== 'none') positionPopup(); }, true);
+    window.addEventListener('resize', () => { if (popup.style.display !== 'none') positionPopup(); });
+
     async function fetchMedicines(term) {
+        showLoadingPopup();
         try {
             const res = await fetch(`?handler=Search&term=${encodeURIComponent(term)}`);
             searchResults = await res.json();
-            renderDropdown();
-        } catch { hideDropdown(); }
+            renderPopup();
+        } catch { hidePopup(); }
     }
 
-    function renderDropdown() {
-        if (!searchResults.length) { hideDropdown(); return; }
+    function showLoadingPopup() {
+        popupBody.innerHTML = `<div class="medicine-popup-loading"><span class="spinner"></span>Searching…</div>`;
+        positionPopup();
+        popup.style.display = '';
+    }
+
+    function renderPopup() {
+        if (!searchResults.length) {
+            popupBody.innerHTML = `<div class="medicine-popup-empty">No medicines found</div>`;
+            positionPopup();
+            popup.style.display = '';
+            return;
+        }
+
         selectedIndex = -1;
-        dropdownBody.innerHTML = searchResults.map((m, i) => {
+        popupBody.innerHTML = `<div class="medicine-popup-section">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Results
+        </div>`;
+
+        const frag = document.createDocumentFragment();
+        searchResults.forEach((m, i) => {
             const isLow = m.stockQuantity <= (m.lowStockThreshold ?? 10);
             const isOut = m.stockQuantity === 0;
             const stockBadge = isOut
-                ? `<span class="purchase-stock-badge out-of-stock">Out of stock</span>`
+                ? `<span class="purchase-stock-badge out-of-stock">Out</span>`
                 : isLow
-                    ? `<span class="purchase-stock-badge low-stock">⚠ Low: ${m.stockQuantity}</span>`
+                    ? `<span class="purchase-stock-badge low-stock">⚠ ${m.stockQuantity}</span>`
                     : `<span class="purchase-stock-ok">${m.stockQuantity}</span>`;
-            return `<div class="medicine-dropdown-item${isLow ? ' low-stock-row' : ''}" data-idx="${i}">
-                <span style="width:55%">${esc(m.name)}${m.genericName ? `<br><small class="text-muted">${esc(m.genericName)}</small>` : ''}</span>
-                <span style="width:25%"><small class="text-muted">${m.purchasePrice > 0 ? 'Rs.'+m.purchasePrice.toFixed(2) : '—'}</small></span>
-                <span style="width:20%">${stockBadge}</span>
-            </div>`;
-        }).join('');
-        dropdownBody.querySelectorAll('.medicine-dropdown-item').forEach(el => {
-            el.addEventListener('mousedown', e => { e.preventDefault(); selectMedicine(searchResults[+el.dataset.idx]); });
+
+            const row = document.createElement('div');
+            row.className = 'medicine-popup-row' + (isLow && !isOut ? ' low-stock-row' : '');
+            row.dataset.idx = i;
+            row.innerHTML = `
+                <div style="flex:1;min-width:0">
+                    <div class="fw-semibold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name)}</div>
+                    ${m.genericName ? `<div style="font-size:0.78rem;opacity:0.65">${esc(m.genericName)}${m.formType ? ' · ' + esc(m.formType) : ''}</div>` : ''}
+                    ${m.manufacturer ? `<div style="font-size:0.72rem;opacity:0.5">${esc(m.manufacturer)}</div>` : ''}
+                </div>
+                <div style="text-align:right;flex-shrink:0;padding-left:0.5rem">
+                    <div style="font-size:0.8rem;opacity:0.75">${m.purchasePrice > 0 ? 'Rs.' + m.purchasePrice.toFixed(2) : '—'}</div>
+                    <div>${stockBadge}</div>
+                </div>`;
+            row.addEventListener('mousedown', e => { e.preventDefault(); selectMedicine(searchResults[+row.dataset.idx]); });
+            frag.appendChild(row);
         });
-        dropdown.style.display = '';
+        popupBody.appendChild(frag);
+
+        popupBody.innerHTML += `<div class="medicine-popup-footer">
+            <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+            <span><kbd>Enter</kbd> Select</span>
+            <span><kbd>Esc</kbd> Close</span>
+        </div>`;
+
+        positionPopup();
+        popup.style.display = '';
+    }
+
+    function positionPopup() {
+        const rect = searchInput.getBoundingClientRect();
+        const viewH = window.innerHeight;
+        const spaceBelow = viewH - rect.bottom;
+        const spaceAbove = rect.top;
+
+        popup.style.left  = rect.left + 'px';
+        popup.style.width = rect.width + 'px';
+
+        if (spaceBelow >= 200 || spaceBelow >= spaceAbove) {
+            popup.style.top    = (rect.bottom + 4) + 'px';
+            popup.style.bottom = 'auto';
+            popupBody.style.maxHeight = Math.min(340, spaceBelow - 80) + 'px';
+        } else {
+            popup.style.bottom = (viewH - rect.top + 4) + 'px';
+            popup.style.top    = 'auto';
+            popupBody.style.maxHeight = Math.min(340, spaceAbove - 80) + 'px';
+        }
     }
 
     function moveSel(dir) {
-        const rows = dropdownBody.querySelectorAll('.medicine-dropdown-item');
+        const rows = popupBody.querySelectorAll('.medicine-popup-row');
         rows.forEach(r => r.classList.remove('active'));
         selectedIndex = Math.max(0, Math.min(rows.length - 1, selectedIndex + dir));
         rows[selectedIndex]?.classList.add('active');
         rows[selectedIndex]?.scrollIntoView({ block: 'nearest' });
     }
 
-    function hideDropdown() {
-        dropdown.style.display = 'none';
+    function hidePopup() {
+        popup.style.display = 'none';
         searchResults = [];
         selectedIndex = -1;
     }
 
     function selectMedicine(m) {
-        hideDropdown();
+        hidePopup();
         searchInput.value = '';
 
-        // Check duplicate
         if (items.find(i => i.medicineId === m.id)) {
-            const existing = items.find(i => i.medicineId === m.id);
-            existing.qty += 1;
+            items.find(i => i.medicineId === m.id).qty += 1;
             renderTable();
             return;
         }
@@ -151,7 +208,9 @@
 
         itemsBody.innerHTML = items.map((item, idx) => `
             <tr data-idx="${idx}">
-                <td class="fw-semibold">${esc(item.medicineName)}</td>
+                <td>
+                    <div class="fw-semibold">${esc(item.medicineName)}</div>
+                </td>
                 <td>
                     <input type="text" class="form-control form-control-sm"
                            value="${esc(item.batchNumber)}"
@@ -227,7 +286,7 @@
         itemsJsonInput.value = JSON.stringify(payload);
     }
 
-    // ── Global callbacks (called from inline onchange) ──────────────────────
+    // ── Global callbacks (called from inline onchange) ────────────────────────
     window.__purchaseUpdateField = function (idx, field, value) {
         items[idx][field] = value;
         renderTable();

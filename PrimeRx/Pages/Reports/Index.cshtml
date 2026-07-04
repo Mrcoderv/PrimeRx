@@ -180,6 +180,42 @@
                 </div>
             </div>
         </div>
+
+        <div class="report-section-label mt-4">Supplier & Audit Reports</div>
+        <div class="row g-3">
+            <div class="col-md-6 col-xl-4">
+                <div class="report-action-card">
+                    <div class="report-action-title"><i class="bi bi-graph-up-arrow me-2"></i>Supplier Profit Analysis</div>
+                    <p class="text-muted-small mb-2">Purchase cost vs MRP value per supplier — margin breakdown</p>
+                    <a asp-page-handler="SupplierProfit" class="btn btn-accent btn-sm w-100">View Report</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="report-action-card">
+                    <div class="report-action-title"><i class="bi bi-calendar3 me-2"></i>Monthly Purchase by Supplier</div>
+                    <form method="get" asp-page-handler="MonthlySupplier">
+                        <div class="mb-2">
+                            <input type="number" name="year" value="@DateTime.Today.Year" class="form-control form-control-sm" placeholder="Year" min="2020" max="2099" />
+                        </div>
+                        <button type="submit" class="btn btn-accent btn-sm w-100">View</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="report-action-card">
+                    <div class="report-action-title"><i class="bi bi-credit-card me-2"></i>Payables to Suppliers</div>
+                    <p class="text-muted-small mb-2">Outstanding amounts owed to each supplier</p>
+                    <a asp-page-handler="SupplierPayables" class="btn btn-accent btn-sm w-100">View</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="report-action-card">
+                    <div class="report-action-title"><i class="bi bi-journal-text me-2"></i>Audit Log</div>
+                    <p class="text-muted-small mb-2">System-wide activity trail — last 200 entries</p>
+                    <a asp-page-handler="AuditReport" class="btn btn-accent btn-sm w-100">View</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -427,6 +463,233 @@
                 else
                 {
                     <div class="report-empty">No purchases found for this period.</div>
+                }
+            }
+
+            @if (Model.SupplierProfit != null)
+            {
+                if (!Model.SupplierProfit.Any())
+                {
+                    <div class="report-empty">No purchase data found. Add purchases first.</div>
+                }
+                else
+                {
+                    <div class="panel-body">
+                        <div class="row g-3 mb-4">
+                            <div class="col-6 col-md-3">
+                                <div class="pnl-box">
+                                    <div class="pnl-label">Total Suppliers</div>
+                                    <div class="pnl-value">@Model.SupplierProfit.Count</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="pnl-box">
+                                    <div class="pnl-label">Total Purchase Cost</div>
+                                    <div class="pnl-value">Rs. @Model.SupplierProfit.Sum(r => r.TotalCost).ToString("N0")</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="pnl-box">
+                                    <div class="pnl-label">Total MRP Value</div>
+                                    <div class="pnl-value">Rs. @Model.SupplierProfit.Sum(r => r.TotalMrpValue).ToString("N0")</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="pnl-box pnl-profit">
+                                    <div class="pnl-label">Potential Profit</div>
+                                    <div class="pnl-value positive">Rs. @Model.SupplierProfit.Sum(r => r.PotentialProfit).ToString("N0")</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-pro mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Supplier</th>
+                                    <th class="text-center">Purchases</th>
+                                    <th class="text-center">Units</th>
+                                    <th class="text-end">Total Cost</th>
+                                    <th class="text-end">MRP Value</th>
+                                    <th class="text-end">Potential Profit</th>
+                                    <th class="text-end">Margin %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ var spi = 1; }
+                                @foreach (var r in Model.SupplierProfit)
+                                {
+                                    <tr>
+                                        <td>@spi</td>
+                                        <td class="fw-semibold">@r.SupplierName</td>
+                                        <td class="text-center"><span class="badge bg-secondary">@r.PurchaseCount</span></td>
+                                        <td class="text-center">@r.TotalUnits</td>
+                                        <td class="text-end amount-cell">Rs. @r.TotalCost.ToString("N2")</td>
+                                        <td class="text-end amount-cell">Rs. @r.TotalMrpValue.ToString("N2")</td>
+                                        <td class="text-end amount-cell positive">Rs. @r.PotentialProfit.ToString("N2")</td>
+                                        <td class="text-end"><span class="badge @(r.MarginPercent >= 20 ? "bg-success" : r.MarginPercent >= 10 ? "bg-warning text-dark" : "bg-danger")">@r.MarginPercent.ToString("N1")%</span></td>
+                                    </tr>
+                                    spi++;
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            }
+
+            @if (Model.MonthlySupplierPurchase != null)
+            {
+                if (!Model.MonthlySupplierPurchase.Any())
+                {
+                    <div class="report-empty">No purchases found for this year.</div>
+                }
+                else
+                {
+                    var suppliers = Model.MonthlySupplierPurchase.Select(r => r.SupplierName).Distinct().OrderBy(s => s).ToList();
+                    var months = Model.MonthlySupplierPurchase.Select(r => r.Month).Distinct().OrderBy(m => m).ToList();
+                    <div class="table-responsive">
+                        <table class="table table-pro mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    @foreach (var s in suppliers)
+                                    {
+                                        <th class="text-end" style="min-width:100px">@s</th>
+                                    }
+                                    <th class="text-end fw-bold">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var mo in months)
+                                {
+                                    var label = new DateTime(Model.MonthlySupplierPurchase.First().Year, mo, 1).ToString("MMM yyyy");
+                                    var rowTotal = Model.MonthlySupplierPurchase.Where(r => r.Month == mo).Sum(r => r.TotalAmount);
+                                    <tr>
+                                        <td class="fw-semibold">@label</td>
+                                        @foreach (var s in suppliers)
+                                        {
+                                            var cell = Model.MonthlySupplierPurchase.FirstOrDefault(r => r.Month == mo && r.SupplierName == s);
+                                            <td class="text-end amount-cell">@(cell != null ? "Rs. " + cell.TotalAmount.ToString("N0") : "—")</td>
+                                        }
+                                        <td class="text-end fw-bold amount-cell">Rs. @rowTotal.ToString("N0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="report-total-row">
+                                    <td class="text-end"><strong>Total</strong></td>
+                                    @foreach (var s in suppliers)
+                                    {
+                                        var colTotal = Model.MonthlySupplierPurchase.Where(r => r.SupplierName == s).Sum(r => r.TotalAmount);
+                                        <td class="text-end amount-cell"><strong>Rs. @colTotal.ToString("N0")</strong></td>
+                                    }
+                                    <td class="text-end amount-cell"><strong>Rs. @Model.MonthlySupplierPurchase.Sum(r => r.TotalAmount).ToString("N0")</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+            }
+
+            @if (Model.SupplierPayables != null)
+            {
+                <div class="panel-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="pnl-box"><div class="pnl-label">Total Payable</div><div class="pnl-value">Rs. @Model.SupplierPayables.TotalAmount.ToString("N0")</div></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="pnl-box pnl-profit"><div class="pnl-label">Total Paid</div><div class="pnl-value positive">Rs. @Model.SupplierPayables.TotalPaid.ToString("N0")</div></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="pnl-box"><div class="pnl-label">Pending</div><div class="pnl-value negative">Rs. @Model.SupplierPayables.TotalPending.ToString("N0")</div></div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="pnl-box"><div class="pnl-label">Overdue</div><div class="pnl-value @(Model.SupplierPayables.OverdueCount > 0 ? "negative" : "")">@Model.SupplierPayables.OverdueCount entries</div></div>
+                        </div>
+                    </div>
+                </div>
+                @if (Model.SupplierPayables.Suppliers.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-pro mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Supplier</th>
+                                    <th class="text-center">Entries</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-end">Paid</th>
+                                    <th class="text-end">Pending</th>
+                                    <th class="text-center">Overdue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in Model.SupplierPayables.Suppliers)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@s.SupplierName</td>
+                                        <td class="text-center"><span class="badge bg-secondary">@s.PayableCount</span></td>
+                                        <td class="text-end amount-cell">Rs. @s.TotalAmount.ToString("N2")</td>
+                                        <td class="text-end amount-cell positive">Rs. @s.PaidAmount.ToString("N2")</td>
+                                        <td class="text-end amount-cell @(s.PendingAmount > 0 ? "negative" : "")">Rs. @s.PendingAmount.ToString("N2")</td>
+                                        <td class="text-center">
+                                            @if (s.OverdueCount > 0)
+                                            {
+                                                <span class="badge bg-danger">@s.OverdueCount overdue</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="report-empty">No payables found. Payables are auto-created for credit purchases.</div>
+                }
+            }
+
+            @if (Model.AuditLogs != null)
+            {
+                if (!Model.AuditLogs.Any())
+                {
+                    <div class="report-empty">No audit entries found.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-pro mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Entity</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var a in Model.AuditLogs)
+                                {
+                                    <tr>
+                                        <td><small class="text-muted">@a.Timestamp.ToLocalTime().ToString("dd-MM-yyyy HH:mm")</small></td>
+                                        <td><small>@(a.UserName ?? a.UserId ?? "System")</small></td>
+                                        <td><span class="badge bg-secondary bg-opacity-75">@a.Action</span></td>
+                                        <td><small class="text-muted">@(a.EntityType ?? "—") @(a.EntityId.HasValue ? "#" + a.EntityId : "")</small></td>
+                                        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                                            <small class="text-muted" title="@a.NewValue">@(a.NewValue ?? a.OldValue ?? "—")</small>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 }
             }
         </div>
