@@ -121,7 +121,7 @@ public class IndexModel(InventoryService inventoryService, ApplicationDbContext 
             }
 
             var allMedicines = context.Medicines.ToDictionary(
-                m => m.Name.ToLower().Trim(), m => m);
+                m => (m.Name.ToLower().Trim() + "|" + (m.Manufacturer ?? "").ToLower().Trim()), m => m);
 
             var rows = ws.Dimension?.Rows ?? 1;
             for (int row = 2; row <= rows; row++)
@@ -135,7 +135,8 @@ public class IndexModel(InventoryService inventoryService, ApplicationDbContext 
                 int.TryParse(Cell(row, "LowStockThreshold"), out var threshold);
                 decimal.TryParse(Cell(row, "DiscountPercent"), out var discount);
 
-                var key = name.ToLower().Trim();
+                var mfrImport = Cell(row, "Manufacturer");
+                var key = name.ToLower().Trim() + "|" + mfrImport.ToLower().Trim();
                 if (allMedicines.TryGetValue(key, out var existing))
                 {
                     // Update existing
@@ -144,7 +145,7 @@ public class IndexModel(InventoryService inventoryService, ApplicationDbContext 
                     var form = Cell(row, "FormType");
                     var cat  = Cell(row, "Category");
                     if (!string.IsNullOrEmpty(gen))  existing.GenericName  = gen;
-                    if (!string.IsNullOrEmpty(mfr))  existing.Manufacturer = mfr;
+                    if (!string.IsNullOrEmpty(mfr))  { existing.Manufacturer = mfr; }
                     if (!string.IsNullOrEmpty(form)) existing.FormType     = form;
                     if (!string.IsNullOrEmpty(cat))  existing.Category     = cat;
                     if (mrp > 0) existing.MRP = mrp;
