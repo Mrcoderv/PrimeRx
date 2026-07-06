@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PrimeRx.Data;
 
@@ -10,9 +11,11 @@ using PrimeRx.Data;
 namespace PrimeRx.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260706051132_AddMedicineMaster")]
+    partial class AddMedicineMaster
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
@@ -907,10 +910,6 @@ namespace PrimeRx.Data.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("BatchNumber")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("ConversionCharge")
-                        .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("DiscountPercent")

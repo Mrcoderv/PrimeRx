@@ -44,7 +44,10 @@ public class InventoryService(ApplicationDbContext context)
                 Id = m.Id,
                 Name = m.Name,
                 GenericName = m.GenericName,
+                Manufacturer = m.Manufacturer,
+                FormType = m.FormType,
                 MRP = m.MRP,
+                PurchasePrice = m.PurchasePrice,
                 StockQuantity = m.StockQuantity,
                 DiscountPercent = m.DiscountPercent
             })
@@ -291,6 +294,122 @@ public class InventoryService(ApplicationDbContext context)
             .Where(m => m.IsActive && m.ExpiryDate != null && m.ExpiryDate <= DateTime.Now.AddDays(days))
             .OrderBy(m => m.ExpiryDate)
             .ToListAsync();
+
+    /// <summary>
+    /// Records a stock exchange (Aaicho Paicho) transfer to another pharmacy.
+    /// Tracks quantity only, no price involved in the exchange.
+    /// </summary>
+        public async Task<List<MedicineMaster>> SearchMasterForAutoFillAsync(string term, int limit = 10)
+        {
+            if (string.IsNullOrWhiteSpace(term)) return [];
+            var t = term.Trim().ToLower();
+            return await context.MedicineMasters
+                .Where(m => m.IsActive && (
+                    m.GenericName.ToLower().Contains(t) ||
+                    (m.BrandName != null && m.BrandName.ToLower().Contains(t))))
+                .OrderBy(m => m.GenericName)
+                .Take(limit)
+                .ToListAsync();
+        }
+
+        public byte[] ExportInventoryStockToExcel()
+        {
+            using var package = new OfficeOpenXml.ExcelPackage();
+            var sheet = package.Workbook.Worksheets.Add("Inventory Stock");
+            sheet.Cells[1, 1].Value = "Medicine";
+            sheet.Cells[1, 2].Value = "Generic Name";
+            sheet.Cells[1, 3].Value = "Manufacturer";
+            sheet.Cells[1, 4].Value = "Form";
+            sheet.Cells[1, 5].Value = "Batch #";
+            sheet.Cells[1, 6].Value = "Expiry Date";
+            sheet.Cells[1, 7].Value = "Quantity";
+            sheet.Cells[1, 8].Value = "Purchase Price";
+            sheet.Cells[1, 9].Value = "MRP";
+            sheet.Cells[1, 10].Value = "Category";
+            sheet.Cells[1, 11].Value = "Rack";
+
+            using var range = sheet.Cells[1, 1, 1, 11];
+            range.Style.Font.Bold = true;
+
+            var medicines = context.Medicines.Where(m => m.IsActive).OrderBy(m => m.Name).ToList();
+            var medicineMap = medicines.ToDictionary(m => m.Id, m => m);
+            var allBatches = context.InventoryBatches.Where(b => b.Quantity > 0)
+                .OrderBy(b => b.MedicineId).ThenBy(b => b.ExpiryDate).ToList();
+            var batchesByMed = allBatches.GroupBy(b => b.MedicineId).ToDictionary(g => g.Key, g => g.ToList());
+
+            var row = 2;
+            foreach (var m in medicines)
+            {
+                if (batchesByMed.TryGetValue(m.Id, out var batches))
+                {
+                    foreach (var b in batches)
+                    {
+                        sheet.Cells[row, 1].Value = m.Name;
+                        sheet.Cells[row, 2].Value = m.GenericName;
+                        sheet.Cells[row, 3].Value = m.Manufacturer;
+                        sheet.Cells[row, 4].Value = m.FormType;
+                        sheet.Cells[row, 5].Value = b.BatchNumber;
+                        sheet.Cells[row, 6].Value = b.ExpiryDate?.ToString("dd-MM-yyyy");
+                        sheet.Cells[row, 7].Value = b.Quantity;
+                        sheet.Cells[row, 8].Value = b.PurchasePrice;
+                        sheet.Cells[row, 9].Value = m.MRP;
+                        sheet.Cells[row, 10].Value = m.Category;
+                        sheet.Cells[row, 11].Value = "";
+                        row++;
+                    }
+                }
+                else
+                {
+                    sheet.Cells[row, 1].Value = m.Name;
+                    sheet.Cells[row, 2].Value = m.GenericName;
+                    sheet.Cells[row, 3].Value = m.Manufacturer;
+                    sheet.Cells[row, 4].Value = m.FormType;
+                    sheet.Cells[row, 5].Value = m.BatchNumber;
+                    sheet.Cells[row, 6].Value = m.ExpiryDate?.ToString("dd-MM-yyyy");
+                    sheet.Cells[row, 7].Value = m.StockQuantity;
+                    sheet.Cells[row, 8].Value = m.PurchasePrice;
+                    sheet.Cells[row, 9].Value = m.MRP;
+                    sheet.Cells[row, 10].Value = m.Category;
+                    sheet.Cells[row, 11].Value = "";
+                    row++;
+                }
+            }
+
+            for (var c = 1; c <= 11; c++) sheet.Column(c).AutoFit();
+            return package.GetAsByteArray();
+        }
+
+        public async Task ExchangeStockAsync(int medicineId, int quantity, string otherPharmacy, string? reference)
+    {
+        if (quantity <= 0)
+            throw new InvalidOperationException("Exchange quantity must be greater than zero.");
+
+        var medicine = await context.Medicines.FindAsync(medicineId)
+            ?? throw new InvalidOperationException("Medicine not found.");
+
+        if (medicine.StockQuantity < quantity)
+            throw new InvalidOperationException($"Cannot exchange {quantity} units of '{medicine.Name}' — only {medicine.StockQuantity} in stock.");
+
+        medicine.StockQuantity -= quantity;
+
+        var latestBatch = await context.InventoryBatches
+            .Where(b => b.MedicineId == medicine.Id)
+            .OrderByDescending(b => b.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (latestBatch is not null)
+            latestBatch.Quantity = Math.Max(0, latestBatch.Quantity - quantity);
+
+        context.InventoryTransactions.Add(new InventoryTransaction
+        {
+            MedicineId = medicine.Id,
+            TransactionType = TransactionTypes.Exchange,
+            QuantityChange = -quantity,
+            Reference = $"Exchange to {otherPharmacy}" + (string.IsNullOrWhiteSpace(reference) ? "" : $" • {reference}")
+        });
+
+        await context.SaveChangesAsync();
+    }
 
     public async Task<List<Medicine>> GetExpiringMedicinesAsync(int daysThreshold = 90)
     {

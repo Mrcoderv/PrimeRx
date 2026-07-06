@@ -20,6 +20,12 @@ public class IndexModel(ApplicationDbContext db) : PageModel
     public int OverdueCount { get; set; }
     public int DueSoonCount { get; set; }
 
+    // Ageing buckets
+    public AgeingBucket Age_0_30 { get; set; } = new();
+    public AgeingBucket Age_31_60 { get; set; } = new();
+    public AgeingBucket Age_61_90 { get; set; } = new();
+    public AgeingBucket Age_90_Plus { get; set; } = new();
+
     public async Task OnGetAsync(string? filter, string? supplier, string? message)
     {
         Message = message;
@@ -55,6 +61,46 @@ public class IndexModel(ApplicationDbContext db) : PageModel
         PaidThisMonth = await db.Payables
             .Where(p => p.Status == PayableStatus.Paid && p.CreatedAt >= monthStart)
             .SumAsync(p => (decimal?)p.Amount) ?? 0;
+
+        // Calculate ageing buckets for unpaid payables
+        var today = DateTime.Today;
+        Age_0_30 = new AgeingBucket { Label = "0–30 Days" };
+        Age_31_60 = new AgeingBucket { Label = "31–60 Days" };
+        Age_61_90 = new AgeingBucket { Label = "61–90 Days" };
+        Age_90_Plus = new AgeingBucket { Label = "90+ Days" };
+
+        foreach (var p in unpaid)
+        {
+            var daysOverdue = (today - p.DueDate).Days;
+            if (daysOverdue <= 0)
+            {
+                // Not yet overdue
+            }
+            else if (daysOverdue <= 30)
+            {
+                Age_0_30.Add(p);
+            }
+            else if (daysOverdue <= 60)
+            {
+                Age_31_60.Add(p);
+            }
+            else if (daysOverdue <= 90)
+            {
+                Age_61_90.Add(p);
+            }
+            else
+            {
+                Age_90_Plus.Add(p);
+            }
+        }
+    }
+
+    public class AgeingBucket
+    {
+        public string Label { get; set; } = "";
+        public int Count { get; set; }
+        public decimal Amount { get; set; }
+        public void Add(Payable p) { Count++; Amount += p.PendingAmount; }
     }
 
     public async Task<IActionResult> OnPostRecordPaymentAsync(int id, decimal amount)

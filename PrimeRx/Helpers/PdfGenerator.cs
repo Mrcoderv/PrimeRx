@@ -37,7 +37,7 @@ public class PdfGenerator
                         if (company.ShowPanOnBill && !string.IsNullOrWhiteSpace(company.PAN))
                             row.RelativeItem().AlignCenter().Text($"PAN: {company.PAN}");
                         if (company.ShowGstinOnBill && !string.IsNullOrWhiteSpace(company.GSTIN))
-                            row.RelativeItem().AlignCenter().Text($"GSTIN: {company.GSTIN}");
+                            row.RelativeItem().AlignCenter().Text($"Regd.no: {company.GSTIN}");
                     });
 
                     col.Item().PaddingTop(8).LineHorizontal(1).LineColor(headerColor);

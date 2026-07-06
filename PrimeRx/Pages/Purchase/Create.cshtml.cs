@@ -36,16 +36,43 @@ public class CreateModel(
     public async Task<IActionResult> OnGetSearchAsync(string term)
     {
         var results = await inventoryService.GetAllAsync(term, includeInactive: false);
-        return new JsonResult(results.Select(m => new
+        var meds = results.Select(m => new
         {
             id = m.Id,
             name = m.Name,
             genericName = m.GenericName,
+            manufacturer = m.Manufacturer,
+            formType = m.FormType,
             stockQuantity = m.StockQuantity,
             lowStockThreshold = m.LowStockThreshold,
             purchasePrice = m.PurchasePrice,
-            mrp = m.MRP
-        }));
+            mrp = m.MRP,
+            isMaster = false
+        }).ToList();
+
+        // Also search master catalog for entries not yet in stock
+        var masterResults = await inventoryService.SearchMasterForAutoFillAsync(term, 5);
+        foreach (var master in masterResults)
+        {
+            if (!meds.Any(m => m.name.Contains(master.GenericName, StringComparison.OrdinalIgnoreCase)))
+            {
+                meds.Add(new
+                {
+                    id = -master.Id,
+                    name = master.DisplayName,
+                    genericName = (string?)master.GenericName,
+                    manufacturer = master.Manufacturer,
+                    formType = master.Form,
+                    stockQuantity = 0,
+                    lowStockThreshold = 0,
+                    purchasePrice = 0m,
+                    mrp = 0m,
+                    isMaster = true
+                });
+            }
+        }
+
+        return new JsonResult(meds);
     }
 
     public async Task<IActionResult> OnPostAsync()

@@ -72,11 +72,12 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
                 PurchasePrice = line.PurchasePrice,
                 DiscountPercent = line.DiscountPercent,
                 MRP = mrp,
+                ConversionCharge = line.ConversionCharge,
                 BatchNumber = line.BatchNumber?.Trim(),
                 ExpiryDate = line.ExpiryDate
             });
 
-            total += Math.Round(line.Quantity * line.PurchasePrice * (1 - line.DiscountPercent / 100m), 2);
+            total += Math.Round(line.Quantity * line.PurchasePrice * (1 - line.DiscountPercent / 100m), 2) + line.ConversionCharge;
 
             // Update stock and batch record
             await inventoryService.RecordPurchaseAsync(new PurchaseEntryRequest
@@ -235,6 +236,7 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
                 orig.DiscountPercent = line.DiscountPercent;
                 orig.FreeQuantity = Math.Max(0, line.FreeQuantity);
                 orig.MRP = mrp;
+                orig.ConversionCharge = line.ConversionCharge;
                 orig.BatchNumber = line.BatchNumber?.Trim();
                 orig.ExpiryDate = line.ExpiryDate;
                 updatedItems.Add(orig);
@@ -251,6 +253,7 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
                     PurchasePrice = line.PurchasePrice,
                     DiscountPercent = line.DiscountPercent,
                     MRP = mrp,
+                    ConversionCharge = line.ConversionCharge,
                     BatchNumber = line.BatchNumber?.Trim(),
                     ExpiryDate = line.ExpiryDate
                 };
@@ -268,7 +271,7 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
                 });
             }
 
-            total += Math.Round(line.Quantity * line.PurchasePrice * (1 - line.DiscountPercent / 100m), 2);
+            total += Math.Round(line.Quantity * line.PurchasePrice * (1 - line.DiscountPercent / 100m), 2) + line.ConversionCharge;
         }
 
         // Remove deleted items from DB

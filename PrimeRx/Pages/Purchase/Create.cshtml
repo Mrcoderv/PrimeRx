@@ -29,7 +29,27 @@
                     <input type="text" id="medicineSearchText"
                            class="form-control medicine-search-input"
                            placeholder="Type medicine name to search catalog…"
-                           autocomplete="off">
+                           autocomplete="off"
+                           role="combobox"
+                           aria-expanded="false"
+                           aria-autocomplete="list"
+                           aria-controls="medicinePopup">
+                    <div id="medicinePopup"
+                         class="medicine-popup"
+                         role="listbox"
+                         style="display:none;">
+                        <div class="medicine-popup-header">
+                            <span style="width:55%">MEDICINE</span>
+                            <span style="width:25%">PRICE</span>
+                            <span style="width:20%">STOCK</span>
+                        </div>
+                        <div class="medicine-popup-body" id="medicinePopupBody"></div>
+                        <div class="medicine-popup-footer">
+                            <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> Navigate</span>
+                            <span><kbd>Enter</kbd> Select</span>
+                            <span><kbd>Esc</kbd> Close</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -40,26 +60,42 @@
                         <thead>
                             <tr>
                                 <th>Medicine</th>
-                                <th style="width:95px">Batch #</th>
-                                <th style="width:115px">Expiry</th>
-                                <th style="width:85px">Qty</th>
-                                <th style="width:85px" title="Free/Bonus units">Free</th>
-                                <th style="width:105px">Purchase Price</th>
-                                <th style="width:75px" title="Discount %">Disc %</th>
-                                <th style="width:95px">MRP</th>
-                                <th style="width:95px">Amount</th>
-                                <th style="width:40px"></th>
+                                <th style="width:90px">Batch #</th>
+                                <th style="width:105px">Expiry</th>
+                                <th style="width:70px">Qty</th>
+                                <th style="width:65px" title="Free/Bonus units">Free</th>
+                                <th style="width:95px">Rate</th>
+                                <th style="width:65px" title="Discount %">Disc%</th>
+                                <th style="width:70px">CC</th>
+                                <th style="width:85px">MRP</th>
+                                <th style="width:85px">Amount</th>
+                                <th style="width:36px"></th>
                             </tr>
                         </thead>
                         <tbody id="itemsBody">
                             <tr id="emptyRow">
-                                <td colspan="10" class="text-center text-muted py-4">Search and add medicines above</td>
+                                <td colspan="11" class="text-center text-muted py-4">Search and add medicines above</td>
                             </tr>
                         </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="8" class="text-end fw-semibold">Total Purchase Amount</td>
-                                <td class="fw-bold text-accent" id="totalDisplay">Rs. 0.00</td>
+                        <tfoot id="tableFoot">
+                            <tr class="purchase-total-row">
+                                <td colspan="8" class="text-end fw-semibold">Subtotal</td>
+                                <td colspan="2" class="fw-bold text-accent" id="subtotalDisplay">Rs. 0.00</td>
+                                <td></td>
+                            </tr>
+                            <tr class="purchase-total-row">
+                                <td colspan="8" class="text-end fw-semibold text-danger">Discount</td>
+                                <td colspan="2" class="fw-bold text-danger" id="discountDisplay">- Rs. 0.00</td>
+                                <td></td>
+                            </tr>
+                            <tr class="purchase-total-row">
+                                <td colspan="8" class="text-end fw-semibold">Conv. Charges (CC)</td>
+                                <td colspan="2" class="fw-bold text-accent" id="ccTotalDisplay">Rs. 0.00</td>
+                                <td></td>
+                            </tr>
+                            <tr class="purchase-total-row purchase-grand-total">
+                                <td colspan="8" class="text-end fw-semibold">Net Amount</td>
+                                <td colspan="2" class="fw-bold text-accent" id="netTotalDisplay">Rs. 0.00</td>
                                 <td></td>
                             </tr>
                         </tfoot>
@@ -77,7 +113,7 @@
                         <label class="form-label">Supplier / Company <span class="text-danger">*</span></label>
                         <select asp-for="Input.SupplierName" class="form-select" id="supplierName"
                                 onchange="onSupplierChange(this.value)">
-                            <option value="">— Select or type a supplier —</option>
+                            <option value="">&mdash; Select or type a supplier &mdash;</option>
                             @foreach (var s in Model.KnownSuppliers)
                             {
                                 <option value="@s.Name" data-phone="@s.Phone" data-creditdays="@s.CreditDays">@s.Name</option>
@@ -126,17 +162,20 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Notes</label>
-                        <textarea asp-for="Input.Notes" class="form-control" rows="2" placeholder="Optional remarks…"></textarea>
+                        <textarea asp-for="Input.Notes" class="form-control" rows="2" placeholder="Optional remarks&hellip;"></textarea>
                     </div>
 
                     <hr class="billing-divider" />
+                    <div class="billing-total-row"><span>Subtotal</span><span id="sidebarSubtotal">Rs. 0.00</span></div>
+                    <div class="billing-total-row text-danger"><span>Discount</span><span id="sidebarDiscount">- Rs. 0.00</span></div>
+                    <div class="billing-total-row"><span>Total CC</span><span id="sidebarCC">Rs. 0.00</span></div>
                     <div class="billing-total-row billing-total-final mb-3">
-                        <span>Total</span>
-                        <span id="sidebarTotal">Rs. 0.00</span>
+                        <span>Net Amount</span>
+                        <span id="sidebarNetTotal">Rs. 0.00</span>
                     </div>
                     <div id="creditBadge" class="alert alert-warning py-2 small mb-3" style="display:none;">
                         <i class="bi bi-exclamation-triangle me-1"></i>
-                        Credit purchase — a payable will be auto-created in <strong>Payables</strong>.
+                        Credit purchase &mdash; a payable will be auto-created in <strong>Payables</strong>.
                     </div>
 
                     <input type="hidden" id="itemsJson" name="ItemsJson" value="[]" />
@@ -158,16 +197,45 @@
     </div>
     <div id="medicinePopupBody" class="medicine-popup-body"></div>
     <div class="medicine-popup-footer">
-        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> Navigate</span>
         <span><kbd>Enter</kbd> Select</span>
         <span><kbd>Esc</kbd> Close</span>
     </div>
+</div>
+
+<!-- Floating Calculator -->
+<div id="floatingCalc" class="floating-calc" style="display:none">
+    <div class="calc-grid">
+        <button type="button" class="calc-btn" data-calc="7">7</button>
+        <button type="button" class="calc-btn" data-calc="8">8</button>
+        <button type="button" class="calc-btn" data-calc="9">9</button>
+        <button type="button" class="calc-btn calc-clear" data-calc="C">C</button>
+        <button type="button" class="calc-btn" data-calc="4">4</button>
+        <button type="button" class="calc-btn" data-calc="5">5</button>
+        <button type="button" class="calc-btn" data-calc="6">6</button>
+        <button type="button" class="calc-btn calc-back" data-calc="&#x232B;">&#x232B;</button>
+        <button type="button" class="calc-btn" data-calc="1">1</button>
+        <button type="button" class="calc-btn" data-calc="2">2</button>
+        <button type="button" class="calc-btn" data-calc="3">3</button>
+        <button type="button" class="calc-btn calc-enter" data-calc="Enter">Enter</button>
+        <button type="button" class="calc-btn" data-calc="0">0</button>
+        <button type="button" class="calc-btn" data-calc=".">.</button>
+        <button type="button" class="calc-btn calc-plus" data-calc="+">+</button>
+        <button type="button" class="calc-btn calc-minus" data-calc="-">-</button>
+    </div>
+</div>
+
+<!-- Batch Info Panel -->
+<div id="batchInfoPanel" class="batch-info-panel" style="display:none;">
+    <div class="batch-info-header">Batch Information</div>
+    <div class="batch-info-body" id="batchInfoBody"></div>
 </div>
 
 </div>
 
 @section Styles {
     <link rel="stylesheet" href="~/css/billing.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/purchase.css" asp-append-version="true" />
 }
 
 @section Scripts {

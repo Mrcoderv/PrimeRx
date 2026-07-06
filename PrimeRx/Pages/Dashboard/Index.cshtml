@@ -16,10 +16,19 @@
         </a>
     </div>
 
+    @* ── Global Search Bar ── *@
+    <div class="dash-search-bar" data-search-trigger>
+        <div class="dash-search-inner">
+            <i class="bi bi-search dash-search-icon"></i>
+            <span class="dash-search-text">Search features, pages...</span>
+            <span class="dash-search-shortcut"><kbd>Ctrl</kbd>+<kbd>K</kbd></span>
+        </div>
+    </div>
+
     @* ── Stat Cards Row 1: Today ── *@
     <div class="stat-grid">
-        <div class="stat-card" style="--stat-accent:#3b82f6;--stat-bg:linear-gradient(135deg,#eff6ff,#dbeafe);">
-            <div class="stat-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb);">
+        <div class="stat-card">
+            <div class="stat-icon icon-sales">
                 <i class="bi bi-graph-up-arrow"></i>
             </div>
             <div class="stat-body">
@@ -28,8 +37,8 @@
                 <div class="stat-footer">@Model.Summary.TodayBills bills</div>
             </div>
         </div>
-        <div class="stat-card" style="--stat-accent:#f59e0b;--stat-bg:linear-gradient(135deg,#fffbeb,#fef3c7);">
-            <div class="stat-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+        <div class="stat-card">
+            <div class="stat-icon icon-discount">
                 <i class="bi bi-tag"></i>
             </div>
             <div class="stat-body">
@@ -38,8 +47,8 @@
                 <div class="stat-footer">given on today's bills</div>
             </div>
         </div>
-        <div class="stat-card" style="--stat-accent:#8b5cf6;--stat-bg:linear-gradient(135deg,#f5f3ff,#ede9fe);">
-            <div class="stat-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">
+        <div class="stat-card">
+            <div class="stat-icon icon-expense">
                 <i class="bi bi-wallet2"></i>
             </div>
             <div class="stat-body">
@@ -48,8 +57,8 @@
                 <div class="stat-footer">operational costs</div>
             </div>
         </div>
-        <div class="stat-card" style="--stat-accent:#10b981;--stat-bg:linear-gradient(135deg,#ecfdf5,#d1fae5);">
-            <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#059669);">
+        <div class="stat-card">
+            <div class="stat-icon icon-profit">
                 <i class="bi bi-piggy-bank"></i>
             </div>
             <div class="stat-body">
@@ -62,8 +71,8 @@
 
     @* ── Stat Cards Row 2: Monthly ── *@
     <div class="stat-grid">
-        <div class="stat-card" style="--stat-accent:#3b82f6;--stat-bg:linear-gradient(135deg,#eff6ff,#dbeafe);">
-            <div class="stat-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb);">
+        <div class="stat-card">
+            <div class="stat-icon icon-sales">
                 <i class="bi bi-calendar-check"></i>
             </div>
             <div class="stat-body">
@@ -72,8 +81,8 @@
                 <div class="stat-footer">@Model.Summary.MonthBills bills this month</div>
             </div>
         </div>
-        <div class="stat-card" style="--stat-accent:#f59e0b;--stat-bg:linear-gradient(135deg,#fffbeb,#fef3c7);">
-            <div class="stat-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+        <div class="stat-card">
+            <div class="stat-icon icon-discount">
                 <i class="bi bi-percent"></i>
             </div>
             <div class="stat-body">
@@ -82,8 +91,8 @@
                 <div class="stat-footer">across @Model.Summary.MonthBills bills</div>
             </div>
         </div>
-        <div class="stat-card" style="--stat-accent:#8b5cf6;--stat-bg:linear-gradient(135deg,#f5f3ff,#ede9fe);">
-            <div class="stat-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">
+        <div class="stat-card">
+            <div class="stat-icon icon-expense">
                 <i class="bi bi-cash-stack"></i>
             </div>
             <div class="stat-body">
@@ -92,8 +101,8 @@
                 <div class="stat-footer">this month</div>
             </div>
         </div>
-        <div class="stat-card" style="--stat-accent:#10b981;--stat-bg:linear-gradient(135deg,#ecfdf5,#d1fae5);">
-            <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#059669);">
+        <div class="stat-card">
+            <div class="stat-icon icon-profit">
                 <i class="bi bi-graph-up"></i>
             </div>
             <div class="stat-body">
@@ -233,10 +242,6 @@
     </div>
 </div>
 
-@section Styles {
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-}
-
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
@@ -257,12 +262,12 @@
                     datasets: [{
                         label: 'Sales (Rs.)',
                         data: salesData.map(x => x.amount),
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59,130,246,0.12)',
+                        borderColor: '#2563EB',
+                        backgroundColor: 'rgba(37,99,235,0.1)',
                         fill: true,
                         tension: 0.4,
                         pointRadius: 5,
-                        pointBackgroundColor: '#3b82f6',
+                        pointBackgroundColor: '#2563EB',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
                         borderWidth: 3
@@ -307,7 +312,7 @@
                     labels: topMeds.map(x => x.medicineName),
                     datasets: [{
                         data: topMeds.map(x => x.totalAmount),
-                        backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'],
+                        backgroundColor: ['#2563EB', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
                         borderColor: '#fff',
                         borderWidth: 3,
                         hoverOffset: 8

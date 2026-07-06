@@ -203,13 +203,32 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         return Page();
     }
 
-    public async Task<IActionResult> OnGetAuditReportAsync()
+    public int? SelectedAuditDays { get; set; }
+    public DateTime? AuditFrom { get; set; }
+    public DateTime? AuditTo { get; set; }
+
+    public async Task<IActionResult> OnGetAuditReportAsync(int? days, DateTime? from, DateTime? to)
     {
         await LoadPageDataAsync();
         ActiveReport = "audit";
-        AuditLogs = await reportService.GetAuditReportAsync(200);
-        ReportTitle = "Audit Log (Last 200 Entries)";
-        SummaryText = $"{AuditLogs.Count} entries";
+
+        AuditFrom = from;
+        AuditTo = to;
+
+        if (from.HasValue && to.HasValue)
+        {
+            AuditLogs = await reportService.GetAuditReportByRangeAsync(from.Value, to.Value);
+            ReportTitle = $"Audit Report ({from:dd MMM yyyy} - {to:dd MMM yyyy})";
+            SummaryText = $"{AuditLogs.Count} entries";
+        }
+        else
+        {
+            var d = days ?? 30;
+            SelectedAuditDays = d;
+            AuditLogs = await reportService.GetAuditReportByDaysAsync(d);
+            ReportTitle = $"Audit Report (Last {d} Days)";
+            SummaryText = $"{AuditLogs.Count} entries";
+        }
         return Page();
     }
 

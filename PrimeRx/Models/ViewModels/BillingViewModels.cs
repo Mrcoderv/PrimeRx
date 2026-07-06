@@ -34,7 +34,10 @@ public class MedicineSearchResult
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? GenericName { get; set; }
+    public string? Manufacturer { get; set; }
+    public string? FormType { get; set; }
     public decimal MRP { get; set; }
+    public decimal PurchasePrice { get; set; }
     public int StockQuantity { get; set; }
     public decimal DiscountPercent { get; set; }
 }

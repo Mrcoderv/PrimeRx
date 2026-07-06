@@ -23,12 +23,15 @@
                     medicineId: itemData.medicineId,
                     medicineName: itemData.medicineName,
                     rate: itemData.rate,
+                    purchasePrice: itemData.purchasePrice || 0,
                     quantity: itemData.quantity,
                     availableStock: itemData.availableStock ?? 999,
                     discountPercent: itemData.discountPercent || 0,
                     discountAmount: itemData.discountAmount || 0,
                     batchId: itemData.selectedBatchId || null,
-                    batchNumber: itemData.batchNumber || null
+                    batchNumber: itemData.batchNumber || null,
+
+                    expiryDate: itemData.expiryDate || null
                 });
                 renderRow(items[items.length - 1]);
                 const lastTr = itemsBody.lastElementChild;
@@ -54,7 +57,6 @@
     function recalcTotals() {
         let subtotal = 0;
         let itemDiscount = 0;
-
         items.forEach(item => {
             const gross = item.rate * item.quantity;
             const discountAmount = gross * (item.discountPercent / 100);
@@ -64,16 +66,31 @@
         });
 
         const totalDiscount = itemDiscount;
-        const total = subtotal - totalDiscount;
+        const netAmount = subtotal - totalDiscount;
 
-        document.getElementById('subtotalDisplay').textContent = formatMoney(subtotal);
-        document.getElementById('discountDisplay').textContent = formatMoney(totalDiscount);
-        document.getElementById('totalDisplay').textContent = formatMoney(Math.max(0, total));
+        const fmtSub = 'Rs. ' + formatMoney(subtotal);
+        const fmtDisc = '- Rs. ' + formatMoney(totalDiscount);
+        const fmtNet = 'Rs. ' + formatMoney(Math.max(0, netAmount));
+
+        const subEl = document.getElementById('subtotalDisplay');
+        const discEl = document.getElementById('discountDisplay');
+        const netEl = document.getElementById('netTotalDisplay');
+        if (subEl) subEl.textContent = fmtSub;
+        if (discEl) discEl.textContent = fmtDisc;
+        if (netEl) netEl.textContent = fmtNet;
+
+        const sbSub = document.getElementById('sidebarSubtotal');
+        const sbDisc = document.getElementById('sidebarDiscount');
+        const sbNet = document.getElementById('sidebarNetTotal');
+        if (sbSub) sbSub.textContent = fmtSub;
+        if (sbDisc) sbDisc.textContent = fmtDisc;
+        if (sbNet) sbNet.textContent = fmtNet;
 
         itemsJson.value = JSON.stringify(items.map(i => ({
             medicineId: i.medicineId,
             medicineName: i.medicineName,
             rate: i.rate,
+            purchasePrice: i.purchasePrice,
             quantity: i.quantity,
             availableStock: i.availableStock,
             discountPercent: i.discountPercent,
@@ -97,30 +114,70 @@
             medicineId: medicine.id,
             medicineName: medicine.name,
             rate: medicine.mrp,
+            purchasePrice: medicine.purchasePrice || 0,
             quantity: 1,
             availableStock: medicine.stockQuantity,
             discountPercent: medicine.discountPercent || 0,
             discountAmount: 0,
             batchId: null,
-            batchNumber: null
+            batchNumber: null,
+            expiryDate: null
         });
 
         renderRow(items[items.length - 1]);
         recalcTotals();
+
+        const lastTr = itemsBody.lastElementChild;
+        if (lastTr) {
+            const rateInput = lastTr.querySelector('.rate-input');
+            if (rateInput) rateInput.focus();
+        }
+    }
+
+    function getMarginFlag(rate, purchasePrice, discountPercent) {
+        if (!purchasePrice || purchasePrice <= 0) return '';
+        const margin = rate / purchasePrice;
+        const effectiveRate = rate * (1 - (discountPercent || 0) / 100);
+        const effectiveMargin = effectiveRate / purchasePrice;
+        if (effectiveMargin < 1.05) {
+            return '<span class="margin-flag danger" title="Low margin: ' + effectiveMargin.toFixed(2) + 'x (purchase: Rs. ' + purchasePrice.toFixed(2) + ')">⚠ High Disc.</span>';
+        } else if (effectiveMargin < 1.10) {
+            return '<span class="margin-flag warning" title="Reduced margin: ' + effectiveMargin.toFixed(2) + 'x (purchase: Rs. ' + purchasePrice.toFixed(2) + ')">' + effectiveMargin.toFixed(2) + 'x</span>';
+        }
+        return '';
     }
 
     function renderRow(item) {
         const tr = document.createElement('tr');
         tr.dataset.index = item.index;
 
+        const marginFlag = getMarginFlag(item.rate, item.purchasePrice, item.discountPercent);
+        const effectiveMargin = item.purchasePrice > 0 ? (item.rate * (1 - (item.discountPercent || 0) / 100)) / item.purchasePrice : 99;
+        if (effectiveMargin < 1.05) {
+            tr.classList.add('high-discount-row');
+        }
+
         const nameTd = document.createElement('td');
-        nameTd.innerHTML = `${item.medicineName}<br><small class="text-muted">Stock: ${item.availableStock}</small><br>`;
+        nameTd.innerHTML = `
+            <div class="purchase-med-info">
+                <div class="purchase-med-name">${escapeHtml(item.medicineName)}${marginFlag}</div>
+                <small class="text-muted">Stock: ${item.availableStock}</small>
+            </div>`;
         const batchBtn = document.createElement('button');
         batchBtn.type = 'button';
         batchBtn.className = 'batch-btn';
         batchBtn.title = 'Change batch';
         batchBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17h7m-3.5-3.5v7"/></svg><span class="batch-label">Auto batch</span> ▾`;
         nameTd.appendChild(batchBtn);
+
+        const batchInfo = document.createElement('span');
+        batchInfo.className = 'batch-info';
+        if (item.batchId) {
+            batchInfo.textContent = `Batch: ${item.batchNumber || '#' + item.batchId} | Exp: ${item.expiryDate || ''}`;
+        } else {
+            batchInfo.style.display = 'none';
+        }
+        nameTd.appendChild(batchInfo);
 
         tr.appendChild(nameTd);
         tr.innerHTML += `
@@ -129,7 +186,7 @@
             <td><input type="number" class="form-control form-control-sm disc-percent-input" value="${item.discountPercent}" step="0.1" min="0" max="100"></td>
             <td class="disc-amount">${formatMoney(item.discountAmount)}</td>
             <td class="line-total">${formatMoney(item.rate * item.quantity - item.discountAmount)}</td>
-            <td><button type="button" class="btn btn-sm btn-outline-danger remove-btn">&times;</button></td>`;
+            <td><button type="button" class="btn btn-sm btn-outline-danger btn-remove-item">&times;</button></td>`;
 
         tr.querySelector('.batch-btn').addEventListener('click', e => {
             e.stopPropagation();
@@ -138,6 +195,7 @@
 
         tr.querySelector('.rate-input').addEventListener('input', e => {
             item.rate = parseFloat(e.target.value) || 0;
+            updateMarginFlag(tr, item);
             updateLineTotal(tr, item);
             recalcTotals();
         });
@@ -160,11 +218,33 @@
             if (percent > 100) percent = 100;
             e.target.value = percent;
             item.discountPercent = percent;
+            updateMarginFlag(tr, item);
             updateLineTotal(tr, item);
             recalcTotals();
         });
 
-        tr.querySelector('.remove-btn').addEventListener('click', () => {
+        tr.querySelector('.rate-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                tr.querySelector('.qty-input').focus();
+            }
+        });
+
+        tr.querySelector('.qty-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                tr.querySelector('.disc-percent-input').focus();
+            }
+        });
+
+        tr.querySelector('.disc-percent-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
+
+        tr.querySelector('.btn-remove-item').addEventListener('click', () => {
             const i = items.findIndex(x => x.index === item.index);
             if (i >= 0) items.splice(i, 1);
             tr.remove();
@@ -187,6 +267,21 @@
         tr.querySelector('.line-total').textContent = formatMoney(gross - discountAmount);
     }
 
+    function updateMarginFlag(tr, item) {
+        const nameCell = tr.querySelector('td:first-child');
+        const existingFlag = nameCell.querySelector('.margin-flag');
+        if (existingFlag) existingFlag.remove();
+        const flagHtml = getMarginFlag(item.rate, item.purchasePrice, item.discountPercent);
+        if (flagHtml) {
+            const medName = nameCell.childNodes[0];
+            const wrapper = document.createElement('span');
+            wrapper.innerHTML = flagHtml;
+            medName.after(wrapper.firstChild);
+        }
+        const effectiveMargin = item.purchasePrice > 0 ? (item.rate * (1 - (item.discountPercent || 0) / 100)) / item.purchasePrice : 99;
+        tr.classList.toggle('high-discount-row', effectiveMargin < 1.05);
+    }
+
     // ── Batch picker ────────────────────────────────────────────────────────
     function escHtml(s) {
         return String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
@@ -202,6 +297,16 @@
         } else {
             label.textContent = 'Auto batch';
             btn.classList.remove('has-batch');
+        }
+        const batchInfo = tr.querySelector('.batch-info');
+        if (batchInfo) {
+            if (item.batchId) {
+                batchInfo.textContent = `Batch: ${item.batchNumber || '#' + item.batchId} | Exp: ${item.expiryDate || ''}`;
+                batchInfo.style.display = '';
+            } else {
+                batchInfo.textContent = '';
+                batchInfo.style.display = 'none';
+            }
         }
         recalcTotals();
     }
@@ -248,7 +353,7 @@
                 autoRow.innerHTML = `<span class="bp-number">Auto (FEFO)</span><span class="bp-qty">—</span><span class="bp-expiry">Earliest expiry first</span>${!item.batchId ? '<span class="bp-check">✓</span>' : '<span></span>'}`;
                 autoRow.addEventListener('mousedown', e => {
                     e.preventDefault();
-                    item.batchId = null; item.batchNumber = null;
+                    item.batchId = null; item.batchNumber = null; item.expiryDate = null;
                     const qtyInput = tr.querySelector('.qty-input');
                     qtyInput.max = item.availableStock;
                     updateBatchDisplay(tr, item);
@@ -270,6 +375,7 @@
                             e.preventDefault();
                             item.batchId = b.id;
                             item.batchNumber = b.batchNumber;
+                            item.expiryDate = b.expiryDate || '';
                             const qtyInput = tr.querySelector('.qty-input');
                             if (parseInt(qtyInput.value) > b.quantity) {
                                 qtyInput.value = b.quantity;
@@ -297,27 +403,49 @@
         setTimeout(() => document.addEventListener('mousedown', closeBatchPickerOutside), 10);
     }
 
-    // Conditional validation for CustomerPhone field when payment is Due
-    const paymentMethod = document.getElementById('paymentMethod');
-    const customerPhone = document.getElementById('customerPhone');
-    const customerPhoneHint = document.getElementById('customerPhoneHint');
+    // ── Payment Method Button Group ─────────────────────────────────────────
+    const paymentMethodSelect = document.getElementById('paymentMethod');
+    const paymentMethodGroup  = document.getElementById('paymentMethodGroup');
+    const customerPhone       = document.getElementById('customerPhone');
+    const customerPhoneHint   = document.getElementById('customerPhoneHint');
+    const customerPhoneGroup  = document.getElementById('customerPhoneGroup');
 
-    function updateCustomerPhoneRequirement() {
-        if (paymentMethod.value === 'Due') {
-            customerPhone.setAttribute('required', 'required');
-            customerPhoneHint.textContent = 'Required when payment is Due';
-            customerPhoneHint.classList.add('text-danger');
-            customerPhoneHint.classList.remove('text-muted');
-        } else {
-            customerPhone.removeAttribute('required');
-            customerPhoneHint.textContent = 'Required when payment is Due';
-            customerPhoneHint.classList.remove('text-danger');
-            customerPhoneHint.classList.add('text-muted');
+    if (paymentMethodGroup) {
+        function setPaymentMethod(value) {
+            paymentMethodSelect.value = value;
+            paymentMethodGroup.querySelectorAll('.payment-method-btn').forEach(function (btn) {
+                btn.classList.toggle('active', btn.dataset.value === value);
+            });
+            updateCustomerPhoneRequirement();
         }
-    }
 
-    paymentMethod?.addEventListener('change', updateCustomerPhoneRequirement);
-    updateCustomerPhoneRequirement();
+        paymentMethodGroup.addEventListener('click', function (e) {
+            var btn = e.target.closest('.payment-method-btn');
+            if (btn) setPaymentMethod(btn.dataset.value);
+        });
+
+        // Keep hidden select in sync for form submission
+        paymentMethodSelect.addEventListener('change', function () {
+            setPaymentMethod(this.value);
+        });
+
+        function updateCustomerPhoneRequirement() {
+            if (paymentMethodSelect.value === 'Due') {
+                customerPhone.setAttribute('required', 'required');
+                customerPhoneHint.textContent = 'Required when payment is Due';
+                customerPhoneHint.className = 'small text-danger';
+                customerPhoneGroup.classList.add('phone-required');
+            } else {
+                customerPhone.removeAttribute('required');
+                customerPhoneHint.textContent = 'Required when payment is Due';
+                customerPhoneHint.className = 'small text-muted';
+                customerPhoneGroup.classList.remove('phone-required');
+            }
+        }
+
+        // Init default state
+        setPaymentMethod(paymentMethodSelect.value);
+    }
 
     // ── Floating medicine search popup ─────────────────────────────────────
     const searchInput = document.getElementById('medicineSearchText');
@@ -342,7 +470,8 @@
         const list = loadRecent().filter(r => String(r.id) !== String(m.id));
         list.unshift({
             id: m.id, name: m.name, genericName: m.genericName,
-            mrp: m.mrp, stockQuantity: m.stockQuantity,
+            mrp: m.mrp, purchasePrice: m.purchasePrice || 0,
+            stockQuantity: m.stockQuantity,
             discountPercent: m.discountPercent, batch: m.batch
         });
         try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, RECENT_MAX))); }
@@ -362,17 +491,26 @@
         popupItems = list;
         const frag = document.createDocumentFragment();
         list.forEach(m => {
+            const isLow = m.stockQuantity <= 5;
+            const isOut = m.stockQuantity === 0;
+            const stockBadgeHtml = isOut
+                ? `<span class="purchase-stock-badge out-of-stock">Out</span>`
+                : isLow
+                    ? `<span class="purchase-stock-badge low-stock">⚠ ${m.stockQuantity}</span>`
+                    : `<span class="purchase-stock-ok">${m.stockQuantity}</span>`;
+
             const row = document.createElement('div');
-            row.className = 'medicine-popup-row';
+            row.className = 'medicine-popup-row' + (isLow && !isOut ? ' low-stock-row' : '');
             row.setAttribute('role', 'option');
             row.innerHTML = `
-                <span class="mpc-name">
-                    <span class="mpc-med-name">${escapeHtml(m.name)}</span>
-                    ${m.genericName ? `<span class="mpc-med-generic">${escapeHtml(m.genericName)}</span>` : ''}
-                </span>
-                <span class="mpc-batch">${escapeHtml(m.batch || '—')}</span>
-                <span class="mpc-stock">${stockBadge(m.stockQuantity)}</span>
-                <span class="mpc-rate">₹${Number(m.mrp || 0).toFixed(2)}</span>`;
+                <div style="flex:1;min-width:0">
+                    <div class="fw-semibold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--rx-heading)">${escapeHtml(m.name)}</div>
+                    ${m.genericName ? `<div style="font-size:0.78rem;opacity:0.65">${escapeHtml(m.genericName)}</div>` : ''}
+                </div>
+                <div style="text-align:right;flex-shrink:0;padding-left:0.5rem">
+                    <div style="font-size:0.8rem;opacity:0.75">₹${Number(m.mrp || 0).toFixed(2)}</div>
+                    <div>${stockBadgeHtml}</div>
+                </div>`;
             row.addEventListener('mousedown', e => { e.preventDefault(); selectMedicine(m); });
             frag.appendChild(row);
         });
@@ -439,6 +577,7 @@
 
     function stockBadge(qty) {
         const n = Number(qty || 0);
+        if (n === 0) return `<span class="purchase-stock-badge out-of-stock">Out</span>`;
         let cls = '';
         if (n <= 5)  cls = 'low';
         else if (n <= 20) cls = 'medium';
@@ -472,17 +611,29 @@
 
         const frag = document.createDocumentFragment();
         medicines.forEach((m) => {
+            const isMaster = m.isMaster === true;
+            const isLow = m.stockQuantity <= 5;
+            const isOut = m.stockQuantity === 0;
+            const stockBadgeHtml = isOut
+                ? `<span class="purchase-stock-badge out-of-stock">Out</span>`
+                : isLow
+                    ? `<span class="purchase-stock-badge low-stock">⚠ ${m.stockQuantity}</span>`
+                    : `<span class="purchase-stock-ok">${m.stockQuantity}</span>`;
+
             const row = document.createElement('div');
-            row.className = 'medicine-popup-row';
+            row.className = 'medicine-popup-row' + (isMaster ? ' master-row' : '') + (isLow && !isOut ? ' low-stock-row' : '');
             row.setAttribute('role', 'option');
             row.innerHTML = `
-                <span class="mpc-name">
-                    <span class="mpc-med-name">${escapeHtml(m.name)}</span>
-                    ${m.genericName ? `<span class="mpc-med-generic">${escapeHtml(m.genericName)}</span>` : ''}
-                </span>
-                <span class="mpc-batch">${escapeHtml(m.batch || '—')}</span>
-                <span class="mpc-stock">${stockBadge(m.stockQuantity)}</span>
-                <span class="mpc-rate">₹${Number(m.mrp || 0).toFixed(2)}</span>`;
+                <div style="flex:1;min-width:0">
+                    <div class="fw-semibold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--rx-heading)">${escapeHtml(m.name)}</div>
+                    ${m.genericName ? `<div style="font-size:0.78rem;opacity:0.65">${escapeHtml(m.genericName)}${m.formType ? ' · ' + escapeHtml(m.formType) : ''}</div>` : ''}
+                    ${m.manufacturer ? `<div style="font-size:0.72rem;opacity:0.5">${escapeHtml(m.manufacturer)}</div>` : ''}
+                    ${isMaster ? '<div style="font-size:0.65rem;color:#60A5FA;font-weight:600;margin-top:1px">Catalog · No stock</div>' : ''}
+                </div>
+                <div style="text-align:right;flex-shrink:0;padding-left:0.5rem">
+                    ${isMaster ? '' : `<div style="font-size:0.8rem;opacity:0.75">₹${Number(m.mrp || 0).toFixed(2)}</div>`}
+                    <div>${isMaster ? '' : stockBadgeHtml}</div>
+                </div>`;
             row.addEventListener('mousedown', e => {
                 e.preventDefault();
                 selectMedicine(m);
@@ -498,17 +649,29 @@
 
     function selectMedicine(medicine) {
         if (!medicine) return;
+
+        // Master catalog entries — redirect to add stock or show info
+        if (medicine.isMaster === true) {
+            const name = medicine.genericName || medicine.name;
+            if (confirm(`"${name}" is in the master catalog but has no stock.\n\nGo to Purchase → New Purchase to add stock?`)) {
+                window.location.href = '/Purchase/Create';
+            }
+            closePopup();
+            searchInput.value = '';
+            return;
+        }
+
         saveRecent(medicine);
         addItem({
             id: Number(medicine.id),
             name: medicine.name,
             mrp: Number(medicine.mrp || 0),
+            purchasePrice: Number(medicine.purchasePrice || 0),
             stockQuantity: Number(medicine.stockQuantity || 0),
             discountPercent: Number(medicine.discountPercent || 0)
         });
         closePopup();
         searchInput.value = '';
-        searchInput.focus();
     }
 
     function selectActive() {
@@ -535,10 +698,14 @@
                     id: String(m.id ?? m.Id),
                     name: m.name ?? m.Name,
                     genericName: m.genericName ?? m.GenericName,
+                    manufacturer: m.manufacturer ?? m.Manufacturer,
+                    formType: m.formType ?? m.FormType,
                     mrp: Number(m.mrp ?? m.MRP ?? 0),
+                    purchasePrice: Number(m.purchasePrice ?? m.PurchasePrice ?? 0),
                     stockQuantity: Number(m.stockQuantity ?? m.StockQuantity ?? 0),
                     discountPercent: Number(m.discountPercent ?? m.DiscountPercent ?? 0),
-                    batch: m.batch ?? m.Batch
+                    batch: m.batch ?? m.Batch,
+                    isMaster: m.isMaster === true
                 }));
                 renderPopup(popupItems);
             })
@@ -618,4 +785,84 @@
 
     window.addEventListener('resize', () => { if (isOpen) positionPopup(); });
     window.addEventListener('scroll', () => { if (isOpen) positionPopup(); }, true);
+
+    // ── Floating Calculator ─────────────────────────────────────
+    const floatingCalc = document.getElementById('floatingCalc');
+    let calcTarget = null;
+
+    function showCalc(target) {
+        calcTarget = target;
+        const rect = target.getBoundingClientRect();
+        floatingCalc.style.left = Math.max(4, rect.left) + 'px';
+        floatingCalc.style.top = (rect.bottom + 4) + 'px';
+        floatingCalc.style.display = '';
+        // Keep within viewport
+        const calcRect = floatingCalc.getBoundingClientRect();
+        if (calcRect.right > window.innerWidth) {
+            floatingCalc.style.left = (window.innerWidth - calcRect.width - 4) + 'px';
+        }
+    }
+
+    function hideCalc() {
+        floatingCalc.style.display = 'none';
+        calcTarget = null;
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+            e.preventDefault();
+            const active = document.activeElement;
+            if (active && (active.classList.contains('rate-input') || active.classList.contains('qty-input'))) {
+                if (floatingCalc.style.display === 'none') {
+                    showCalc(active);
+                } else {
+                    hideCalc();
+                }
+            }
+        }
+    });
+
+    document.addEventListener('contextmenu', e => {
+        const input = e.target.closest('.rate-input, .qty-input');
+        if (input) {
+            e.preventDefault();
+            showCalc(input);
+        }
+    });
+
+    floatingCalc.addEventListener('click', e => {
+        const btn = e.target.closest('[data-calc]');
+        if (!btn || !calcTarget) return;
+        const val = btn.dataset.calc;
+        if (val === 'Enter') {
+            hideCalc();
+            const tr = calcTarget.closest('tr');
+            if (calcTarget.classList.contains('rate-input') && tr) {
+                tr.querySelector('.qty-input').focus();
+            } else if (calcTarget.classList.contains('qty-input') && tr) {
+                tr.querySelector('.disc-percent-input').focus();
+            } else if (calcTarget.classList.contains('disc-percent-input')) {
+                searchInput.focus();
+            }
+            return;
+        }
+        if (val === 'C') {
+            calcTarget.value = '0';
+        } else if (val === '\u232B') {
+            calcTarget.value = calcTarget.value.slice(0, -1) || '0';
+        } else {
+            if (calcTarget.value === '0' && val !== '.') {
+                calcTarget.value = val;
+            } else {
+                calcTarget.value += val;
+            }
+        }
+        calcTarget.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    document.addEventListener('mousedown', e => {
+        if (floatingCalc.style.display !== 'none' && !floatingCalc.contains(e.target) && e.target !== calcTarget) {
+            hideCalc();
+        }
+    });
 })();

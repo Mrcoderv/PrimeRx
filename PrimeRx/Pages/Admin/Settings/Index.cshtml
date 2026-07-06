@@ -43,7 +43,7 @@
                 </li>
             </ul>
 
-            <form method="post" class="panel-body">
+            <form method="post" enctype="multipart/form-data" class="panel-body">
                 <input type="hidden" asp-for="Settings.Id" />
                 <input type="hidden" asp-for="Tab" id="activeTab" value="@tab" />
 
@@ -68,8 +68,38 @@
                                 <input asp-for="Settings.PAN" class="form-control" id="previewPan" />
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="Settings.GSTIN" class="form-label">GSTIN</label>
+                                <label asp-for="Settings.GSTIN" class="form-label">Regd.no</label>
                                 <input asp-for="Settings.GSTIN" class="form-control" id="previewGstin" />
+                            </div>
+                        </div>
+
+                        <h6 class="settings-section-title mt-4">Company Logo</h6>
+                        <p class="text-muted-small mb-2">Upload a square logo (200×200 px recommended). It will appear at the top of the site.</p>
+                        <div class="d-flex align-items-start gap-4">
+                            <div class="logo-upload-preview" id="logoPreviewWrap">
+                                @if (!string.IsNullOrEmpty(Model.Settings.LogoPath))
+                                {
+                                    <img src="@Url.Content(Model.Settings.LogoPath)" alt="Company Logo" class="logo-preview-img" id="logoPreviewImg" />
+                                }
+                                else
+                                {
+                                    <div class="logo-preview-placeholder" id="logoPreviewPlaceholder">
+                                        <i class="bi bi-image fs-2"></i>
+                                        <span class="small">No logo</span>
+                                    </div>
+                                }
+                            </div>
+                            <div class="flex-grow-1">
+                                <label asp-for="LogoUpload" class="form-label">Upload New Logo</label>
+                                <input asp-for="LogoUpload" class="form-control" type="file" accept="image/png,image/jpeg,image/webp" id="logoUpload" />
+                                <div class="form-text">PNG, JPG or WebP. Max 2 MB.</div>
+                                @if (!string.IsNullOrEmpty(Model.Settings.LogoPath))
+                                {
+                                    <div class="form-check mt-2">
+                                        <input type="checkbox" name="RemoveLogo" value="true" class="form-check-input" id="removeLogo" />
+                                        <label class="form-check-label text-danger" for="removeLogo">Remove current logo</label>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </div>
@@ -122,7 +152,7 @@
                         </div>
                         <div class="form-check">
                             <input asp-for="Settings.ShowGstinOnBill" class="form-check-input" id="previewShowGstin" />
-                            <label asp-for="Settings.ShowGstinOnBill" class="form-check-label">Show GSTIN on bill</label>
+                            <label asp-for="Settings.ShowGstinOnBill" class="form-check-label">Show Regd.no on bill</label>
                         </div>
                     </div>
 
@@ -199,7 +229,7 @@
                         <div class="bill-preview-meta" id="pvAddress">@Model.Settings.Address</div>
                         <div class="bill-preview-meta" id="pvPhone">@Model.Settings.Phone</div>
                         <div class="bill-preview-meta" id="pvPan">PAN: @Model.Settings.PAN</div>
-                        <div class="bill-preview-meta" id="pvGstin">GSTIN: @Model.Settings.GSTIN</div>
+                        <div class="bill-preview-meta" id="pvGstin">Regd.no: @Model.Settings.GSTIN</div>
                     </div>
                     <div class="bill-preview-body">
                         <div class="d-flex justify-content-between small mb-2">
@@ -251,7 +281,7 @@
             document.getElementById('pvPan').textContent = document.getElementById('previewShowPan')?.checked && document.getElementById('previewPan')?.value
                 ? 'PAN: ' + document.getElementById('previewPan').value : '';
             document.getElementById('pvGstin').textContent = document.getElementById('previewShowGstin')?.checked && document.getElementById('previewGstin')?.value
-                ? 'GSTIN: ' + document.getElementById('previewGstin').value : '';
+                ? 'Regd.no: ' + document.getElementById('previewGstin').value : '';
             document.getElementById('pvFooter').textContent = document.getElementById('previewFooter')?.value || 'Thank you for your purchase!';
 
             const rate = parseFloat(document.getElementById('previewTaxRate')?.value) || 0;

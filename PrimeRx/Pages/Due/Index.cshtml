@@ -11,6 +11,46 @@
     </div>
 </div>
 
+<!-- Ageing Analysis -->
+<div class="panel-card mb-4">
+    <div class="panel-header d-flex justify-content-between align-items-center">
+        <h5><i class="bi bi-clock-history me-2"></i>Ageing Analysis (Outstanding Dues)</h5>
+        <span class="badge bg-secondary">Total: Rs. @Model.TotalOutstanding.ToString("N0")</span>
+    </div>
+    <div class="panel-body">
+        <div class="row g-2 text-center">
+            <div class="col-3">
+                <div class="pnl-box">
+                    <div class="pnl-label">@Model.Age_0_30.Label</div>
+                    <div class="pnl-value" style="font-size:1.1rem;">@Model.Age_0_30.Count</div>
+                    <div class="small text-muted">Rs. @Model.Age_0_30.Amount.ToString("N0")</div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="pnl-box" style="border-color:rgba(245,158,11,0.3);">
+                    <div class="pnl-label">@Model.Age_31_60.Label</div>
+                    <div class="pnl-value" style="font-size:1.1rem;color:#d97706;">@Model.Age_31_60.Count</div>
+                    <div class="small text-muted">Rs. @Model.Age_31_60.Amount.ToString("N0")</div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="pnl-box" style="border-color:rgba(239,68,68,0.3);">
+                    <div class="pnl-label">@Model.Age_61_90.Label</div>
+                    <div class="pnl-value" style="font-size:1.1rem;color:#dc2626;">@Model.Age_61_90.Count</div>
+                    <div class="small text-muted">Rs. @Model.Age_61_90.Amount.ToString("N0")</div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="pnl-box" style="border-color:rgba(220,38,38,0.5);">
+                    <div class="pnl-label">@Model.Age_90_Plus.Label</div>
+                    <div class="pnl-value" style="font-size:1.1rem;color:#991b1b;">@Model.Age_90_Plus.Count</div>
+                    <div class="small text-muted">Rs. @Model.Age_90_Plus.Amount.ToString("N0")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <form method="get" class="row g-2 mb-3">
     <div class="col-md-4">
         <label for="dueSearch" class="form-label small mb-1">Search</label>
@@ -34,6 +74,7 @@
                         <th class="text-end">Total</th>
                         <th class="text-end">Paid</th>
                         <th class="text-end">Due</th>
+                        <th>Days</th>
                         <th>Status</th>
                         <th style="width:100px"></th>
                     </tr>
@@ -41,7 +82,9 @@
                 <tbody>
                     @foreach (var bill in Model.DueBills)
                     {
-                        <tr>
+                        var daysSince = (DateTime.Today - bill.BillDate.Date).Days;
+                        var rowClass = daysSince > 90 ? "age-90-plus" : daysSince > 60 ? "age-61-90" : daysSince > 30 ? "age-31-60" : "";
+                        <tr class="@rowClass">
                             <td><strong>@bill.BillNumber</strong></td>
                             <td>@bill.BillDate.ToString("dd-MM-yyyy")</td>
                             <td>@bill.CustomerName</td>
@@ -49,6 +92,7 @@
                             <td class="text-end">Rs. @bill.FinalAmount.ToString("N2")</td>
                             <td class="text-end positive">Rs. @bill.PaidAmount.ToString("N2")</td>
                             <td class="text-end negative fw-semibold">Rs. @bill.DueAmount.ToString("N2")</td>
+                            <td>@daysSince d</td>
                             <td><span class="badge-status @(bill.PaymentStatus == "Due" ? "due" : "partial")">@bill.PaymentStatus</span></td>
                             <td>
                                 <a asp-page="/Due/Pay" asp-route-id="@bill.Id" class="btn btn-accent btn-sm w-100">Collect</a>

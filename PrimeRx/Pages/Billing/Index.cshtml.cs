@@ -32,14 +32,60 @@ public class IndexModel(
     public async Task<IActionResult> OnGetSearchAsync(string term)
     {
         var results = await inventoryService.SearchMedicinesAsync(term);
-        return new JsonResult(results.Select(m => new
+        var meds = results.Select(m => new
         {
             id = m.Id,
             name = m.Name,
             genericName = m.GenericName,
+            manufacturer = m.Manufacturer,
+            formType = m.FormType,
             mrp = m.MRP,
+            purchasePrice = m.PurchasePrice,
             stockQuantity = m.StockQuantity,
-            discountPercent = m.DiscountPercent
+            discountPercent = m.DiscountPercent,
+            isMaster = false
+        }).ToList();
+
+        var masterResults = await inventoryService.SearchMasterForAutoFillAsync(term, 5);
+        foreach (var master in masterResults)
+        {
+            if (!meds.Any(m => m.name != null && m.name.Contains(master.GenericName, StringComparison.OrdinalIgnoreCase)))
+            {
+                meds.Add(new
+                {
+                    id = -master.Id,
+                    name = master.DisplayName,
+                    genericName = (string?)master.GenericName,
+                    manufacturer = master.Manufacturer,
+                    formType = master.Form,
+                    mrp = 0m,
+                    purchasePrice = 0m,
+                    stockQuantity = 0,
+                    discountPercent = 0m,
+                    isMaster = true
+                });
+            }
+        }
+
+        return new JsonResult(meds);
+    }
+
+    public async Task<IActionResult> OnGetSearchMasterAsync(string term)
+    {
+        var results = await inventoryService.SearchMasterForAutoFillAsync(term);
+        return new JsonResult(results.Select(m => new
+        {
+            id = m.Id,
+            genericName = m.GenericName,
+            brandName = m.BrandName,
+            manufacturer = m.Manufacturer,
+            form = m.Form,
+            strength = m.Strength,
+            unit = m.Unit,
+            category = m.Category,
+            hsnCode = m.HSNCode,
+            rackLocation = m.RackLocation,
+            displayName = m.DisplayName
         }));
     }
 

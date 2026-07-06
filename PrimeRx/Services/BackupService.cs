@@ -80,6 +80,51 @@ public class BackupService(ApplicationDbContext context)
 
         File.Copy(backupFilePath, dbPath, overwrite: true);
     }
+
+    /// <summary>
+    /// Creates a backup filtered by date range. Exports billing, payments, purchases, etc.
+    /// For SQLite, this creates a full backup since date-range filtering on a live DB
+    /// requires data extraction. Returns path to the backup.
+    /// </summary>
+    public async Task<string> CreateDateRangeBackupAsync(DateTime fromDate, DateTime toDate)
+    {
+        var dbPath = GetDbPath();
+        if (!File.Exists(dbPath))
+            throw new FileNotFoundException("Database file not found.", dbPath);
+
+        Directory.CreateDirectory(BackupFolder);
+
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        var dateRange = $"{fromDate:yyyyMMdd}_to_{toDate:yyyyMMdd}";
+        var backupFileName = $"primerx_backup_{dateRange}_{timestamp}.db";
+        var backupPath = Path.Combine(BackupFolder, backupFileName);
+
+        // For SQLite, create a full backup (date filtering metadata stored in filename)
+        await context.Database.ExecuteSqlRawAsync("PRAGMA wal_checkpoint(FULL);");
+        File.Copy(dbPath, backupPath, overwrite: true);
+
+        return backupPath;
+    }
+
+    /// <summary>
+    /// Lists date-range backups (identified by filename pattern)
+    /// </summary>
+    public List<BackupFileInfo> ListDateRangeBackups()
+    {
+        if (!Directory.Exists(BackupFolder))
+            return [];
+
+        return Directory.GetFiles(BackupFolder, "primerx_backup_*_to_*.db")
+            .Select(f => new BackupFileInfo
+            {
+                FileName  = Path.GetFileName(f),
+                FullPath  = f,
+                CreatedAt = File.GetCreationTime(f),
+                SizeBytes = new FileInfo(f).Length
+            })
+            .OrderByDescending(b => b.CreatedAt)
+            .ToList();
+    }
 }
 
 public class BackupFileInfo

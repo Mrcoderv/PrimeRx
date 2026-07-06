@@ -1,0 +1,98 @@
+@page
+@model PrimeRx.Pages.Inventory.StockExchangeModel
+@{
+    ViewData["Title"] = "Stock Exchange";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Stock Exchange (Aaicho Paicho)</h1>
+        <p class="page-subtitle">Transfer stock to other pharmacies — quantity only, no price involved</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-@(Model.IsError ? "danger" : "success") alert-dismissible fade show">
+        @Model.Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="panel-card">
+            <div class="panel-header">
+                <h5><i class="bi bi-arrow-left-right me-2"></i>New Exchange</h5>
+            </div>
+            <div class="panel-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Medicine</label>
+                        <select asp-for="Input.MedicineId" class="form-select" required>
+                            <option value="">— Select Medicine —</option>
+                            @foreach (var m in Model.Medicines)
+                            {
+                                <option value="@m.Id">@m.Name (Stock: @m.StockQuantity)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity to Transfer</label>
+                        <input asp-for="Input.Quantity" class="form-control" type="number" min="1" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Other Pharmacy Name</label>
+                        <input asp-for="Input.OtherPharmacy" class="form-control" placeholder="e.g. Sallaghari Pharmacy" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reference / Note</label>
+                        <input asp-for="Input.Reference" class="form-control" placeholder="Optional notes..." />
+                    </div>
+                    <button type="submit" class="btn btn-accent w-100">
+                        <i class="bi bi-send me-1"></i>Record Exchange
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="panel-card">
+            <div class="panel-header">
+                <h5><i class="bi bi-clock-history me-2"></i>Recent Exchanges</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-pro mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Medicine</th>
+                            <th>Qty</th>
+                            <th>Reference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.RecentExchanges.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">No exchanges recorded yet.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var tx in Model.RecentExchanges)
+                            {
+                                <tr>
+                                    <td><small class="text-muted">@tx.TransactionDate.ToString("dd-MM-yyyy HH:mm")</small></td>
+                                    <td><strong>@tx.Medicine?.Name</strong></td>
+                                    <td><span class="badge bg-warning text-dark">@tx.QuantityChange</span></td>
+                                    <td><small class="text-muted">@tx.Reference</small></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

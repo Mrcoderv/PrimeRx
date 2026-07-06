@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PrimeRx.Models;
 using PrimeRx.Services;
@@ -23,5 +24,11 @@ public class IndexModel(InventoryService inventoryService) : PageModel
 
         var allBatches = await inventoryService.GetBatchesAsync();
         MedicineBatches = allBatches.GroupBy(b => b.MedicineId).ToDictionary(g => g.Key, g => g.ToList());
+    }
+
+    public IActionResult OnGetExportStockAsync()
+    {
+        var bytes = inventoryService.ExportInventoryStockToExcel();
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "inventory-stock.xlsx");
     }
 }

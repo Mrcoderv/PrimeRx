@@ -1,0 +1,77 @@
+@page "{id:int}"
+@model PrimeRx.Pages.Admin.MedicineMaster.EditModel
+@{
+    ViewData["Title"] = "Edit Medicine Master";
+}
+
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-pencil me-2"></i>Edit Master List Entry</h1>
+    <p class="page-subtitle">Update pure catalog information. No price or quantity fields.</p>
+</div>
+
+<form method="post" class="panel-card">
+    <input type="hidden" asp-for="Input.Id" />
+    <div class="panel-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="Input.GenericName" class="form-label"></label>
+                <input asp-for="Input.GenericName" class="form-control" required />
+                <span asp-validation-for="Input.GenericName" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Input.BrandName" class="form-label"></label>
+                <input asp-for="Input.BrandName" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Input.Manufacturer" class="form-label"></label>
+                <input asp-for="Input.Manufacturer" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Input.Form" class="form-label"></label>
+                <input asp-for="Input.Form" class="form-control" list="formList" />
+                <datalist id="formList">
+                    <option value="Tablet" /><option value="Capsule" /><option value="Syrup" />
+                    <option value="Suspension" /><option value="Injection" /><option value="Eye Drop" />
+                    <option value="Ear Drop" /><option value="Nasal Drop" /><option value="Ointment" />
+                    <option value="Cream" /><option value="Gel" /><option value="Lotion" />
+                    <option value="Powder" /><option value="Inhaler" /><option value="Patch" />
+                    <option value="Suppository" /><option value="Solution" /><option value="Drop" />
+                </datalist>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Input.Strength" class="form-label"></label>
+                <input asp-for="Input.Strength" class="form-control" placeholder="e.g. 500mg" />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Input.Unit" class="form-label"></label>
+                <input asp-for="Input.Unit" class="form-control" list="unitList" />
+                <datalist id="unitList">
+                    <option value="Strip" /><option value="Bottle" /><option value="Vial" />
+                    <option value="Box" /><option value="Tube" /><option value="Ampoule" />
+                    <option value="Piece" /><option value="Pack" /><option value="Sachet" />
+                </datalist>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Input.Category" class="form-label"></label>
+                <input asp-for="Input.Category" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Input.HSNCode" class="form-label"></label>
+                <input asp-for="Input.HSNCode" class="form-control" placeholder="e.g. 300490" />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Input.RackLocation" class="form-label"></label>
+                <input asp-for="Input.RackLocation" class="form-control" placeholder="e.g. A-12" />
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-accent"><i class="bi bi-check-lg me-1"></i>Update</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

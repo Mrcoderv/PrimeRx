@@ -29,5 +29,7 @@ public class PurchaseItem
 
     public decimal DiscountPercent { get; set; }
 
+    public decimal ConversionCharge { get; set; }
+
     public decimal Amount => Math.Round(Quantity * PurchasePrice * (1 - DiscountPercent / 100m), 2);
 }

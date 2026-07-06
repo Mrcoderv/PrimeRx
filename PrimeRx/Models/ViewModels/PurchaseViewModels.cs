@@ -12,8 +12,14 @@ public class PurchaseLineItem
     public decimal PurchasePrice { get; set; }
     public decimal DiscountPercent { get; set; }
     public decimal MRP { get; set; }
+    public decimal ConversionCharge { get; set; }
     public string? BatchNumber { get; set; }
     public DateTime? ExpiryDate { get; set; }
+    public string? GenericName { get; set; }
+    public string? Manufacturer { get; set; }
+    public string? FormType { get; set; }
+    public string? Strength { get; set; }
+    public string? Unit { get; set; }
     public decimal Amount => Math.Round(Quantity * PurchasePrice * (1 - DiscountPercent / 100m), 2);
 }
 

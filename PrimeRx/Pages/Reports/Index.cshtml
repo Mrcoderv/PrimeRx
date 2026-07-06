@@ -253,8 +253,24 @@
             <div class="col-md-6 col-xl-4">
                 <div class="report-action-card">
                     <div class="report-action-title"><i class="bi bi-journal-text me-2"></i>Audit Log</div>
-                    <p class="text-muted-small mb-2">System-wide activity trail — last 200 entries</p>
-                    <a asp-page-handler="AuditReport" class="btn btn-accent btn-sm w-100">View</a>
+                    <p class="text-muted-small mb-2">System-wide activity trail — select period</p>
+                    <div class="d-flex gap-1 flex-wrap mb-2">
+                        <a asp-page-handler="AuditReport" asp-route-days="30" class="btn btn-sm @(Model.SelectedAuditDays == 30 ? "btn-accent" : "btn-outline-accent")">30 Days</a>
+                        <a asp-page-handler="AuditReport" asp-route-days="60" class="btn btn-sm @(Model.SelectedAuditDays == 60 ? "btn-accent" : "btn-outline-accent")">60 Days</a>
+                        <a asp-page-handler="AuditReport" asp-route-days="90" class="btn btn-sm @(Model.SelectedAuditDays == 90 ? "btn-accent" : "btn-outline-accent")">90 Days</a>
+                        <a asp-page-handler="AuditReport" asp-route-days="180" class="btn btn-sm @(Model.SelectedAuditDays == 180 ? "btn-accent" : "btn-outline-accent")">180 Days</a>
+                    </div>
+                    <form method="get" asp-page-handler="AuditReport" class="d-flex gap-2 align-items-end">
+                        <div class="flex-fill">
+                            <label class="form-label small mb-1">From</label>
+                            <input type="date" name="from" value="@Model.AuditFrom?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+                        </div>
+                        <div class="flex-fill">
+                            <label class="form-label small mb-1">To</label>
+                            <input type="date" name="to" value="@Model.AuditTo?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+                        </div>
+                        <button type="submit" class="btn btn-accent btn-sm">Go</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -801,8 +817,8 @@
                     labels: topMeds.map(x => x.medicineName),
                     datasets: [{
                         data: topMeds.map(x => x.totalAmount),
-                        backgroundColor: ['#3b82f6','#06b6d4','#6366f1','#8b5cf6','#0ea5e9','#14b8a6','#f59e0b','#ef4444'],
-                        borderColor: '#0f2744',
+                        backgroundColor: ['#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4','#6366F1','#0EA5E9'],
+                        borderColor: '#FFFFFF',
                         borderWidth: 2
                     }]
                 },

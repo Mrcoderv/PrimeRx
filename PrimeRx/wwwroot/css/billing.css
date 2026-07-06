@@ -14,9 +14,9 @@
 
 .billing-page .medicine-search-input {
   background: var(--rx-form-bg) !important;
-  border: 1px solid var(--rx-border) !important;
-  border-radius: 10px !important;
-  min-height: 46px;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 12px !important;
+  min-height: 48px;
   padding: 0.4rem 0.85rem !important;
   color: var(--rx-form-text) !important;
   box-shadow: none !important;
@@ -28,12 +28,9 @@
   opacity: 1 !important;
 }
 .billing-page .medicine-search-input:focus {
-  border-color: var(--rx-cyan) !important;
-  box-shadow: 0 0 0 3px rgba(56,189,248,0.2) !important;
+  border-color: #2563EB !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12) !important;
   outline: none;
-}
-[data-bs-theme="light"] .billing-page .medicine-search-input:focus {
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.15) !important;
 }
 
 /* ── Floating suggestion popup ────────────────────────────── */
@@ -177,19 +174,19 @@
   padding-left: calc(0.9rem - 3px);
 }
 [data-bs-theme="light"] .medicine-popup-row:hover {
-  background: rgba(37,99,235,0.07);
+  background: rgba(37,99,235,0.06);
 }
 [data-bs-theme="light"] .medicine-popup-row.active {
   background: rgba(37,99,235,0.1);
-  border-left-color: #2563eb;
+  border-left-color: #2563EB;
 }
 
 /* ── Row columns ──────────────────────────────────────────── */
 .mpc-name  { width: 52%; min-width: 0; padding-right: 0.5rem; }
 .mpc-batch { width: 16%; font-size: 0.8rem; color: var(--rx-text-muted); }
 .mpc-stock { width: 16%; font-size: 0.82rem; }
-.mpc-rate  { width: 16%; font-size: 0.88rem; font-weight: 600; text-align: right; color: var(--rx-cyan, #38bdf8); white-space: nowrap; }
-[data-bs-theme="light"] .mpc-rate { color: #2563eb; }
+.mpc-rate  { width: 16%; font-size: 0.88rem; font-weight: 600; text-align: right; color: #2563EB; white-space: nowrap; }
+[data-bs-theme="dark"] .mpc-rate { color: #38bdf8; }
 
 .mpc-med-name {
   display: block;
@@ -206,13 +203,13 @@
 .mpc-med-generic {
   display: block;
   font-size: 0.75rem;
-  color: #38bdf8;
+  color: #2563EB;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   margin-top: 1px;
 }
-[data-bs-theme="light"] .mpc-med-generic { color: #2563eb; }
+[data-bs-theme="dark"] .mpc-med-generic { color: #38bdf8; }
 
 /* Stock badge */
 .mpc-stock-badge {
@@ -232,9 +229,9 @@
   background: rgba(245,158,11,0.18);
   color: #fcd34d;
 }
-[data-bs-theme="light"] .mpc-stock-badge { background: #dcfce7; color: #166534; }
-[data-bs-theme="light"] .mpc-stock-badge.low { background: #fee2e2; color: #b91c1c; }
-[data-bs-theme="light"] .mpc-stock-badge.medium { background: #fef3c7; color: #92400e; }
+[data-bs-theme="light"] .mpc-stock-badge { background: rgba(16,185,129,0.1); color: #059669; }
+[data-bs-theme="light"] .mpc-stock-badge.low { background: rgba(239,68,68,0.1); color: #DC2626; }
+[data-bs-theme="light"] .mpc-stock-badge.medium { background: rgba(245,158,11,0.1); color: #D97706; }
 
 /* ── Footer keyboard hints ────────────────────────────────── */
 .medicine-popup-footer {
@@ -309,6 +306,91 @@
 }
 [data-bs-theme="light"] .purchase-stock-ok { color: #16a34a; }
 
+/* ── Batch info display in row ────────────────────────────── */
+.batch-info {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--rx-text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Floating Calculator ──────────────────────────────────── */
+.floating-calc {
+  position: fixed;
+  z-index: 10000;
+  background: #0f2744;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3);
+  padding: 6px;
+  animation: rx-popup-in 0.12s cubic-bezier(0.16,1,0.3,1);
+  transform-origin: top left;
+}
+[data-bs-theme="light"] .floating-calc {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.12);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+}
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 40px);
+  gap: 4px;
+}
+.calc-btn {
+  width: 40px;
+  height: 36px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  color: #e2e8f0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.08s;
+  padding: 0;
+  line-height: 1;
+}
+.calc-btn:hover {
+  background: rgba(56,189,248,0.18);
+}
+.calc-btn:active {
+  background: rgba(56,189,248,0.3);
+}
+.calc-clear {
+  color: #f87171;
+}
+.calc-enter {
+  background: rgba(56,189,248,0.2);
+  border-color: rgba(56,189,248,0.3);
+  color: #38bdf8;
+}
+.calc-plus,
+.calc-minus {
+  color: #6ee7b7;
+}
+[data-bs-theme="light"] .calc-btn {
+  border-color: rgba(0,0,0,0.1);
+  background: #f8fafc;
+  color: #334155;
+}
+[data-bs-theme="light"] .calc-btn:hover {
+  background: #e2e8f0;
+}
+[data-bs-theme="light"] .calc-clear { color: #dc2626; }
+[data-bs-theme="light"] .calc-enter {
+  background: #2563EB;
+  border-color: #2563EB;
+  color: #ffffff;
+}
+[data-bs-theme="light"] .calc-plus,
+[data-bs-theme="light"] .calc-minus { color: #16a34a; }
+
 /* ── Batch button on bill rows ────────────────────────────── */
 .batch-btn {
   display: inline-flex;
@@ -330,10 +412,10 @@
 .batch-btn:hover { background: rgba(56,189,248,0.22); border-color: rgba(56,189,248,0.4); }
 .batch-btn.has-batch { background: rgba(16,185,129,0.12); color: #6ee7b7; border-color: rgba(16,185,129,0.25); }
 .batch-btn.has-batch:hover { background: rgba(16,185,129,0.22); }
-[data-bs-theme="light"] .batch-btn { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
-[data-bs-theme="light"] .batch-btn:hover { background: #dbeafe; }
-[data-bs-theme="light"] .batch-btn.has-batch { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
-[data-bs-theme="light"] .batch-btn.has-batch:hover { background: #dcfce7; }
+[data-bs-theme="light"] .batch-btn { background: rgba(37,99,235,0.08); color: #2563EB; border-color: rgba(37,99,235,0.2); }
+[data-bs-theme="light"] .batch-btn:hover { background: rgba(37,99,235,0.14); }
+[data-bs-theme="light"] .batch-btn.has-batch { background: rgba(16,185,129,0.1); color: #059669; border-color: rgba(16,185,129,0.2); }
+[data-bs-theme="light"] .batch-btn.has-batch:hover { background: rgba(16,185,129,0.18); }
 
 /* ── Batch picker popup ───────────────────────────────────── */
 .batch-picker {
@@ -402,6 +484,53 @@
   border-radius: 50%;
   animation: rx-spin 0.7s linear infinite;
   flex-shrink: 0;
+}
+
+/* ── High Discount / Low Margin Flag ──────────────────────── */
+.margin-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15em 0.5em;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 0.4rem;
+  white-space: nowrap;
+  cursor: help;
+  line-height: 1.4;
+}
+.margin-flag.danger {
+  background: rgba(239,68,68,0.18);
+  color: #fca5a5;
+  border: 1px solid rgba(239,68,68,0.3);
+}
+.margin-flag.warning {
+  background: rgba(245,158,11,0.18);
+  color: #fcd34d;
+  border: 1px solid rgba(245,158,11,0.3);
+}
+[data-bs-theme="light"] .margin-flag.danger {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+[data-bs-theme="light"] .margin-flag.warning {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+.high-discount-row {
+  background: rgba(239,68,68,0.04) !important;
+}
+.high-discount-row:hover td {
+  background: rgba(239,68,68,0.08) !important;
+}
+[data-bs-theme="dark"] .high-discount-row {
+  background: rgba(239,68,68,0.06) !important;
+}
+[data-bs-theme="dark"] .high-discount-row:hover td {
+  background: rgba(239,68,68,0.1) !important;
 }
 
 /* ── Row added flash ──────────────────────────────────────── */
@@ -473,6 +602,88 @@
   color: var(--rx-form-text) !important;
 }
 
+/* ── Payment Method Selector ──────────────────────────────── */
+.billing-page .payment-method-section {
+  background: var(--rx-surface);
+  border: 1px solid var(--rx-border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+.billing-page .payment-method-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--rx-heading);
+  margin-bottom: 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.billing-page .payment-method-label i {
+  color: #2563EB;
+  font-size: 1.1rem;
+}
+.billing-page .payment-method-group {
+  display: flex;
+  gap: 0.5rem;
+}
+.billing-page .payment-method-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.6rem 0.4rem;
+  border: 2px solid var(--rx-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--rx-text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.billing-page .payment-method-btn i {
+  font-size: 1.35rem;
+  color: var(--rx-text-muted);
+  transition: color 0.15s ease;
+}
+.billing-page .payment-method-btn:hover {
+  border-color: #2563EB;
+  color: var(--rx-heading);
+  background: rgba(37,99,235,0.06);
+}
+.billing-page .payment-method-btn:hover i {
+  color: #2563EB;
+}
+.billing-page .payment-method-btn.active {
+  border-color: #2563EB;
+  background: rgba(37,99,235,0.1);
+  color: var(--rx-heading);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+.billing-page .payment-method-btn.active i {
+  color: #2563EB;
+}
+.billing-page .payment-method-btn.active[data-value="Due"] {
+  border-color: #d97706;
+  background: rgba(217,119,6,0.1);
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.15);
+}
+.billing-page .payment-method-btn.active[data-value="Due"] i {
+  color: #d97706;
+}
+.billing-page .payment-method-btn.active[data-value="Due"] span {
+  color: #d97706;
+}
+.billing-page #customerPhoneGroup.phone-required {
+  border-left: 3px solid #d97706;
+  padding-left: 0.75rem;
+}
+[data-bs-theme="dark"] .billing-page .payment-method-section {
+  background: rgba(255,255,255,0.03);
+}
+
 /* ── Sidebar totals ───────────────────────────────────────── */
 .billing-page .billing-divider {
   border-color: var(--rx-border);
@@ -498,10 +709,34 @@
   border-top: 1px solid var(--rx-border);
 }
 .billing-page .billing-total-final span:last-child {
-  color: var(--rx-cyan);
+  color: #2563EB;
   font-size: 1.35rem;
 }
 .billing-page .panel-header {
   color: var(--rx-heading);
   font-weight: 600;
+}
+
+/* ── Medicine popup master catalog rows ───────────────────── */
+.billing-page .medicine-popup-row.master-row {
+  border-left: 3px solid #2563EB;
+}
+.billing-page .mpc-med-mfr {
+  display: block;
+  font-size: 0.72rem;
+  opacity: 0.55;
+  margin-top: 0.1rem;
+}
+.billing-page .mpc-master-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background: rgba(37,99,235,0.12);
+  color: #60A5FA;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }

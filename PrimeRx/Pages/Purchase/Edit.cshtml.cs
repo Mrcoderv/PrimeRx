@@ -48,8 +48,11 @@ public class EditModel(
             MedicineId = i.MedicineId,
             MedicineName = i.MedicineName,
             Quantity = i.Quantity,
+            FreeQuantity = i.FreeQuantity,
+            DiscountPercent = i.DiscountPercent,
             PurchasePrice = i.PurchasePrice,
             MRP = i.MRP,
+            ConversionCharge = i.ConversionCharge,
             BatchNumber = i.BatchNumber,
             ExpiryDate = i.ExpiryDate
         }).ToList();
@@ -70,9 +73,13 @@ public class EditModel(
             id = m.Id,
             name = m.Name,
             genericName = m.GenericName,
+            manufacturer = m.Manufacturer,
+            formType = m.FormType,
             stockQuantity = m.StockQuantity,
+            lowStockThreshold = m.LowStockThreshold,
             purchasePrice = m.PurchasePrice,
-            mrp = m.MRP
+            mrp = m.MRP,
+            isMaster = false
         }));
     }
 

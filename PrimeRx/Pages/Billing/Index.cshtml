@@ -49,14 +49,13 @@
                              role="listbox"
                              style="display:none;">
                             <div class="medicine-popup-header">
-                                <span class="mpc-name">Name</span>
-                                <span class="mpc-batch">Batch</span>
-                                <span class="mpc-stock">Stock</span>
-                                <span class="mpc-rate">Rate</span>
+                                <span style="width:55%">MEDICINE</span>
+                                <span style="width:25%">RATE</span>
+                                <span style="width:20%">STOCK</span>
                             </div>
                             <div class="medicine-popup-body" id="medicinePopupBody"></div>
                             <div class="medicine-popup-footer">
-                                <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+                                <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> Navigate</span>
                                 <span><kbd>Enter</kbd> Add</span>
                                 <span><kbd>Esc</kbd> Close</span>
                             </div>
@@ -71,12 +70,12 @@
                             <thead>
                                 <tr>
                                     <th>Medicine</th>
-                                    <th style="width:100px">Rate</th>
-                                    <th style="width:80px">Qty</th>
-                                    <th style="width:90px">Disc %</th>
-                                    <th style="width:100px">Disc Amt</th>
-                                    <th style="width:100px">Amount</th>
-                                    <th style="width:50px"></th>
+                                    <th style="width:85px">Rate</th>
+                                    <th style="width:70px">Qty</th>
+                                    <th style="width:70px">Disc%</th>
+                                    <th style="width:85px">Disc Amt</th>
+                                    <th style="width:95px">Amount</th>
+                                    <th style="width:36px"></th>
                                 </tr>
                             </thead>
                             <tbody id="itemsBody">
@@ -84,6 +83,23 @@
                                     <td colspan="7" class="billing-empty-msg">Search and add medicines above</td>
                                 </tr>
                             </tbody>
+                            <tfoot id="tableFoot">
+                                <tr class="purchase-total-row">
+                                    <td colspan="5" class="text-end fw-semibold">Subtotal</td>
+                                    <td class="fw-bold text-accent" id="subtotalDisplay">Rs. 0.00</td>
+                                    <td></td>
+                                </tr>
+                                <tr class="purchase-total-row">
+                                    <td colspan="5" class="text-end fw-semibold text-danger">Discount</td>
+                                    <td class="fw-bold text-danger" id="discountDisplay">- Rs. 0.00</td>
+                                    <td></td>
+                                </tr>
+                                <tr class="purchase-total-row purchase-grand-total">
+                                    <td colspan="5" class="text-end fw-semibold">Net Amount</td>
+                                    <td class="fw-bold text-accent" id="netTotalDisplay">Rs. 0.00</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -98,26 +114,45 @@
                             <input asp-for="Input.CustomerName" class="form-control" id="customerName" />
                             <span asp-validation-for="Input.CustomerName" class="text-danger"></span>
                         </div>
-                        <div class="mb-3">
-                            <label asp-for="Input.CustomerPhone" class="form-label"></label>
-                            <input asp-for="Input.CustomerPhone" class="form-control" id="customerPhone" />
-                            <span asp-validation-for="Input.CustomerPhone" class="text-danger"></span>
-                            <small class="text-muted" id="customerPhoneHint">Required when payment is Due</small>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="Input.PaymentMethod" class="form-label"></label>
-                            <select asp-for="Input.PaymentMethod" class="form-select" id="paymentMethod">
+
+                        <div class="payment-method-section mb-3">
+                            <label class="form-label payment-method-label">
+                                <i class="bi bi-credit-card me-1"></i>Payment Method
+                            </label>
+                            <select asp-for="Input.PaymentMethod" class="form-select d-none" id="paymentMethod">
                                 <option value="Cash">Cash</option>
                                 <option value="Online">Online / Card</option>
                                 <option value="Due">Due</option>
                             </select>
+                            <div class="payment-method-group" id="paymentMethodGroup">
+                                <button type="button" class="payment-method-btn" data-value="Cash">
+                                    <i class="bi bi-cash-coin"></i>
+                                    <span>Cash</span>
+                                </button>
+                                <button type="button" class="payment-method-btn" data-value="Online">
+                                    <i class="bi bi-credit-card-2-front"></i>
+                                    <span>Online / Card</span>
+                                </button>
+                                <button type="button" class="payment-method-btn" data-value="Due">
+                                    <i class="bi bi-journal-text"></i>
+                                    <span>Due</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="customerPhoneGroup">
+                            <label asp-for="Input.CustomerPhone" class="form-label">
+                                <i class="bi bi-telephone me-1"></i>Customer Phone
+                            </label>
+                            <input asp-for="Input.CustomerPhone" class="form-control" id="customerPhone" />
+                            <span asp-validation-for="Input.CustomerPhone" class="text-danger"></span>
+                            <small class="text-muted" id="customerPhoneHint">Required when payment is Due</small>
                         </div>
 
                         <hr class="billing-divider" />
-                        <div class="billing-total-row"><span>Subtotal</span><span id="subtotalDisplay">0.00</span></div>
-                        <div class="billing-total-row"><span>Discount (after Subtotal)</span><span id="discountDisplay">0.00</span></div>
-
-                        <div class="billing-total-row billing-total-final"><span>Total</span><span id="totalDisplay">0.00</span></div>
+                        <div class="billing-total-row"><span>Subtotal</span><span id="sidebarSubtotal">Rs. 0.00</span></div>
+                        <div class="billing-total-row text-danger"><span>Discount</span><span id="sidebarDiscount">- Rs. 0.00</span></div>
+                        <div class="billing-total-row billing-total-final"><span>Net Amount</span><span id="sidebarNetTotal">Rs. 0.00</span></div>
 
                         <input type="hidden" asp-for="Input.ItemsJson" id="itemsJson" />
                         <button type="submit" class="btn btn-accent btn-lg w-100 mt-3" id="generateBtn" disabled>Generate Bill</button>
@@ -128,12 +163,34 @@
     </form>
 </div>
 
+<!-- Floating Calculator -->
+<div id="floatingCalc" class="floating-calc" style="display:none">
+    <div class="calc-grid">
+        <button type="button" class="calc-btn" data-calc="7">7</button>
+        <button type="button" class="calc-btn" data-calc="8">8</button>
+        <button type="button" class="calc-btn" data-calc="9">9</button>
+        <button type="button" class="calc-btn calc-clear" data-calc="C">C</button>
+        <button type="button" class="calc-btn" data-calc="4">4</button>
+        <button type="button" class="calc-btn" data-calc="5">5</button>
+        <button type="button" class="calc-btn" data-calc="6">6</button>
+        <button type="button" class="calc-btn calc-back" data-calc="&#x232B;">&#x232B;</button>
+        <button type="button" class="calc-btn" data-calc="1">1</button>
+        <button type="button" class="calc-btn" data-calc="2">2</button>
+        <button type="button" class="calc-btn" data-calc="3">3</button>
+        <button type="button" class="calc-btn calc-enter" data-calc="Enter">Enter</button>
+        <button type="button" class="calc-btn" data-calc="0">0</button>
+        <button type="button" class="calc-btn" data-calc=".">.</button>
+        <button type="button" class="calc-btn calc-plus" data-calc="+">+</button>
+        <button type="button" class="calc-btn calc-minus" data-calc="-">-</button>
+    </div>
+</div>
+
 @section Styles {
     <link rel="stylesheet" href="~/css/billing.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/purchase.css" asp-append-version="true" />
 }
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/billing.js" asp-append-version="true"></script>
 }
-

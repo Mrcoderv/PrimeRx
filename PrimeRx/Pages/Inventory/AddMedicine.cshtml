@@ -12,6 +12,15 @@
     <a asp-page="/Inventory/Index" class="btn btn-outline-accent">Back to Inventory</a>
 </div>
 
+<!-- Master catalog lookup -->
+<div class="panel-card mb-3 col-lg-9">
+    <div class="panel-body">
+        <label class="form-label">Look up from Master Catalog <small class="text-muted">(optional — start typing to pre-fill)</small></label>
+        <input type="text" id="masterSearch" class="form-control" placeholder="Search by generic name or brand…" autocomplete="off" />
+        <div id="masterResults" class="list-group mt-2" style="display:none;max-height:200px;overflow-y:auto;"></div>
+    </div>
+</div>
+
 <div class="panel-card col-lg-9">
     <div class="panel-body">
         <form method="post">
@@ -26,4 +35,57 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        const searchInput = document.getElementById('masterSearch');
+        const resultsDiv  = document.getElementById('masterResults');
+        let timer = null;
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(timer);
+            const term = this.value.trim();
+            if (term.length < 2) { resultsDiv.style.display = 'none'; return; }
+            timer = setTimeout(() => {
+                fetch('/Billing/Index?handler=SearchMaster&term=' + encodeURIComponent(term))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data.length) { resultsDiv.style.display = 'none'; return; }
+                        resultsDiv.innerHTML = data.map(m =>
+                            `<button type="button" class="list-group-item list-group-item-action" data-master='${JSON.stringify(m).replace(/'/g, "&#39;")}'>
+                                <strong>${esc(m.genericName)}</strong>${m.brandName ? ' (' + esc(m.brandName) + ')' : ''}
+                                ${m.manufacturer ? '<br><small>' + esc(m.manufacturer) + '</small>' : ''}
+                                ${m.form ? ' <span class="badge bg-secondary">' + esc(m.form) + '</span>' : ''}
+                                ${m.strength ? ' <span class="badge bg-outline-secondary">' + esc(m.strength) + '</span>' : ''}
+                            </button>`
+                        ).join('');
+                        resultsDiv.style.display = '';
+                    })
+                    .catch(() => { resultsDiv.style.display = 'none'; });
+            }, 300);
+        });
+
+        resultsDiv.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-master]');
+            if (!btn) return;
+            const m = JSON.parse(btn.dataset.master);
+            document.getElementById('Medicine_GenericName').value = m.genericName || '';
+            document.getElementById('Medicine_Name').value = m.brandName || m.genericName || '';
+            document.getElementById('Medicine_Manufacturer').value = m.manufacturer || '';
+            if (document.getElementById('Medicine_FormType')) {
+                document.getElementById('Medicine_FormType').value = m.form || '';
+            }
+            if (document.getElementById('Medicine_Category')) {
+                document.getElementById('Medicine_Category').value = m.category || '';
+            }
+            resultsDiv.style.display = 'none';
+            searchInput.value = m.genericName + (m.brandName ? ' (' + m.brandName + ')' : '');
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!resultsDiv.contains(e.target) && e.target !== searchInput) {
+                resultsDiv.style.display = 'none';
+            }
+        });
+
+        function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    </script>
 }

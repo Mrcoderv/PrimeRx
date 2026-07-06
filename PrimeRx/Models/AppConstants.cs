@@ -34,6 +34,7 @@ public static class TransactionTypes
     public const string Purchase = "Purchase";
     public const string Adjustment = "Adjustment";
     public const string Return = "Return";
+    public const string Exchange = "Exchange";
 }
 
 public static class PayableStatus

@@ -7,12 +7,14 @@ namespace PrimeRx.Pages.Admin.Backup;
 public class IndexModel(BackupService backupService) : PageModel
 {
     public List<BackupFileInfo> Backups { get; set; } = [];
+    public List<BackupFileInfo> DateRangeBackups { get; set; } = [];
     public string? Message { get; set; }
     public bool IsError { get; set; }
 
     public void OnGet()
     {
         Backups = backupService.ListBackups();
+        DateRangeBackups = backupService.ListDateRangeBackups();
     }
 
     public async Task<IActionResult> OnPostCreateAsync()
@@ -28,6 +30,32 @@ public class IndexModel(BackupService backupService) : PageModel
             Message = $"Backup failed: {ex.Message}";
         }
         Backups = backupService.ListBackups();
+        DateRangeBackups = backupService.ListDateRangeBackups();
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostDateRangeBackupAsync(DateTime fromDate, DateTime toDate)
+    {
+        try
+        {
+            if (fromDate > toDate)
+            {
+                IsError = true;
+                Message = "From date must be before or equal to To date.";
+                Backups = backupService.ListBackups();
+                DateRangeBackups = backupService.ListDateRangeBackups();
+                return Page();
+            }
+            var path = await backupService.CreateDateRangeBackupAsync(fromDate, toDate);
+            Message = $"Date range backup created: {Path.GetFileName(path)} ({fromDate:dd-MM-yyyy} to {toDate:dd-MM-yyyy})";
+        }
+        catch (Exception ex)
+        {
+            IsError = true;
+            Message = $"Backup failed: {ex.Message}";
+        }
+        Backups = backupService.ListBackups();
+        DateRangeBackups = backupService.ListDateRangeBackups();
         return Page();
     }
 
@@ -44,6 +72,7 @@ public class IndexModel(BackupService backupService) : PageModel
             IsError = true;
             Message = $"Download failed: {ex.Message}";
             Backups = backupService.ListBackups();
+            DateRangeBackups = backupService.ListDateRangeBackups();
             return Page();
         }
     }
@@ -55,6 +84,7 @@ public class IndexModel(BackupService backupService) : PageModel
             IsError = true;
             Message = "Please select a valid backup file.";
             Backups = backupService.ListBackups();
+            DateRangeBackups = backupService.ListDateRangeBackups();
             return Page();
         }
 
@@ -77,6 +107,7 @@ public class IndexModel(BackupService backupService) : PageModel
             if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath);
         }
         Backups = backupService.ListBackups();
+        DateRangeBackups = backupService.ListDateRangeBackups();
         return Page();
     }
 
@@ -93,6 +124,7 @@ public class IndexModel(BackupService backupService) : PageModel
             Message = $"Restore failed: {ex.Message}";
         }
         Backups = backupService.ListBackups();
+        DateRangeBackups = backupService.ListDateRangeBackups();
         return Page();
     }
 }

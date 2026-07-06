@@ -188,6 +188,26 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
             .Take(limit)
             .ToListAsync();
 
+    public async Task<List<AuditLog>> GetAuditReportByDaysAsync(int days, int limit = 500)
+    {
+        var from = DateTime.UtcNow.AddDays(-days);
+        return await context.AuditLogs
+            .Where(a => a.Timestamp >= from)
+            .OrderByDescending(a => a.Timestamp)
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    public async Task<List<AuditLog>> GetAuditReportByRangeAsync(DateTime from, DateTime to, int limit = 500)
+    {
+        var toEnd = to.Date.AddDays(1);
+        return await context.AuditLogs
+            .Where(a => a.Timestamp >= from && a.Timestamp < toEnd)
+            .OrderByDescending(a => a.Timestamp)
+            .Take(limit)
+            .ToListAsync();
+    }
+
     public async Task<List<Medicine>> GetInventoryReportAsync() =>
         await context.Medicines
             .Where(m => m.IsActive)
