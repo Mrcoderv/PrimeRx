@@ -57,9 +57,14 @@
 
 <!-- Ageing Analysis -->
 <div class="panel-card mb-4">
-    <div class="panel-header d-flex justify-content-between align-items-center">
-        <h5><i class="bi bi-clock-history me-2"></i>Ageing Analysis (Unpaid Payables)</h5>
-        <span class="badge bg-secondary">Total: Rs. @Model.TotalPending.ToString("N0")</span>
+    <div class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Ageing Analysis (Unpaid Payables)</h5>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-secondary">Total: Rs. @Model.TotalPending.ToString("N0")</span>
+            <a asp-page="/Due/Payables/Ageing/Index" class="btn btn-sm btn-outline-accent">
+                <i class="bi bi-file-earmark-text me-1"></i>View Detailed Ageing Report
+            </a>
+        </div>
     </div>
     <div class="panel-body">
         <div class="row g-2 text-center">

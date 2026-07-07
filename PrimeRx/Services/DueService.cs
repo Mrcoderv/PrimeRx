@@ -5,7 +5,7 @@ using PrimeRx.Models.ViewModels;
 
 namespace PrimeRx.Services;
 
-public class DueService(ApplicationDbContext context)
+public class DueService(ApplicationDbContext context, NotificationService notificationService)
 {
     public async Task<List<Bill>> GetDueBillsAsync(string? search = null)
     {
@@ -67,6 +67,12 @@ public class DueService(ApplicationDbContext context)
 
         context.DuePayments.Add(payment);
         await context.SaveChangesAsync();
+
+        // If fully paid, mark related notifications as action completed
+        if (bill.DueAmount <= 0)
+        {
+            await notificationService.MarkActionCompletedAsync("Bill", bill.Id);
+        }
 
         return bill;
     }

@@ -25,6 +25,10 @@
     <link rel="stylesheet" href="~/PrimeRx.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/calculator.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
+    <style>
+        .notification-read { background-color: rgba(var(--bs-secondary-rgb), 0.05); }
+        .notification-item .dismiss-notif:hover { color: var(--bs-danger) !important; }
+    </style>
 </head>
 <body class="app-body">
     @if (User.Identity?.IsAuthenticated == true)
@@ -151,11 +155,15 @@
                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                                       id="notificationBadge" style="display:none;">0</span>
                             </a>
-                            <div class="dropdown-menu dropdown-menu-end p-0" style="width:320px;max-height:480px;overflow-y:auto;"
+                            <div class="dropdown-menu dropdown-menu-end p-0" style="width:340px;max-height:480px;overflow-y:auto;"
                                  aria-labelledby="bellDropdown">
-                                <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
+                                <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center gap-2">
                                     <strong style="font-size:.9rem;">Notifications</strong>
-                                    <a asp-page="/Notifications/Index" class="text-primary small">View all</a>
+                                    <div class="d-flex gap-1">
+                                        <button id="markAllReadBtn" class="btn btn-sm btn-outline-secondary" style="font-size:.7rem;padding:1px 6px;" title="Mark all as read">&#10003; All</button>
+                                        <button id="dismissAllDoneBtn" class="btn btn-sm btn-outline-secondary" style="font-size:.7rem;padding:1px 6px;" title="Dismiss completed">&#10005; Done</button>
+                                        <a asp-page="/Notifications/Index" class="btn btn-sm btn-outline-accent" style="font-size:.7rem;padding:1px 6px;">View all</a>
+                                    </div>
                                 </div>
                                 <div id="bellSummaryItems">
                                     <div class="text-center py-3 text-muted small">Loading…</div>
@@ -220,79 +228,121 @@
         (function () {
             const badge = document.getElementById('notificationBadge');
             const items = document.getElementById('bellSummaryItems');
+            const markAllBtn = document.getElementById('markAllReadBtn');
+            const dismissDoneBtn = document.getElementById('dismissAllDoneBtn');
 
             function escHtml(s) {
                 return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
             }
 
-            async function loadBellSummary() {
+            function typeIcon(type) {
+                switch (type) {
+                    case 'DueExpiry': return 'bi-wallet2 text-danger';
+                    case 'ExpiringMedicine': return 'bi-clock-history text-warning';
+                    case 'LowStock': return 'bi-box-seam text-info';
+                    case 'PayableDue': return 'bi-credit-card text-secondary';
+                    default: return 'bi-bell text-muted';
+                }
+            }
+
+            function typeLink(type, refType, refId) {
+                if (refType === 'Bill') return '/Due/Index';
+                if (refType === 'Payable') return '/Admin/Payables/Index';
+                if (type === 'ExpiringMedicine') return '/Inventory/Expiry';
+                if (type === 'LowStock') return '/Inventory/Index';
+                return '/Notifications/Index';
+            }
+
+            async function loadNotifications() {
                 try {
-                    const res = await fetch('/Notifications?handler=BellSummary');
+                    const res = await fetch('/Notifications?handler=NotificationsJson');
                     if (!res.ok) return;
                     const d = await res.json();
 
-                    const total = d.totalCount ?? 0;
-                    if (total > 0) {
-                        badge.textContent = total > 99 ? '99+' : total;
+                    const unread = d.unreadCount ?? 0;
+                    if (unread > 0) {
+                        badge.textContent = unread > 99 ? '99+' : unread;
                         badge.style.display = '';
                     } else {
                         badge.style.display = 'none';
                     }
 
                     let html = '';
-
-                    if (d.customerDues > 0) {
-                        html += `<a href="/Due/Index" class="dropdown-item py-2 border-bottom">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="bi bi-wallet2 text-danger"></i>
-                                <span><strong>${d.customerDues}</strong> customer due${d.customerDues > 1 ? 's' : ''} pending</span>
-                            </div>
-                        </a>`;
-                    }
-                    if (d.expiring > 0) {
-                        html += `<a href="/Inventory/Expiry" class="dropdown-item py-2 border-bottom">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="bi bi-clock-history text-warning"></i>
-                                <span><strong>${d.expiring}</strong> medicine${d.expiring > 1 ? 's' : ''} expiring soon</span>
-                            </div>
-                        </a>`;
-                    }
-                    if (d.lowStock > 0) {
-                        html += `<a href="/Inventory/Index" class="dropdown-item py-2 border-bottom">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="bi bi-box-seam text-info"></i>
-                                <span><strong>${d.lowStock}</strong> low stock item${d.lowStock > 1 ? 's' : ''}</span>
-                            </div>
-                        </a>`;
-                    }
-                    if (d.payables && d.payables.length > 0) {
-                        d.payables.forEach(p => {
-                            const due = new Date(p.dueDate).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
-                            const overdueBadge = p.isOverdue ? '<span class="badge bg-danger ms-1" style="font-size:.65rem;">Overdue</span>' : '';
-                            html += `<a href="/Admin/Payables/Index" class="dropdown-item py-2 border-bottom">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <div><i class="bi bi-credit-card text-secondary me-1"></i><strong>${escHtml(p.supplierName)}</strong>${overdueBadge}</div>
-                                        <div class="text-muted" style="font-size:.78rem;">${escHtml(p.invoiceNo ?? '')} · Due ${escHtml(due)}</div>
-                                    </div>
-                                    <span class="text-danger fw-bold ms-2" style="white-space:nowrap;">Rs. ${Number(p.pendingAmount).toFixed(2)}</span>
+                    if (d.notifications && d.notifications.length > 0) {
+                        d.notifications.forEach(n => {
+                            const dimmed = n.isRead || n.isActionCompleted ? 'opacity-50' : '';
+                            const readClass = n.isRead ? 'notification-read' : '';
+                            const icon = typeIcon(n.type);
+                            const link = typeLink(n.type, n.refType, n.refId);
+                            html += `<div class="dropdown-item py-2 border-bottom notification-item ${dimmed} ${readClass}" data-id="${n.id}" data-ref="${n.refType}-${n.refId}">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <a href="${link}" class="text-decoration-none flex-grow-1 min-w-0" onclick="markNotifRead(${n.id})">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi ${icon}"></i>
+                                            <div class="min-w-0">
+                                                <div class="text-truncate" style="font-size:.82rem;">${escHtml(n.title)}</div>
+                                                <div class="text-muted text-truncate" style="font-size:.72rem;">${escHtml(n.message ?? '')}</div>
+                                                <div class="text-muted" style="font-size:.65rem;">${escHtml(n.timeAgo)}</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    <button class="btn btn-sm p-0 border-0 text-muted dismiss-notif flex-shrink-0" style="font-size:.7rem;line-height:1;" data-id="${n.id}" title="Dismiss">&times;</button>
                                 </div>
-                            </a>`;
+                            </div>`;
                         });
-                    }
-                    if (!html) {
+                    } else {
                         html = '<div class="text-center py-3 text-muted small"><i class="bi bi-check-circle text-success me-1"></i>All clear — no pending alerts</div>';
                     }
                     items.innerHTML = html;
+
+                    // Wire dismiss buttons
+                    items.querySelectorAll('.dismiss-notif').forEach(btn => {
+                        btn.addEventListener('click', async function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const id = this.dataset.id;
+                            await fetch('/Notifications?handler=Dismiss', {
+                                method: 'POST',
+                                headers: {'Content-Type':'application/json'},
+                                body: JSON.stringify({id: Number(id)})
+                            });
+                            loadNotifications();
+                        });
+                    });
                 } catch (err) {
                     console.error('Failed to load notifications', err);
                     items.innerHTML = '<div class="text-center py-3 text-muted small">Could not load notifications</div>';
                 }
             }
 
-            document.getElementById('bellDropdown')?.addEventListener('show.bs.dropdown', loadBellSummary);
-            loadBellSummary();
-            setInterval(loadBellSummary, 60000);
+            // Mark single notification as read on click
+            window.markNotifRead = async function (id) {
+                await fetch('/Notifications?handler=MarkRead', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({id: Number(id)})
+                });
+            };
+
+            // Mark all as read
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', async function () {
+                    await fetch('/Notifications?handler=MarkAllRead', { method: 'POST' });
+                    loadNotifications();
+                });
+            }
+
+            // Dismiss all completed
+            if (dismissDoneBtn) {
+                dismissDoneBtn.addEventListener('click', async function () {
+                    await fetch('/Notifications?handler=DismissAllCompleted', { method: 'POST' });
+                    loadNotifications();
+                });
+            }
+
+            document.getElementById('bellDropdown')?.addEventListener('show.bs.dropdown', loadNotifications);
+            loadNotifications();
+            setInterval(loadNotifications, 60000);
         })();
         </script>
     }

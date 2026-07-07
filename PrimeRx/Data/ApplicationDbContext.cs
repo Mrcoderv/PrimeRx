@@ -25,6 +25,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<CreditNote> CreditNotes => Set<CreditNote>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<MedicineMaster> MedicineMasters => Set<MedicineMaster>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

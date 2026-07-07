@@ -74,6 +74,7 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AllowAnonymousToPage("/Index");
 });
 
+builder.Services.AddTransient<IEmailSender<IdentityUser>, EmailSender>();
 builder.Services.AddScoped<InventoryService>();
 builder.Services.AddScoped<BillingService>();
 builder.Services.AddScoped<DueService>();
@@ -84,7 +85,9 @@ builder.Services.AddScoped<PurchaseService>();
 builder.Services.AddScoped<PurchaseReturnService>();
 builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<BackupService>();
+builder.Services.AddScoped<PayableService>();
 builder.Services.AddSingleton<PdfGenerator>();
+builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<UpdateService>();
 
 var app = builder.Build();

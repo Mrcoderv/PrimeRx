@@ -9,7 +9,88 @@
         <h1 class="page-title">Notifications</h1>
         <p class="page-subtitle">Alerts for dues, expiring medicines, and low stock</p>
     </div>
+    <div class="d-flex gap-2">
+        @if (Model.UnreadCount > 0)
+        {
+            <form method="post" asp-page-handler="MarkAllRead" id="markAllReadForm">
+                @* Handled via AJAX *@
+            </form>
+            <button id="markAllReadPage" class="btn btn-sm btn-outline-accent" onclick="markAllReadPage()">
+                <i class="bi bi-check2-all me-1"></i>Mark All as Read
+            </button>
+        }
+        <button id="dismissAllDonePage" class="btn btn-sm btn-outline-secondary" onclick="dismissAllDonePage()">
+            <i class="bi bi-x-lg me-1"></i>Dismiss Completed
+        </button>
+    </div>
 </div>
+
+<!-- Persisted Notifications List -->
+@if (Model.NotificationItems.Any())
+{
+    <div class="panel-card mb-4">
+        <div class="panel-header">
+            <h5><i class="bi bi-bell me-2"></i>Notifications (@Model.UnreadCount unread)</h5>
+        </div>
+        <div class="p-0 panel-body-flush" id="notificationsList">
+            @foreach (var n in Model.NotificationItems)
+            {
+                var dimmed = n.IsRead || n.IsActionCompleted ? "opacity-50" : "";
+                var readClass = n.IsRead ? "notification-read" : "";
+                var icon = n.Type switch
+                {
+                    "DueExpiry" => "bi-wallet2 text-danger",
+                    "ExpiringMedicine" => "bi-clock-history text-warning",
+                    "LowStock" => "bi-box-seam text-info",
+                    "PayableDue" => "bi-credit-card text-secondary",
+                    _ => "bi-bell text-muted"
+                };
+                var link = n.ReferenceType switch
+                {
+                    "Bill" => "/Due/Index",
+                    "Payable" => "/Admin/Payables/Index",
+                    _ when n.Type == "ExpiringMedicine" => "/Inventory/Expiry",
+                    _ when n.Type == "LowStock" => "/Inventory/Index",
+                    _ => "/Notifications/Index"
+                };
+
+                <div class="notification-item @dimmed @readClass border-bottom" data-id="@n.Id">
+                    <div class="d-flex align-items-start gap-3 px-3 py-2">
+                        <a href="@link" class="text-decoration-none flex-grow-1 min-w-0 notif-link" data-id="@n.Id">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi @icon fs-5"></i>
+                                <div class="min-w-0">
+                                    <div class="fw-semibold text-truncate" style="font-size:.9rem;">@n.Title</div>
+                                    @if (!string.IsNullOrEmpty(n.Message))
+                                    {
+                                        <div class="text-muted text-truncate" style="font-size:.8rem;">@n.Message</div>
+                                    }
+                                    <small class="text-muted">@IndexModel.FormatTimeAgo(n.CreatedAt)</small>
+                                </div>
+                            </div>
+                        </a>
+                        <div class="d-flex gap-1 flex-shrink-0 pt-1">
+                            @if (!n.IsRead)
+                            {
+                                <button class="btn btn-sm btn-outline-secondary mark-read-btn" style="font-size:.7rem;padding:1px 6px;" data-id="@n.Id" title="Mark as read">&#10003;</button>
+                            }
+                            <button class="btn btn-sm btn-outline-danger dismiss-btn" style="font-size:.7rem;padding:1px 6px;" data-id="@n.Id" title="Dismiss">&#10005;</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="panel-card mb-4">
+        <div class="panel-body text-center py-4 text-muted">
+            <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+            <p class="mt-2 mb-0">No notifications. All clear!</p>
+        </div>
+    </div>
+}
 
 <!-- Summary Cards -->
 <div class="row g-4 mb-4">
@@ -231,6 +312,60 @@
     </div>
 </div>
 
+@section Scripts {
+<script>
+    // Mark as read (single)
+    document.querySelectorAll('.notif-link, .mark-read-btn').forEach(el => {
+        el.addEventListener('click', async function (e) {
+            const id = this.dataset.id;
+            if (id) {
+                await fetch('/Notifications?handler=MarkRead', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({id: Number(id)})
+                });
+                // Dim the row
+                const item = this.closest('.notification-item');
+                if (item) item.classList.add('opacity-50', 'notification-read');
+                // Hide the mark-read button
+                const btn = item?.querySelector('.mark-read-btn');
+                if (btn) btn.style.display = 'none';
+            }
+        });
+    });
+
+    // Dismiss single
+    document.querySelectorAll('.dismiss-btn').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const id = this.dataset.id;
+            await fetch('/Notifications?handler=Dismiss', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({id: Number(id)})
+            });
+            this.closest('.notification-item').remove();
+        });
+    });
+
+    // Mark all as read (page)
+    window.markAllReadPage = async function () {
+        await fetch('/Notifications?handler=MarkAllRead', { method: 'POST' });
+        document.querySelectorAll('.notification-item').forEach(el => {
+            el.classList.add('opacity-50', 'notification-read');
+        });
+        document.querySelectorAll('.mark-read-btn').forEach(b => b.style.display = 'none');
+    };
+
+    // Dismiss all completed (page)
+    window.dismissAllDonePage = async function () {
+        await fetch('/Notifications?handler=DismissAllCompleted', { method: 'POST' });
+        document.querySelectorAll('.notification-item').forEach(el => {
+            if (el.classList.contains('opacity-50')) el.remove();
+        });
+    };
+</script>
+}
+
 <style>
     .stat-clickable {
         cursor: pointer;
@@ -239,5 +374,8 @@
     .stat-clickable:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .notification-read {
+        background-color: rgba(var(--bs-secondary-rgb), 0.05);
     }
 </style>

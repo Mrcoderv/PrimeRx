@@ -42,3 +42,31 @@ public class PurchaseCreateRequest
 
     public List<PurchaseLineItem> Items { get; set; } = [];
 }
+
+public class PayableAgingRow
+{
+    public int Id { get; set; }
+    public string SupplierName { get; set; } = string.Empty;
+    public string? InvoiceNo { get; set; }
+    public string? Description { get; set; }
+    public DateTime DueDate { get; set; }
+    public decimal Amount { get; set; }
+    public decimal PaidAmount { get; set; }
+    public decimal PendingAmount => Amount - PaidAmount;
+    public int AgeDays { get; set; }
+    public string Status { get; set; } = string.Empty;
+}
+
+public class PayableAgingReport
+{
+    public string CompanyName { get; set; } = string.Empty;
+    public string CompanyAddress { get; set; } = string.Empty;
+    public string Title { get; set; } = "Ageing Dues";
+    public DateTime GeneratedAt { get; set; } = DateTime.Now;
+    public string? SupplierFilter { get; set; }
+    public DateTime? FromDate { get; set; }
+    public DateTime? ToDate { get; set; }
+    public List<PayableAgingRow> Rows { get; set; } = [];
+    public decimal GrandTotal => Rows.Sum(r => r.PendingAmount);
+    public int TotalCount => Rows.Count;
+}

@@ -4,11 +4,12 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PrimeRx.Data;
 using PrimeRx.Models;
+using PrimeRx.Services;
 
 namespace PrimeRx.Pages.Admin.Payables;
 
 [Authorize(Policy = "AdminOnly")]
-public class IndexModel(ApplicationDbContext db) : PageModel
+public class IndexModel(ApplicationDbContext db, NotificationService notificationService) : PageModel
 {
     public List<Payable> Payables { get; set; } = [];
     public string Filter { get; set; } = "All";
@@ -114,6 +115,10 @@ public class IndexModel(ApplicationDbContext db) : PageModel
             : PayableStatus.Partial;
 
         await db.SaveChangesAsync();
+
+        if (payable.Status == PayableStatus.Paid)
+            await notificationService.MarkActionCompletedAsync("Payable", payable.Id);
+
         return RedirectToPage(new { message = $"Payment of Rs. {amount:N2} recorded for {payable.SupplierName}." });
     }
 
@@ -126,6 +131,8 @@ public class IndexModel(ApplicationDbContext db) : PageModel
         payable.Status = PayableStatus.Paid;
 
         await db.SaveChangesAsync();
+        await notificationService.MarkActionCompletedAsync("Payable", payable.Id);
+
         return RedirectToPage(new { message = $"{payable.SupplierName} — Rs. {payable.Amount:N2} marked as fully paid." });
     }
 

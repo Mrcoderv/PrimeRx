@@ -1,6 +1,6 @@
 # PrimeRx
 
-**PrimeRx** is a professional pharmacy billing and inventory management system built for commercial pharmacy operations. It provides fast point-of-sale billing, real-time stock control, due payment tracking, analytics dashboards, and exportable reports.
+**PrimeRx** is a professional pharmacy billing, inventory, and purchase management system built for commercial pharmacy operations. It provides fast point-of-sale billing, real-time stock control, purchase entry with batch/expiry tracking, due payment tracking, analytics dashboards, and exportable reports.
 
 **Developed by Prime LogicTech**  
 📞 986-7788298 | 📧 primelogictech3@gmail.com  
@@ -18,16 +18,17 @@
 | Module | Capabilities |
 |--------|----------------|
 | **Dashboard** | Today's sales, monthly revenue, due outstanding, stock alerts, 7-day sales chart, top medicines |
-| **Billing** | Medicine autocomplete, multi-item bills, discounts, Cash / Online / Due payments, PDF invoices |
-| **Inventory** | Stock view, add medicines (Staff & Admin), purchase entry, adjustments, transaction history |
+| **Billing (POS)** | Medicine autocomplete popup (purchase-style), multi-item bills, discounts, smart Enter key navigation, floating calculator, Cash / Online / Due payments, PDF invoices |
+| **Purchase Entry** | Multi-item purchase recording with **CC (Conversion Charges)**, batch number & expiry tracking, smart Enter key navigation (dakadak), floating calculator, batch info panel, medicine master auto-fill, per-item discount, MRP auto-calculation, supplier management, credit purchase with auto-payable |
+| **Inventory** | Stock view, add medicines (Staff & Admin), batch management, expiry tracking, stock adjustments, transaction history |
 | **Due Payments** | Search customers, partial/full collection, payment history |
-| **Reports** | Sales bar charts, medicine pie charts, daily/monthly reports, P&L, inventory & expiry (PDF/Excel) |
-| **Admin** | Company profile, staff account management, full medicine catalog control |
+| **Reports** | Sales bar charts, medicine pie charts, daily/monthly reports, P&L, inventory & expiry (PDF/Excel), supplier profit |
+| **Admin** | Company profile, staff account management, medicine master catalog, supplier management, full medicine catalog control |
 
 ### User Roles
 
-- **Admin** — Full access including company setup, staff management, and medicine editing
-- **Staff** — Billing, inventory (including add medicine), due collection, reports, dashboard
+- **Admin** — Full access including company setup, staff management, medicine master catalog, and supplier management
+- **Staff** — Billing, purchase entry, inventory (including add medicine), due collection, reports, dashboard
 
 ---
 
@@ -49,7 +50,7 @@ Open **http://localhost:5000** in your browser.
 2. Optionally load the sample medicine database
 3. Log in and start from the **Dashboard**
 
-> **Database:** SQLite file at `publish\win-x64\Data\primerx.db` — back up this file regularly to preserve all business data.
+> **Database:** SQLite file at `Data\primerx.db` — back up this file regularly to preserve all business data.
 
 ---
 
@@ -96,16 +97,29 @@ dotnet publish PrimeRx\PrimeRx.csproj `
 
 ```
 PrimeRx/
-├── PrimeRx/          # ASP.NET Core Razor Pages application
-│   ├── Data/                   # DbContext, migrations, seeders
-│   ├── Models/                 # Domain entities & view models
-│   ├── Services/               # Billing, inventory, reports, dashboard
-│   ├── Helpers/                # PDF invoice generator (QuestPDF)
-│   ├── Pages/                  # Razor UI (Billing, Dashboard, Reports…)
-│   ├── ViewComponents/         # Company header banner
-│   └── wwwroot/                # CSS, JavaScript, static assets
-├── publish/win-x64/            # Ready-to-run self-contained release
-├── CODE_MAP.md                 # Full code map: methods, classes, workflows
+├── PrimeRx/                  # ASP.NET Core Razor Pages application
+│   ├── Data/                 # DbContext, migrations, seeders
+│   ├── Models/               # Domain entities & view models
+│   ├── Services/             # Billing, purchase, inventory, reports, dashboard
+│   ├── Helpers/              # PDF invoice generator (QuestPDF), number-to-words
+│   ├── Middleware/           # First-run setup redirect
+│   ├── Pages/                # Razor UI (Billing, Purchase, Dashboard, Reports…)
+│   │   ├── Billing/          # Point of Sale (POS)
+│   │   ├── Purchase/         # Purchase entry, edit, history, returns
+│   │   ├── Inventory/        # Stock management, batches, expiry
+│   │   ├── Dashboard/        # Analytics KPIs and charts
+│   │   ├── Reports/          # Sales, inventory, profit reports
+│   │   └── ...
+│   └── wwwroot/              # CSS, JavaScript, static assets
+│       ├── css/
+│       │   ├── site.css      # Design system (light/dark themes)
+│       │   ├── billing.css   # Billing & POS styles
+│       │   └── purchase.css  # Purchase entry styles
+│       └── js/
+│           ├── billing.js    # POS client-side logic
+│           └── purchase.js   # Purchase entry client-side logic
+├── publish/win-x64/          # Ready-to-run self-contained release
+├── CODE_MAP.md               # Full code map: methods, classes, workflows
 └── README.md
 ```
 
@@ -124,18 +138,29 @@ PrimeRx/
 | PDF Invoices | QuestPDF |
 | Excel Reports | EPPlus |
 | Charts | Chart.js |
-| Medicine Search | Tom Select |
-| UI | Bootstrap 5, custom professional blue theme |
+| UI | Bootstrap 5, custom professional dark/light theme |
 
 ---
 
-## Billing Workflow
+## Billing & Purchase Workflows
 
-1. Search and add medicines
-2. Enter customer name and phone
-3. Select payment method (Cash / Online / Due)
-4. Apply optional discount
+### Billing (Point of Sale)
+1. Search and add medicines via autocomplete popup (purchase-style layout)
+2. Smart Enter key navigation: Rate → Qty → Disc% (rapid data entry)
+3. Enter customer name, phone, payment method (Cash / Online / Due)
+4. Apply optional discount per line item
 5. Generate bill → stock deducted automatically → PDF invoice available
+
+### Purchase Entry
+1. Select supplier (or type a new one)
+2. Search and add medicines via autocomplete popup
+3. Smart Enter key navigation: Batch# → Expiry → Qty → Free → Rate → Disc% → CC → MRP
+4. Per-item CC (Conversion Charges) tracked
+5. MRP auto-calculated from configured margin percent
+6. Floating calculator (right-click or Ctrl+Shift+C on Qty/Rate/CC fields)
+7. Batch info panel showing medicine details on focus
+8. Total section: Subtotal, Discount, Total CC, Net Amount
+9. Save → stock updated, batch records created, payable auto-created for credit purchases
 
 ---
 
