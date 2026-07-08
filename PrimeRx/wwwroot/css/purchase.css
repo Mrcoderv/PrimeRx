@@ -24,30 +24,36 @@
 /* ── Table base sizing ─────────────────────────────────── */
 .purchase-page #itemsTable {
   font-size: 0.92rem;
+  table-layout: fixed;
+  min-width: 1060px;
 }
 .purchase-page #itemsTable thead th {
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-weight: 700;
-  padding: 0.75rem 0.6rem;
+  padding: 0.75rem 0.5rem;
   white-space: nowrap;
   background: var(--rx-table-head-bg);
   color: var(--rx-table-head-color);
   border-bottom: 2px solid var(--rx-border);
+  overflow: hidden;
 }
 .purchase-page #itemsTable tbody td {
-  padding: 0.65rem 0.6rem;
+  padding: 0.55rem 0.4rem;
   vertical-align: middle;
   border-bottom: 1px solid var(--rx-table-border);
+  overflow: hidden;
 }
 
 /* ── Input fields inside the table ─────────────────────── */
 .purchase-page #itemsTable .form-control-sm {
   font-size: 0.88rem;
-  padding: 0.4rem 0.5rem;
+  padding: 0.4rem 0.4rem;
   height: auto;
-  min-height: 34px;
+  min-height: 36px;
+  width: 100%;
+  box-sizing: border-box;
   background: var(--rx-form-bg) !important;
   border-color: var(--rx-border) !important;
   color: var(--rx-form-text) !important;
@@ -59,6 +65,29 @@
 [data-bs-theme="light"] .purchase-page #itemsTable .form-control-sm:focus {
   border-color: #2563EB !important;
   box-shadow: 0 0 0 2px rgba(37,99,235,0.15) !important;
+}
+
+/* ── Numeric inputs: drop native spinner so digits have full width ── */
+.purchase-page #itemsTable input[type="number"] {
+  -moz-appearance: textfield;
+  padding-right: 0.35rem;
+}
+.purchase-page #itemsTable input[type="number"]::-webkit-inner-spin-button,
+.purchase-page #itemsTable input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ── Batch # / Expiry: keep compact but fully readable ─── */
+.purchase-page #itemsTable .batch-input {
+  text-align: center;
+  padding-left: 0.3rem;
+  padding-right: 0.3rem;
+}
+.purchase-page #itemsTable .expiry-input {
+  padding-left: 0.3rem;
+  padding-right: 0.3rem;
+  font-size: 0.8rem;
 }
 
 /* ── Medicine name with master info ────────────────────── */

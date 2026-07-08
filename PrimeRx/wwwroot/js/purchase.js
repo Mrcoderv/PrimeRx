@@ -378,6 +378,16 @@
             });
         });
 
+        // Select existing value when a field first receives focus (via Tab/Enter
+        // navigation or click) so typing replaces it instantly — no need to
+        // manually clear a pre-filled "0" or "0.00" first. A click that lands
+        // directly on an already-focused field still positions the caret
+        // normally, so users can still fine-tune a value without retyping it.
+        itemsBody.querySelectorAll('.qty-input, .free-input, .rate-input, .disc-input, .cc-input, .mrp-input, .batch-input')
+            .forEach(el => {
+                el.addEventListener('focus', () => el.select());
+            });
+
         // Batch# - show batch info panel on focus
         itemsBody.querySelectorAll('.batch-input').forEach(el => {
             el.addEventListener('focus', (e) => {
