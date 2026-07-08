@@ -255,8 +255,12 @@
         emptyRow.style.display = 'none';
 
         itemsBody.innerHTML = items.map((item, idx) => {
-            const lineAmount = item.qty * item.purchasePrice * (1 - item.discountPercent / 100);
-            const lineTotal = lineAmount + item.conversionCharge;
+            const qty = item.qty ?? 0;
+            const price = item.purchasePrice ?? 0;
+            const disc = item.discountPercent ?? 0;
+            const cc = item.conversionCharge ?? 0;
+            const lineAmount = qty * price * (1 - disc / 100);
+            const lineTotal = lineAmount + cc;
             const masterInfo = item.genericName || item.manufacturer
                 ? esc([item.genericName, item.manufacturer].filter(Boolean).join(' · '))
                 : '';
@@ -269,38 +273,38 @@
                 </td>
                 <td>
                     <input type="text" class="form-control form-control-sm batch-input"
-                           value="${esc(item.batchNumber)}"
+                           value="${esc(item.batchNumber ?? '')}"
                            placeholder="Batch#"
                            data-idx="${item._idx}" />
                 </td>
                 <td>
                     <input type="date" class="form-control form-control-sm expiry-input"
-                           value="${item.expiryDate}"
+                           value="${item.expiryDate ?? ''}"
                            data-idx="${item._idx}" />
                 </td>
-                <td>
+                <td class="text-end">
                     <input type="number" class="form-control form-control-sm text-center qty-input"
-                           value="${item.qty}" min="1" data-idx="${item._idx}" />
+                           value="${item.qty ?? ''}" min="1" data-idx="${item._idx}" />
                 </td>
-                <td>
+                <td class="text-end">
                     <input type="number" class="form-control form-control-sm text-center free-input"
-                           value="${item.freeQty}" min="0" title="Free/Bonus" data-idx="${item._idx}" />
+                           value="${item.freeQty ?? ''}" min="0" title="Free/Bonus" data-idx="${item._idx}" />
                 </td>
-                <td>
-                    <input type="number" class="form-control form-control-sm rate-input"
-                           value="${item.purchasePrice.toFixed(2)}" min="0" step="0.01" data-idx="${item._idx}" />
+                <td class="text-end">
+                    <input type="number" class="form-control form-control-sm text-end rate-input"
+                           value="${(item.purchasePrice ?? 0).toFixed(2)}" min="0" step="0.01" data-idx="${item._idx}" />
                 </td>
-                <td>
+                <td class="text-end">
                     <input type="number" class="form-control form-control-sm text-center disc-input"
-                           value="${item.discountPercent}" min="0" max="100" step="0.01" data-idx="${item._idx}" />
+                           value="${item.discountPercent ?? ''}" min="0" max="100" step="0.01" data-idx="${item._idx}" />
                 </td>
-                <td>
+                <td class="text-end">
                     <input type="number" class="form-control form-control-sm text-center cc-input"
-                           value="${item.conversionCharge.toFixed(2)}" min="0" step="0.01" data-idx="${item._idx}" />
+                           value="${(item.conversionCharge ?? 0).toFixed(2)}" min="0" step="0.01" data-idx="${item._idx}" />
                 </td>
-                <td>
-                    <input type="number" class="form-control form-control-sm mrp-input"
-                           value="${item.mrp.toFixed(2)}" min="0" step="0.01" data-idx="${item._idx}" />
+                <td class="text-end">
+                    <input type="number" class="form-control form-control-sm text-end mrp-input"
+                           value="${(item.mrp ?? 0).toFixed(2)}" min="0" step="0.01" data-idx="${item._idx}" />
                 </td>
                 <td class="fw-semibold text-end align-middle purchase-calc-field">
                     Rs. ${fmt(lineTotal)}
@@ -395,6 +399,21 @@
         updateTotals();
     }
 
+    function updateRowAmount(el) {
+        const tr = el.closest('tr');
+        if (!tr) return;
+        const idx = parseInt(el.dataset.idx);
+        const item = items.find(x => x._idx === idx);
+        if (!item) return;
+        const qty = item.qty ?? 0;
+        const price = item.purchasePrice ?? 0;
+        const disc = item.discountPercent ?? 0;
+        const cc = item.conversionCharge ?? 0;
+        const lineTotal = qty * price * (1 - disc / 100) + cc;
+        const amountCell = tr.querySelector('.purchase-calc-field');
+        if (amountCell) amountCell.textContent = 'Rs. ' + fmt(lineTotal);
+    }
+
     function bindInput(el, field, transform, recalcMargin) {
         el.addEventListener('change', () => {
             const idx = parseInt(el.dataset.idx);
@@ -404,13 +423,28 @@
             item[field] = val;
             if (recalcMargin && item.purchasePrice > 0) {
                 item.mrp = calcMrp(item.purchasePrice, typeof MARGIN_PERCENT !== 'undefined' ? MARGIN_PERCENT : 16);
+                const tr = el.closest('tr');
+                if (tr) {
+                    const mrpInput = tr.querySelector('.mrp-input');
+                    if (mrpInput) mrpInput.value = item.mrp.toFixed(2);
+                }
             }
-            renderTable();
+            updateRowAmount(el);
+            updateTotals();
+        });
+        el.addEventListener('input', () => {
+            const idx = parseInt(el.dataset.idx);
+            const item = items.find(x => x._idx === idx);
+            if (!item) return;
+            const val = transform ? transform(el.value) : el.value;
+            item[field] = val;
+            updateRowAmount(el);
+            updateTotals();
         });
     }
 
     function bindQtyRate(el) {
-        el.addEventListener('change', () => {
+        function sync() {
             const idx = parseInt(el.dataset.idx);
             const item = items.find(x => x._idx === idx);
             if (!item) return;
@@ -419,19 +453,30 @@
             } else {
                 item.purchasePrice = Math.max(0, parseFloat(el.value) || 0);
                 item.mrp = calcMrp(item.purchasePrice, typeof MARGIN_PERCENT !== 'undefined' ? MARGIN_PERCENT : 16);
+                const tr = el.closest('tr');
+                if (tr) {
+                    const mrpInput = tr.querySelector('.mrp-input');
+                    if (mrpInput) mrpInput.value = item.mrp.toFixed(2);
+                }
             }
-            renderTable();
-        });
+            updateRowAmount(el);
+            updateTotals();
+        }
+        el.addEventListener('change', sync);
+        el.addEventListener('input', sync);
     }
 
     function bindCC(el) {
-        el.addEventListener('change', () => {
+        function sync() {
             const idx = parseInt(el.dataset.idx);
             const item = items.find(x => x._idx === idx);
             if (!item) return;
             item.conversionCharge = Math.max(0, parseFloat(el.value) || 0);
-            renderTable();
-        });
+            updateRowAmount(el);
+            updateTotals();
+        }
+        el.addEventListener('change', sync);
+        el.addEventListener('input', sync);
     }
 
     function focusField(idx, field) {
@@ -465,8 +510,8 @@
             ${item.unit ? `<div class="batch-info-row"><span class="batch-info-label">Unit</span><span class="batch-info-value">${esc(item.unit)}</span></div>` : ''}
             <div class="batch-info-row"><span class="batch-info-label">Batch #</span><span class="batch-info-value">${esc(item.batchNumber || '—')}</span></div>
             <div class="batch-info-row"><span class="batch-info-label">Expiry</span><span class="batch-info-value">${item.expiryDate || '—'}</span></div>
-            <div class="batch-info-row"><span class="batch-info-label">Rate</span><span class="batch-info-value">Rs. ${fmt(item.purchasePrice)}</span></div>
-            <div class="batch-info-row"><span class="batch-info-label">MRP</span><span class="batch-info-value">Rs. ${fmt(item.mrp)}</span></div>
+            <div class="batch-info-row"><span class="batch-info-label">Rate</span><span class="batch-info-value">Rs. ${fmt(item.purchasePrice ?? 0)}</span></div>
+            <div class="batch-info-row"><span class="batch-info-label">MRP</span><span class="batch-info-value">Rs. ${fmt(item.mrp ?? 0)}</span></div>
         `;
         batchInfoPanel.style.display = '';
     }
@@ -572,8 +617,8 @@
         let totalCC = 0;
 
         items.forEach(item => {
-            const gross = item.qty * item.purchasePrice;
-            const discAmt = gross * (item.discountPercent / 100);
+            const gross = (item.qty ?? 0) * (item.purchasePrice ?? 0);
+            const discAmt = gross * ((item.discountPercent ?? 0) / 100);
             subtotal += gross;
             totalDiscount += discAmt;
             totalCC += item.conversionCharge || 0;
@@ -604,7 +649,7 @@
             id: i.id,
             medicineId: i.medicineId,
             medicineName: i.medicineName,
-            quantity: i.qty,
+            quantity: i.qty ?? 0,
             freeQuantity: i.freeQty || 0,
             discountPercent: i.discountPercent || 0,
             purchasePrice: i.purchasePrice,

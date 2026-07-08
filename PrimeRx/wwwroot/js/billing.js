@@ -36,7 +36,8 @@
                 renderRow(items[items.length - 1]);
                 const lastTr = itemsBody.lastElementChild;
                 if (lastTr) {
-                    lastTr.querySelector('.qty-input').value = itemData.quantity;
+                    const qtyInput = lastTr.querySelector('.qty-input');
+                    if (qtyInput) qtyInput.value = itemData.quantity ?? '';
                     if (itemData.selectedBatchId) {
                         const label = lastTr.querySelector('.batch-label');
                         if (label) label.textContent = itemData.batchNumber || 'Batch #' + itemData.selectedBatchId;
@@ -58,8 +59,8 @@
         let subtotal = 0;
         let itemDiscount = 0;
         items.forEach(item => {
-            const gross = item.rate * item.quantity;
-            const discountAmount = gross * (item.discountPercent / 100);
+            const gross = (item.rate ?? 0) * (item.quantity ?? 0);
+            const discountAmount = gross * ((item.discountPercent ?? 0) / 100);
             item.discountAmount = discountAmount;
             subtotal += gross;
             itemDiscount += discountAmount;
@@ -181,11 +182,11 @@
 
         tr.appendChild(nameTd);
         tr.innerHTML += `
-            <td><input type="number" class="form-control form-control-sm rate-input" value="${item.rate}" step="0.01" min="0"></td>
-            <td><input type="number" class="form-control form-control-sm qty-input" value="${item.quantity}" min="1" max="${item.availableStock}"></td>
-            <td><input type="number" class="form-control form-control-sm disc-percent-input" value="${item.discountPercent}" step="0.1" min="0" max="100"></td>
-            <td class="disc-amount">${formatMoney(item.discountAmount)}</td>
-            <td class="line-total">${formatMoney(item.rate * item.quantity - item.discountAmount)}</td>
+            <td class="text-end"><input type="number" class="form-control form-control-sm text-end rate-input" value="${item.rate ?? ''}" step="0.01" min="0"></td>
+            <td class="text-end"><input type="number" class="form-control form-control-sm text-end qty-input" value="${item.quantity ?? ''}" min="1" max="${item.availableStock}"></td>
+            <td class="text-end"><input type="number" class="form-control form-control-sm text-end disc-percent-input" value="${item.discountPercent ?? ''}" step="0.1" min="0" max="100"></td>
+            <td class="disc-amount text-end">${formatMoney(item.discountAmount ?? 0)}</td>
+            <td class="line-total text-end">${formatMoney((item.rate ?? 0) * (item.quantity ?? 0) - (item.discountAmount ?? 0))}</td>
             <td><button type="button" class="btn btn-sm btn-outline-danger btn-remove-item">&times;</button></td>`;
 
         tr.querySelector('.batch-btn').addEventListener('click', e => {
@@ -260,8 +261,8 @@
     }
 
     function updateLineTotal(tr, item) {
-        const gross = item.rate * item.quantity;
-        const discountAmount = gross * (item.discountPercent / 100);
+        const gross = (item.rate ?? 0) * (item.quantity ?? 0);
+        const discountAmount = gross * ((item.discountPercent ?? 0) / 100);
         item.discountAmount = discountAmount;
         tr.querySelector('.disc-amount').textContent = formatMoney(discountAmount);
         tr.querySelector('.line-total').textContent = formatMoney(gross - discountAmount);
@@ -508,7 +509,7 @@
                     ${m.genericName ? `<div style="font-size:0.78rem;opacity:0.65">${escapeHtml(m.genericName)}</div>` : ''}
                 </div>
                 <div style="text-align:right;flex-shrink:0;padding-left:0.5rem">
-                    <div style="font-size:0.8rem;opacity:0.75">₹${Number(m.mrp || 0).toFixed(2)}</div>
+                    <div style="font-size:0.8rem;opacity:0.75">Rs. ${Number(m.mrp || 0).toFixed(2)}</div>
                     <div>${stockBadgeHtml}</div>
                 </div>`;
             row.addEventListener('mousedown', e => { e.preventDefault(); selectMedicine(m); });
@@ -631,7 +632,7 @@
                     ${isMaster ? '<div style="font-size:0.65rem;color:#60A5FA;font-weight:600;margin-top:1px">Catalog · No stock</div>' : ''}
                 </div>
                 <div style="text-align:right;flex-shrink:0;padding-left:0.5rem">
-                    ${isMaster ? '' : `<div style="font-size:0.8rem;opacity:0.75">₹${Number(m.mrp || 0).toFixed(2)}</div>`}
+                    ${isMaster ? '' : `<div style="font-size:0.8rem;opacity:0.75">Rs. ${Number(m.mrp || 0).toFixed(2)}</div>`}
                     <div>${isMaster ? '' : stockBadgeHtml}</div>
                 </div>`;
             row.addEventListener('mousedown', e => {

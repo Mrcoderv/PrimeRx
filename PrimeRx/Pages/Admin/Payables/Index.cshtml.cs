@@ -119,7 +119,7 @@ public class IndexModel(ApplicationDbContext db, NotificationService notificatio
         if (payable.Status == PayableStatus.Paid)
             await notificationService.MarkActionCompletedAsync("Payable", payable.Id);
 
-        return RedirectToPage(new { message = $"Payment of Rs. {amount:N2} recorded for {payable.SupplierName}." });
+        return RedirectToPage(new { message = $"Payment of {amount.ToRs()} recorded for {payable.SupplierName}." });
     }
 
     public async Task<IActionResult> OnPostMarkPaidAsync(int id)
@@ -133,7 +133,7 @@ public class IndexModel(ApplicationDbContext db, NotificationService notificatio
         await db.SaveChangesAsync();
         await notificationService.MarkActionCompletedAsync("Payable", payable.Id);
 
-        return RedirectToPage(new { message = $"{payable.SupplierName} — Rs. {payable.Amount:N2} marked as fully paid." });
+        return RedirectToPage(new { message = $"{payable.SupplierName} — {payable.Amount.ToRs()} marked as fully paid." });
     }
 
     public async Task<IActionResult> OnPostDeleteAsync(int id)

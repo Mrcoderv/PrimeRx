@@ -570,6 +570,14 @@
   border-bottom: 1px solid var(--rx-border) !important;
   padding: 0.85rem 1rem;
 }
+.billing-page #itemsTable thead th.text-end,
+.billing-page #itemsTable tbody td.text-end {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.billing-page #itemsTable tbody td.text-end input {
+  text-align: right;
+}
 .billing-page #itemsTable tbody td {
   background: transparent !important;
   color: var(--rx-text) !important;

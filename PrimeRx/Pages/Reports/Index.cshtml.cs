@@ -67,7 +67,7 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
 
         MedicineSales = rows;
         ReportTitle = "Medicine-wise Sales (Last 30 Days)";
-        SummaryText = $"Total: Rs. {rows.Sum(r => r.TotalAmount):N2}";
+        SummaryText = $"Total: {rows.Sum(r => r.TotalAmount).ToRs()}";
         return Page();
     }
 
@@ -79,7 +79,7 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         var toDate = to ?? DateTime.Today;
         ProfitLoss = await reportService.GetProfitLossAsync(fromDate, toDate);
         ReportTitle = $"Profit & Loss ({fromDate:dd MMM yyyy} - {toDate:dd MMM yyyy})";
-        SummaryText = ProfitLoss.Profit >= 0 ? $"Net Profit: Rs. {ProfitLoss.Profit:N2}" : $"Net Loss: Rs. {Math.Abs(ProfitLoss.Profit):N2}";
+        SummaryText = ProfitLoss.Profit >= 0 ? $"Net Profit: {ProfitLoss.Profit.ToRs()}" : $"Net Loss: {Math.Abs(ProfitLoss.Profit).ToRs()}";
 
         if (format == "excel")
             return File(reportService.ExportProfitLossToExcel(ProfitLoss), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "profit-loss.xlsx");
@@ -97,7 +97,7 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         ReportTitle = "Due Collection Report";
         var period = from.HasValue ? $" ({from:dd MMM yyyy} - {to:dd MMM yyyy ?? DateTime.Today})" : "";
         ReportTitle += period;
-        SummaryText = $"Outstanding: Rs. {DueReport.OutstandingDue:N2}";
+        SummaryText = $"Outstanding: {DueReport.OutstandingDue.ToRs()}";
 
         if (format == "excel")
             return File(reportService.ExportDueCollectionToExcel(DueReport), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "due-collection.xlsx");
@@ -160,7 +160,7 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
 
         PurchaseReport = report;
         ReportTitle = report.Title;
-        SummaryText = $"Rs. {report.TotalAmount:N2} · {report.PurchaseCount} purchase(s)";
+        SummaryText = $"{report.TotalAmount.ToRs()} · {report.PurchaseCount} purchase(s)";
         return Page();
     }
 
@@ -170,7 +170,7 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         ActiveReport = "supplierprofit";
         SupplierProfit = await reportService.GetSupplierProfitReportAsync();
         ReportTitle = "Supplier-wise Profit Analysis";
-        SummaryText = $"{SupplierProfit.Count} suppliers · Total Cost: Rs. {SupplierProfit.Sum(r => r.TotalCost):N2}";
+        SummaryText = $"{SupplierProfit.Count} suppliers · Total Cost: {SupplierProfit.Sum(r => r.TotalCost).ToRs()}";
 
         if (format == "excel")
             return File(reportService.ExportSupplierProfitToExcel(SupplierProfit), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "supplier-profit.xlsx");
@@ -185,7 +185,7 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         var y = year ?? DateTime.Today.Year;
         MonthlySupplierPurchase = await reportService.GetMonthlyPurchaseBySupplierAsync(y);
         ReportTitle = $"Monthly Purchase by Supplier — {y}";
-        SummaryText = $"Total: Rs. {MonthlySupplierPurchase.Sum(r => r.TotalAmount):N2}";
+        SummaryText = $"Total: {MonthlySupplierPurchase.Sum(r => r.TotalAmount).ToRs()}";
         return Page();
     }
 
@@ -195,7 +195,7 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
         ActiveReport = "supplierpayables";
         SupplierPayables = await reportService.GetSupplierPayableReportAsync();
         ReportTitle = "Payables to Suppliers";
-        SummaryText = $"Pending: Rs. {SupplierPayables.TotalPending:N2}";
+        SummaryText = $"Pending: {SupplierPayables.TotalPending.ToRs()}";
 
         if (format == "excel")
             return File(reportService.ExportSupplierPayablesToExcel(SupplierPayables), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "supplier-payables.xlsx");
@@ -242,7 +242,7 @@ public class IndexModel(ReportService reportService, DashboardService dashboardS
 
         SalesReport = report;
         ReportTitle = report.Title;
-        SummaryText = $"Total: Rs. {report.TotalSales:N2} · {report.BillCount} bills";
+        SummaryText = $"Total: {report.TotalSales.ToRs()} · {report.BillCount} bills";
         return Page();
     }
 

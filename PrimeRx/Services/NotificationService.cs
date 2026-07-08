@@ -131,7 +131,7 @@ public class NotificationService(ApplicationDbContext db)
                     ReferenceType = "Bill",
                     ReferenceId = bill.Id,
                     Title = $"Due Collection — {bill.CustomerName}",
-                    Message = $"Bill #{bill.BillNumber}: Rs. {bill.DueAmount:N2} pending since {bill.BillDate:dd-MMM-yyyy}",
+                    Message = $"Bill #{bill.BillNumber}: {bill.DueAmount.ToRs()} pending since {bill.BillDate:dd-MMM-yyyy}",
                     CreatedAt = now
                 });
             }
@@ -257,7 +257,7 @@ public class NotificationService(ApplicationDbContext db)
                     ReferenceType = "Payable",
                     ReferenceId = p.Id,
                     Title = $"Payable Due — {p.SupplierName}",
-                    Message = $"Rs. {p.PendingAmount:N2} {(overdue ? "OVERDUE" : "due")} by {p.DueDate:dd-MMM-yyyy}" +
+                    Message = $"{p.PendingAmount.ToRs()} {(overdue ? "OVERDUE" : "due")} by {p.DueDate:dd-MMM-yyyy}" +
                               (!string.IsNullOrEmpty(p.InvoiceNo) ? $" (Invoice: {p.InvoiceNo})" : ""),
                     CreatedAt = now
                 });

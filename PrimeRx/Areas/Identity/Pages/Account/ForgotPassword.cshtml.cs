@@ -1,12 +1,15 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using PrimeRx.Services;
 
 namespace PrimeRx.Areas.Identity.Pages.Account;
 
-public class ForgotPasswordModel(UserManager<IdentityUser> userManager, IEmailSender<IdentityUser> emailSender) : PageModel
+public class ForgotPasswordModel(
+    UserManager<IdentityUser> userManager,
+    IEmailSender<IdentityUser> emailSender,
+    OtpStore otpStore) : PageModel
 {
     [BindProperty]
     public InputModel Input { get; set; } = new();
@@ -29,15 +32,9 @@ public class ForgotPasswordModel(UserManager<IdentityUser> userManager, IEmailSe
             return RedirectToPage("./ForgotPasswordConfirmation");
         }
 
-        var code = await userManager.GeneratePasswordResetTokenAsync(user);
-        var callbackUrl = Url.Page(
-            "/Account/ResetPassword",
-            pageHandler: null,
-            values: new { email = Input.Email, code },
-            protocol: Request.Scheme)!;
+        var otp = otpStore.GenerateOtp(Input.Email.ToUpperInvariant());
+        await emailSender.SendPasswordResetCodeAsync(user, Input.Email, otp);
 
-        await emailSender.SendPasswordResetLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
-
-        return RedirectToPage("./ForgotPasswordConfirmation");
+        return RedirectToPage("./VerifyOtp", new { email = Input.Email });
     }
 }

@@ -60,7 +60,7 @@ public class AddModel(ExpenseService expenseService) : PageModel
 
         await expenseService.AddExpenseAsync(expense);
 
-        SuccessMessage = $"Expense of Rs. {Input.Amount:N2} recorded successfully.";
+        SuccessMessage = $"Expense of {Input.Amount.ToRs()} recorded successfully.";
         Input = new InputModel();
         ModelState.Clear();
 

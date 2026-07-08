@@ -1,36 +1,82 @@
 /* ══════════════════════════════════════════════════════════
    PrimeRx — Purchase Entry page styles
-═══════════════════════════════════════════════════════════ */
+════════════════════════════════════════════════════════════ */
 
 /* ── PC (Conversion Charges) input ─────────────────────── */
 .purchase-page #itemsTable .cc-input {
   background: var(--rx-form-bg) !important;
   border-color: var(--rx-border) !important;
   color: var(--rx-form-text) !important;
-  width: 65px;
+  width: 72px;
   text-align: center;
 }
 
-/* ── Tighten table cell padding for purchase ───────────── */
-#itemsTable.purchase-table tbody td {
-  padding: 0.5rem 0.4rem;
+/* ── Number column alignment for purchase ──────────────── */
+.purchase-page #itemsTable thead th.text-end,
+.purchase-page #itemsTable tbody td.text-end {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.purchase-page #itemsTable tbody td.text-end input {
+  text-align: right;
+}
+
+/* ── Table base sizing ─────────────────────────────────── */
+.purchase-page #itemsTable {
+  font-size: 0.92rem;
+}
+.purchase-page #itemsTable thead th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  padding: 0.75rem 0.6rem;
+  white-space: nowrap;
+  background: var(--rx-table-head-bg);
+  color: var(--rx-table-head-color);
+  border-bottom: 2px solid var(--rx-border);
+}
+.purchase-page #itemsTable tbody td {
+  padding: 0.65rem 0.6rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--rx-table-border);
+}
+
+/* ── Input fields inside the table ─────────────────────── */
+.purchase-page #itemsTable .form-control-sm {
+  font-size: 0.88rem;
+  padding: 0.4rem 0.5rem;
+  height: auto;
+  min-height: 34px;
+  background: var(--rx-form-bg) !important;
+  border-color: var(--rx-border) !important;
+  color: var(--rx-form-text) !important;
+}
+.purchase-page #itemsTable .form-control-sm:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 2px rgba(56,189,248,0.2) !important;
+}
+[data-bs-theme="light"] .purchase-page #itemsTable .form-control-sm:focus {
+  border-color: #2563EB !important;
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.15) !important;
 }
 
 /* ── Medicine name with master info ────────────────────── */
 .purchase-med-info {
   line-height: 1.3;
+  min-width: 160px;
 }
 .purchase-med-name {
   font-weight: 600;
   color: var(--rx-heading);
-  font-size: 0.88rem;
+  font-size: 0.92rem;
 }
 .purchase-med-master {
   display: block;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: var(--rx-text-muted);
   line-height: 1.2;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 .purchase-med-master strong {
   color: var(--rx-cyan);
@@ -38,23 +84,45 @@
 }
 
 /* ── Totals rows in table footer ───────────────────────── */
-.purchase-total-row td {
-  padding: 0.3rem 0.8rem !important;
-  font-size: 0.88rem;
+.purchase-page .purchase-total-row td {
+  padding: 0.4rem 0.8rem !important;
+  font-size: 0.9rem;
   border-bottom: none !important;
   background: transparent !important;
 }
-.purchase-grand-total td {
+.purchase-page .purchase-grand-total td {
   font-size: 1.05rem;
-  padding: 0.5rem 0.8rem !important;
+  padding: 0.6rem 0.8rem !important;
   border-top: 2px solid var(--rx-border) !important;
 }
-.purchase-grand-total .text-accent {
-  font-size: 1.1rem;
+.purchase-page .purchase-grand-total .text-accent {
+  font-size: 1.15rem;
 }
-#itemsTable tfoot td {
+.purchase-page #itemsTable tfoot td {
   background: transparent;
   color: var(--rx-text);
+}
+
+/* ── Calculated fields styling ─────────────────────────── */
+.purchase-calc-field {
+  font-weight: 600;
+  color: var(--rx-cyan);
+  font-size: 0.92rem;
+}
+
+/* ── Responsive: horizontal scroll on small screens ────── */
+.purchase-page .table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 1200px) {
+  .purchase-page .table-responsive { overflow-x: auto; }
+}
+@media (max-width: 768px) {
+  .purchase-page #itemsTable thead th,
+  .purchase-page #itemsTable tbody td {
+    white-space: nowrap;
+  }
 }
 
 /* ── Batch info panel popup ────────────────────────────── */
@@ -118,37 +186,21 @@
   text-align: right;
 }
 
-/* ── Calculated fields styling ─────────────────────────── */
-.purchase-calc-field {
-  font-weight: 600;
-  color: var(--rx-cyan);
-}
-
-/* ── Smart keyboard focus highlight ────────────────────── */
-#itemsTable .form-control-sm:focus {
-  border-color: #38bdf8 !important;
-  box-shadow: 0 0 0 2px rgba(56,189,248,0.2) !important;
-}
-[data-bs-theme="light"] #itemsTable .form-control-sm:focus {
-  border-color: #2563EB !important;
-  box-shadow: 0 0 0 2px rgba(37,99,235,0.15) !important;
-}
-
 /* ── Remove button ─────────────────────────────────────── */
-#itemsTable .btn-remove-item {
-  width: 28px;
-  height: 28px;
+.purchase-page #itemsTable .btn-remove-item {
+  width: 32px;
+  height: 32px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   line-height: 1;
   opacity: 0.5;
   transition: opacity 0.15s;
 }
-#itemsTable .btn-remove-item:hover {
+.purchase-page #itemsTable .btn-remove-item:hover {
   opacity: 1;
 }
 

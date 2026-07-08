@@ -79,7 +79,7 @@
     <div class="col-6 col-lg-3">
         <div class="stat-card stat-danger">
             <div class="stat-label">Grand Total (Pending)</div>
-            <div class="stat-value">Rs. @Model.Report.GrandTotal.ToString("N2")</div>
+            <div class="stat-value">@(Model.Report.GrandTotal.ToRs())</div>
             <div class="stat-foot">Total outstanding</div>
         </div>
     </div>
@@ -162,7 +162,7 @@
                             <td class="text-end fw-bold">Grand Total</td>
                             <td></td>
                             <td class="text-end fw-bold" style="color:var(--danger); font-size:1.05rem;">
-                                Rs. @Model.Report.GrandTotal.ToString("N2")
+                                @(Model.Report.GrandTotal.ToRs())
                             </td>
                         </tr>
                     </tfoot>

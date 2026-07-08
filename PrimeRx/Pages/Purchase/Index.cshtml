@@ -51,7 +51,7 @@
 <div class="panel-card">
     <div class="panel-header d-flex justify-content-between align-items-center">
         <span>@Model.Purchases.Count purchase(s)</span>
-        <span class="fw-bold">Total: Rs. @Model.Purchases.Sum(p => p.TotalAmount).ToString("N2")</span>
+        <span class="fw-bold">Total: @Model.Purchases.Sum(p => p.TotalAmount).ToRs()</span>
     </div>
     <div class="table-responsive">
         <table class="table table-pro mb-0">
@@ -85,7 +85,7 @@
                         <td class="text-center">
                             <span class="badge bg-secondary">@p.Items.Count</span>
                         </td>
-                        <td class="text-end fw-semibold">Rs. @p.TotalAmount.ToString("N2")</td>
+                        <td class="text-end fw-semibold">@(p.TotalAmount.ToRs())</td>
                         <td><small class="text-muted">@(p.CreatedBy ?? "—")</small></td>
                         <td>
                             <div class="d-flex gap-1">
@@ -96,6 +96,11 @@
                                         onclick="confirmDelete(@p.Id, '@p.SupplierName.Replace("'","\\'")', @p.Items.Count)"
                                         title="Delete">
                                     <i class="bi bi-trash"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="ReturnModal.open('@p.SupplierName.Replace("'","\\'")')"
+                                        title="Return to Supplier">
+                                    <i class="bi bi-arrow-return-left"></i>
                                 </button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary"
                                         data-bs-toggle="collapse" data-bs-target="#items-@p.Id"
@@ -137,9 +142,9 @@
                                                     else { <span class="text-muted">—</span> }
                                                 </td>
                                                 <td class="text-center">@item.Quantity</td>
-                                                <td class="text-end">Rs. @item.PurchasePrice.ToString("N2")</td>
-                                                <td class="text-end">Rs. @item.MRP.ToString("N2")</td>
-                                                <td class="text-end fw-semibold">Rs. @item.Amount.ToString("N2")</td>
+                                                <td class="text-end">@(item.PurchasePrice.ToRs())</td>
+                                                <td class="text-end">@(item.MRP.ToRs())</td>
+                                                <td class="text-end fw-semibold">@(item.Amount.ToRs())</td>
                                             </tr>
                                         }
                                     </tbody>
@@ -156,6 +161,8 @@
         </table>
     </div>
 </div>
+
+<partial name="_ReturnToSupplierModal" />
 
 <!-- Delete confirm modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
@@ -178,7 +185,12 @@
     </div>
 </div>
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/return-modal.css" asp-append-version="true" />
+}
+
 @section Scripts {
+<script src="~/js/return-modal.js" asp-append-version="true"></script>
 <script>
 function confirmDelete(id, supplier, itemCount) {
     document.getElementById('deleteId').value = id;

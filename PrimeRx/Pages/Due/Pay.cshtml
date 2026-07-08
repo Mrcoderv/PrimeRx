@@ -29,9 +29,9 @@ else
                     <p><strong>Bill:</strong> @Model.Bill.BillNumber</p>
                     <p><strong>Customer:</strong> @Model.Bill.CustomerName</p>
                     <p><strong>Phone:</strong> @Model.Bill.CustomerPhone</p>
-                    <p><strong>Total:</strong> @Model.Bill.FinalAmount.ToString("N2")</p>
-                    <p><strong>Paid:</strong> @Model.Bill.PaidAmount.ToString("N2")</p>
-                    <p class="text-danger"><strong>Due:</strong> @Model.Bill.DueAmount.ToString("N2")</p>
+                    <p><strong>Total:</strong> @Model.Bill.FinalAmount.ToRs()</p>
+                    <p><strong>Paid:</strong> @Model.Bill.PaidAmount.ToRs()</p>
+                    <p class="text-danger"><strong>Due:</strong> @Model.Bill.DueAmount.ToRs()</p>
                 </div>
             </div>
         </div>

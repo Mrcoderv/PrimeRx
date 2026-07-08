@@ -1,0 +1,273 @@
+.bill-items-page .page-header {
+    margin-bottom: 1.5rem;
+}
+
+.bill-items-page .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--rx-heading);
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.bill-items-page .page-subtitle {
+    color: var(--rx-text-muted);
+    margin: 0.2rem 0 0;
+    font-size: 0.88rem;
+}
+
+.bill-items-card {
+    background: var(--rx-card-bg);
+    border: 1px solid var(--rx-border);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+}
+
+.bill-items-card .card-header {
+    background: rgba(255,255,255,0.025);
+    border-bottom: 1px solid var(--rx-border);
+    padding: 1.1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.bill-items-card .card-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--rx-heading);
+    letter-spacing: -0.01em;
+}
+
+.bill-items-card .card-header .header-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--rx-blue-400);
+    flex-shrink: 0;
+}
+
+.bill-items-card .card-body {
+    padding: 0;
+}
+
+.bill-items-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.bill-items-table thead th {
+    background: rgba(255,255,255,0.025);
+    color: var(--rx-table-head-color);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid var(--rx-border);
+    white-space: nowrap;
+    user-select: none;
+}
+
+.bill-items-table thead th:not(:last-child) {
+    border-right: 1px solid rgba(255,255,255,0.03);
+}
+
+.bill-items-table tbody td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--rx-table-border);
+    color: var(--rx-text);
+    font-size: 0.92rem;
+    vertical-align: middle;
+}
+
+.bill-items-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.bill-items-table tbody tr:hover td {
+    background: var(--rx-table-hover);
+}
+
+.bill-items-table tbody tr:not(:last-child) td {
+    border-bottom: 1px solid var(--rx-table-border);
+}
+
+.col-medicine {
+    width: 38%;
+    min-width: 240px;
+}
+
+.col-rate,
+.col-qty,
+.col-disc-pct,
+.col-disc-amt {
+    width: 10%;
+    min-width: 80px;
+}
+
+.col-amount {
+    width: 12%;
+    min-width: 100px;
+}
+
+.medicine-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.medicine-name {
+    font-weight: 600;
+    color: var(--rx-heading);
+    font-size: 0.95rem;
+    line-height: 1.3;
+}
+
+.medicine-stock-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.stock-label {
+    font-size: 0.78rem;
+    color: var(--rx-text-muted);
+}
+
+.stock-value {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--rx-text-success);
+}
+
+.auto-batch-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2em 0.65em;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: rgba(37,99,235,0.1);
+    color: var(--rx-blue-400);
+    border: 1px solid rgba(37,99,235,0.2);
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s, border-color 0.12s;
+    line-height: 1.5;
+    font-family: inherit;
+}
+
+.auto-batch-btn:hover {
+    background: rgba(37,99,235,0.18);
+    border-color: rgba(37,99,235,0.35);
+}
+
+.auto-batch-btn svg {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+}
+
+.num-cell {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+
+.num-cell .num-value {
+    font-weight: 600;
+    color: var(--rx-heading);
+    font-size: 0.92rem;
+}
+
+.num-cell .num-muted {
+    font-weight: 400;
+    color: var(--rx-text-muted);
+}
+
+.amount-cell {
+    text-align: right;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--rx-blue-400);
+    font-variant-numeric: tabular-nums;
+}
+
+.bill-items-totals {
+    background: rgba(255,255,255,0.015);
+    border-top: 1px solid var(--rx-border);
+    padding: 1.1rem 1.5rem;
+}
+
+.totals-inner {
+    max-width: 320px;
+    margin-left: auto;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.3rem 0;
+    font-size: 0.92rem;
+    color: var(--rx-text-muted);
+}
+
+.total-row .total-label {
+    font-weight: 500;
+}
+
+.total-row .total-value {
+    font-weight: 600;
+    color: var(--rx-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.total-row.total-discount .total-label,
+.total-row.total-discount .total-value {
+    color: var(--rx-text-danger);
+}
+
+.total-row.total-net {
+    padding-top: 0.7rem;
+    margin-top: 0.4rem;
+    border-top: 1px solid var(--rx-border);
+}
+
+.total-row.total-net .total-label {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--rx-heading);
+}
+
+.total-row.total-net .total-value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--rx-heading);
+    letter-spacing: -0.01em;
+}
+
+@media (max-width: 768px) {
+    .bill-items-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .bill-items-table thead th,
+    .bill-items-table tbody td {
+        padding: 0.75rem 0.85rem;
+    }
+
+    .col-medicine {
+        min-width: 200px;
+    }
+
+    .totals-inner {
+        max-width: 100%;
+    }
+}

@@ -73,7 +73,7 @@ public class CreateModel(
             var result = await returnService.CreateAsync(request, user?.UserName);
 
             return RedirectToPage("/Purchase/Return/Index",
-                new { msg = $"Return recorded — Rs. {result.TotalAmount:N2} credit note issued for {result.SupplierName}." });
+                new { msg = $"Return recorded — {result.TotalAmount.ToRs()} credit note issued for {result.SupplierName}." });
         }
         catch (Exception ex)
         {

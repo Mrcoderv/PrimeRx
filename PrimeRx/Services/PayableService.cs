@@ -188,7 +188,7 @@ public class PayableService(ApplicationDbContext context)
                     footer.Item().PaddingTop(4).AlignRight().Text(text =>
                     {
                         text.Span("Grand Total: ").Bold().FontSize(10);
-                        text.Span($"Rs. {report.GrandTotal:N2}").Bold().FontSize(11);
+                        text.Span($"{report.GrandTotal.ToRs()}").Bold().FontSize(11);
                     });
                     footer.Item().PaddingTop(8).AlignCenter().Text("Powered by Prime LogicTech")
                         .FontSize(8).FontColor(Colors.Grey.Darken1);

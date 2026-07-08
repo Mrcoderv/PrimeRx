@@ -33,7 +33,7 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Today's Sales</div>
-                <div class="stat-value">Rs. @Model.Summary.TodaySales.ToString("N0")</div>
+                <div class="stat-value">@(Model.Summary.TodaySales.ToRs())</div>
                 <div class="stat-footer">@Model.Summary.TodayBills bills</div>
             </div>
         </div>
@@ -43,7 +43,7 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Discount Today</div>
-                <div class="stat-value">Rs. @Model.Summary.TodayDiscount.ToString("N0")</div>
+                <div class="stat-value">@(Model.Summary.TodayDiscount.ToRs())</div>
                 <div class="stat-footer">given on today's bills</div>
             </div>
         </div>
@@ -53,7 +53,7 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Today's Expense</div>
-                <div class="stat-value">Rs. @Model.Summary.TodayExpenses.ToString("N0")</div>
+                <div class="stat-value">@(Model.Summary.TodayExpenses.ToRs())</div>
                 <div class="stat-footer">operational costs</div>
             </div>
         </div>
@@ -63,7 +63,7 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Today's Profit</div>
-                <div class="stat-value">Rs. @Model.Summary.TodayProfit.ToString("N0")</div>
+                <div class="stat-value">@(Model.Summary.TodayProfit.ToRs())</div>
                 <div class="stat-footer">net earnings</div>
             </div>
         </div>
@@ -77,7 +77,7 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Monthly Sales</div>
-                <div class="stat-value">Rs. @Model.Summary.MonthSales.ToString("N0")</div>
+                <div class="stat-value">@(Model.Summary.MonthSales.ToRs())</div>
                 <div class="stat-footer">@Model.Summary.MonthBills bills this month</div>
             </div>
         </div>
@@ -87,7 +87,7 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Monthly Discount</div>
-                <div class="stat-value">Rs. @Model.Summary.MonthDiscount.ToString("N0")</div>
+                <div class="stat-value">@(Model.Summary.MonthDiscount.ToRs())</div>
                 <div class="stat-footer">across @Model.Summary.MonthBills bills</div>
             </div>
         </div>
@@ -97,7 +97,7 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Monthly Expenses</div>
-                <div class="stat-value">Rs. @Model.Summary.MonthExpenses.ToString("N0")</div>
+                <div class="stat-value">@(Model.Summary.MonthExpenses.ToRs())</div>
                 <div class="stat-footer">this month</div>
             </div>
         </div>
@@ -107,7 +107,7 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Monthly Profit</div>
-                <div class="stat-value">Rs. @Model.Summary.MonthProfit.ToString("N0")</div>
+                <div class="stat-value">@(Model.Summary.MonthProfit.ToRs())</div>
                 <div class="stat-footer">net earnings</div>
             </div>
         </div>
@@ -160,7 +160,7 @@
                             <tr>
                                 <td><strong>@bill.BillNumber</strong></td>
                                 <td>@bill.CustomerName</td>
-                                <td>Rs. @bill.FinalAmount.ToString("N2")</td>
+                                <td>@(bill.FinalAmount.ToRs())</td>
                                 <td>
                                     <span class="badge-status @(bill.PaymentStatus == "Paid" ? "paid" : bill.PaymentStatus == "Due" ? "due" : "partial")">
                                         @bill.PaymentStatus
@@ -215,7 +215,7 @@
                         {
                             <div class="alert-item warning">
                                 <i class="bi bi-wallet2"></i>
-                                <span><strong>Rs. @Model.Summary.OutstandingDue.ToString("N0")</strong> due pending</span>
+                                <span><strong>@(Model.Summary.OutstandingDue.ToRs())</strong> due pending</span>
                             </div>
                         }
                         @if (Model.Summary.LowStockCount > 0)

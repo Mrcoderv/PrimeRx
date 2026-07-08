@@ -29,13 +29,13 @@
     <div class="col-md-4">
         <div class="panel-card p-3">
             <div class="text-muted small">Returned Value</div>
-            <div class="fs-4 fw-bold">Rs. @Model.Returns.Sum(r => r.TotalAmount).ToString("N2")</div>
+            <div class="fs-4 fw-bold">@Model.Returns.Sum(r => r.TotalAmount).ToRs()</div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="panel-card p-3">
             <div class="text-muted small">Available Credit (all suppliers)</div>
-            <div class="fs-4 fw-bold text-success">Rs. @Model.CreditNotes.Sum(c => c.AvailableAmount).ToString("N2")</div>
+            <div class="fs-4 fw-bold text-success">@Model.CreditNotes.Sum(c => c.AvailableAmount).ToRs()</div>
         </div>
     </div>
 </div>
@@ -68,7 +68,7 @@
                         <td>@(r.InvoiceNumber ?? "—")</td>
                         <td><span class="badge bg-secondary">@PrimeRx.Models.PurchaseReturnReasons.Display(r.Reason)</span></td>
                         <td class="text-center">@r.Items.Count</td>
-                        <td class="text-end fw-semibold">Rs. @r.TotalAmount.ToString("N2")</td>
+                        <td class="text-end fw-semibold">@(r.TotalAmount.ToRs())</td>
                         <td><small class="text-muted">@(r.CreatedBy ?? "—")</small></td>
                     </tr>
                 }
@@ -101,9 +101,9 @@
                     <tr>
                         <td>@c.CreatedAt.ToString("dd MMM yyyy")</td>
                         <td class="fw-semibold">@c.SupplierName</td>
-                        <td class="text-end">Rs. @c.Amount.ToString("N2")</td>
-                        <td class="text-end">Rs. @c.UsedAmount.ToString("N2")</td>
-                        <td class="text-end fw-semibold text-success">Rs. @c.AvailableAmount.ToString("N2")</td>
+                        <td class="text-end">@(c.Amount.ToRs())</td>
+                        <td class="text-end">@(c.UsedAmount.ToRs())</td>
+                        <td class="text-end fw-semibold text-success">@(c.AvailableAmount.ToRs())</td>
                         <td>
                             @{
                                 var badgeClass = c.Status switch

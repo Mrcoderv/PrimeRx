@@ -16,21 +16,21 @@
     <div class="col-6 col-lg-3">
         <div class="stat-card stat-primary">
             <div class="stat-label">Today Sales</div>
-            <div class="stat-value">Rs. @Model.Stats.TodaySales.ToString("N0")</div>
+            <div class="stat-value">@(Model.Stats.TodaySales.ToRs())</div>
             <div class="stat-foot">@Model.Stats.TodayBills bills</div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
         <div class="stat-card stat-info">
             <div class="stat-label">Month Sales</div>
-            <div class="stat-value">Rs. @Model.Stats.MonthSales.ToString("N0")</div>
+            <div class="stat-value">@(Model.Stats.MonthSales.ToRs())</div>
             <div class="stat-foot">This month</div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
         <div class="stat-card stat-warning">
             <div class="stat-label">Outstanding Due</div>
-            <div class="stat-value">Rs. @Model.Stats.OutstandingDue.ToString("N0")</div>
+            <div class="stat-value">@(Model.Stats.OutstandingDue.ToRs())</div>
             <div class="stat-foot">Pending collection</div>
         </div>
     </div>
@@ -308,7 +308,7 @@
                                         <td>@b.BillDate.ToString("dd-MM-yyyy HH:mm")</td>
                                         <td>@b.CustomerName</td>
                                         <td>@b.CustomerPhone</td>
-                                        <td class="amount-cell">Rs. @b.FinalAmount.ToString("N2")</td>
+                                        <td class="amount-cell">@(b.FinalAmount.ToRs())</td>
                                         <td>@b.PaymentMethod</td>
                                         <td><span class="badge-status @(b.PaymentStatus == "Paid" ? "paid" : b.PaymentStatus == "Due" ? "due" : "partial")">@b.PaymentStatus</span></td>
                                     </tr>
@@ -317,7 +317,7 @@
                             <tfoot>
                                 <tr class="report-total-row">
                                     <td colspan="4" class="text-end"><strong>Total</strong></td>
-                                    <td class="amount-cell"><strong>Rs. @Model.SalesReport.TotalSales.ToString("N2")</strong></td>
+                                    <td class="amount-cell"><strong>@(Model.SalesReport.TotalSales.ToRs())</strong></td>
                                     <td colspan="2"><strong>@Model.SalesReport.BillCount bills</strong></td>
                                 </tr>
                             </tfoot>
@@ -338,7 +338,7 @@
                                     <td>@i</td>
                                     <td>@r.MedicineName</td>
                                     <td>@r.TotalQuantity</td>
-                                    <td class="amount-cell">Rs. @r.TotalAmount.ToString("N2")</td>
+                                    <td class="amount-cell">@(r.TotalAmount.ToRs())</td>
                                 </tr>
                                 i++;
                             }
@@ -350,10 +350,10 @@
             {
                 <div class="panel-body">
                     <div class="row g-3">
-                        <div class="col-md-3"><div class="pnl-box"><div class="pnl-label">Revenue</div><div class="pnl-value">Rs. @Model.ProfitLoss.Revenue.ToString("N2")</div></div></div>
-                        <div class="col-md-3"><div class="pnl-box"><div class="pnl-label">Cost of Goods</div><div class="pnl-value">Rs. @Model.ProfitLoss.Cost.ToString("N2")</div></div></div>
-                        <div class="col-md-3"><div class="pnl-box"><div class="pnl-label">Expenses</div><div class="pnl-value">Rs. @Model.ProfitLoss.Expenses.ToString("N2")</div></div></div>
-                        <div class="col-md-3"><div class="pnl-box pnl-profit"><div class="pnl-label">Net Profit</div><div class="pnl-value @(Model.ProfitLoss.Profit >= 0 ? "positive" : "negative")">Rs. @Model.ProfitLoss.Profit.ToString("N2")</div></div></div>
+                        <div class="col-md-3"><div class="pnl-box"><div class="pnl-label">Revenue</div><div class="pnl-value">@(Model.ProfitLoss.Revenue.ToRs())</div></div></div>
+                        <div class="col-md-3"><div class="pnl-box"><div class="pnl-label">Cost of Goods</div><div class="pnl-value">@(Model.ProfitLoss.Cost.ToRs())</div></div></div>
+                        <div class="col-md-3"><div class="pnl-box"><div class="pnl-label">Expenses</div><div class="pnl-value">@(Model.ProfitLoss.Expenses.ToRs())</div></div></div>
+                        <div class="col-md-3"><div class="pnl-box pnl-profit"><div class="pnl-label">Net Profit</div><div class="pnl-value @(Model.ProfitLoss.Profit >= 0 ? "positive" : "negative")">@(Model.ProfitLoss.Profit.ToRs())</div></div></div>
                         <div class="col-md-3"><div class="pnl-box"><div class="pnl-label">Bills</div><div class="pnl-value">@Model.ProfitLoss.BillCount</div></div></div>
                     </div>
                 </div>
@@ -362,8 +362,8 @@
             {
                 <div class="panel-body">
                     <div class="row g-3">
-                        <div class="col-md-6"><div class="pnl-box pnl-profit"><div class="pnl-label">Total Collected</div><div class="pnl-value positive">Rs. @Model.DueReport.TotalCollected.ToString("N2")</div></div></div>
-                        <div class="col-md-6"><div class="pnl-box"><div class="pnl-label">Outstanding Due</div><div class="pnl-value negative">Rs. @Model.DueReport.OutstandingDue.ToString("N2")</div></div></div>
+                        <div class="col-md-6"><div class="pnl-box pnl-profit"><div class="pnl-label">Total Collected</div><div class="pnl-value positive">@(Model.DueReport.TotalCollected.ToRs())</div></div></div>
+                        <div class="col-md-6"><div class="pnl-box"><div class="pnl-label">Outstanding Due</div><div class="pnl-value negative">@(Model.DueReport.OutstandingDue.ToRs())</div></div></div>
                     </div>
                 </div>
             }
@@ -378,8 +378,8 @@
                                 <tr>
                                     <td>@m.Name</td>
                                     <td>@m.StockQuantity</td>
-                                    <td class="amount-cell">Rs. @m.MRP.ToString("N2")</td>
-                                    <td class="amount-cell">Rs. @m.PurchasePrice.ToString("N2")</td>
+                                    <td class="amount-cell">@(m.MRP.ToRs())</td>
+                                    <td class="amount-cell">@(m.PurchasePrice.ToRs())</td>
                                     <td>@(m.ExpiryDate?.ToString("dd-MM-yyyy") ?? "—")</td>
                                 </tr>
                             }
@@ -413,7 +413,7 @@
                         <div class="col-6 col-md-3">
                             <div class="pnl-box">
                                 <div class="pnl-label">Total Spent</div>
-                                <div class="pnl-value">Rs. @Model.PurchaseReport.TotalAmount.ToString("N2")</div>
+                                <div class="pnl-value">@(Model.PurchaseReport.TotalAmount.ToRs())</div>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
@@ -453,7 +453,7 @@
                                         <td>@si</td>
                                         <td class="fw-semibold">@s.SupplierName</td>
                                         <td class="text-center"><span class="badge bg-secondary">@s.PurchaseCount</span></td>
-                                        <td class="text-end amount-cell">Rs. @s.TotalSpend.ToString("N2")</td>
+                                        <td class="text-end amount-cell">@(s.TotalSpend.ToRs())</td>
                                     </tr>
                                     si++;
                                 }
@@ -478,7 +478,7 @@
                                         <td>@mi</td>
                                         <td>@m.MedicineName</td>
                                         <td class="text-center">@m.TotalQuantity</td>
-                                        <td class="text-end amount-cell">Rs. @m.TotalSpend.ToString("N2")</td>
+                                        <td class="text-end amount-cell">@(m.TotalSpend.ToRs())</td>
                                     </tr>
                                     mi++;
                                 }
@@ -503,7 +503,7 @@
                                         <td>@(p.InvoiceNumber ?? "—")</td>
                                         <td class="fw-semibold">@p.SupplierName</td>
                                         <td class="text-center"><span class="badge bg-secondary">@p.Items.Count</span></td>
-                                        <td class="text-end amount-cell">Rs. @p.TotalAmount.ToString("N2")</td>
+                                        <td class="text-end amount-cell">@(p.TotalAmount.ToRs())</td>
                                         <td><small class="text-muted">@(p.CreatedBy ?? "—")</small></td>
                                     </tr>
                                 }
@@ -511,7 +511,7 @@
                             <tfoot>
                                 <tr class="report-total-row">
                                     <td colspan="4" class="text-end"><strong>Total</strong></td>
-                                    <td class="text-end amount-cell"><strong>Rs. @Model.PurchaseReport.TotalAmount.ToString("N2")</strong></td>
+                                    <td class="text-end amount-cell"><strong>@(Model.PurchaseReport.TotalAmount.ToRs())</strong></td>
                                     <td></td>
                                 </tr>
                             </tfoot>
@@ -543,19 +543,19 @@
                             <div class="col-6 col-md-3">
                                 <div class="pnl-box">
                                     <div class="pnl-label">Total Purchase Cost</div>
-                                    <div class="pnl-value">Rs. @Model.SupplierProfit.Sum(r => r.TotalCost).ToString("N0")</div>
+                                    <div class="pnl-value">@Model.SupplierProfit.Sum(r => r.TotalCost).ToRs()</div>
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">
                                 <div class="pnl-box">
                                     <div class="pnl-label">Total MRP Value</div>
-                                    <div class="pnl-value">Rs. @Model.SupplierProfit.Sum(r => r.TotalMrpValue).ToString("N0")</div>
+                                    <div class="pnl-value">@Model.SupplierProfit.Sum(r => r.TotalMrpValue).ToRs()</div>
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">
                                 <div class="pnl-box pnl-profit">
                                     <div class="pnl-label">Potential Profit</div>
-                                    <div class="pnl-value positive">Rs. @Model.SupplierProfit.Sum(r => r.PotentialProfit).ToString("N0")</div>
+                                    <div class="pnl-value positive">@Model.SupplierProfit.Sum(r => r.PotentialProfit).ToRs()</div>
                                 </div>
                             </div>
                         </div>
@@ -583,9 +583,9 @@
                                         <td class="fw-semibold">@r.SupplierName</td>
                                         <td class="text-center"><span class="badge bg-secondary">@r.PurchaseCount</span></td>
                                         <td class="text-center">@r.TotalUnits</td>
-                                        <td class="text-end amount-cell">Rs. @r.TotalCost.ToString("N2")</td>
-                                        <td class="text-end amount-cell">Rs. @r.TotalMrpValue.ToString("N2")</td>
-                                        <td class="text-end amount-cell positive">Rs. @r.PotentialProfit.ToString("N2")</td>
+                                        <td class="text-end amount-cell">@(r.TotalCost.ToRs())</td>
+                                        <td class="text-end amount-cell">@(r.TotalMrpValue.ToRs())</td>
+                                        <td class="text-end amount-cell positive">@(r.PotentialProfit.ToRs())</td>
                                         <td class="text-end"><span class="badge @(r.MarginPercent >= 20 ? "bg-success" : r.MarginPercent >= 10 ? "bg-warning text-dark" : "bg-danger")">@r.MarginPercent.ToString("N1")%</span></td>
                                     </tr>
                                     spi++;
@@ -630,7 +630,7 @@
                                             var cell = Model.MonthlySupplierPurchase.FirstOrDefault(r => r.Month == mo && r.SupplierName == s);
                                             <td class="text-end amount-cell">@(cell != null ? "Rs. " + cell.TotalAmount.ToString("N0") : "—")</td>
                                         }
-                                        <td class="text-end fw-bold amount-cell">Rs. @rowTotal.ToString("N0")</td>
+                                        <td class="text-end fw-bold amount-cell">@(rowTotal.ToRs())</td>
                                     </tr>
                                 }
                             </tbody>
@@ -640,9 +640,9 @@
                                     @foreach (var s in suppliers)
                                     {
                                         var colTotal = Model.MonthlySupplierPurchase.Where(r => r.SupplierName == s).Sum(r => r.TotalAmount);
-                                        <td class="text-end amount-cell"><strong>Rs. @colTotal.ToString("N0")</strong></td>
+                                        <td class="text-end amount-cell"><strong>@(colTotal.ToRs())</strong></td>
                                     }
-                                    <td class="text-end amount-cell"><strong>Rs. @Model.MonthlySupplierPurchase.Sum(r => r.TotalAmount).ToString("N0")</strong></td>
+                                    <td class="text-end amount-cell"><strong>@Model.MonthlySupplierPurchase.Sum(r => r.TotalAmount).ToRs()</strong></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -655,13 +655,13 @@
                 <div class="panel-body">
                     <div class="row g-3 mb-4">
                         <div class="col-6 col-md-3">
-                            <div class="pnl-box"><div class="pnl-label">Total Payable</div><div class="pnl-value">Rs. @Model.SupplierPayables.TotalAmount.ToString("N0")</div></div>
+                            <div class="pnl-box"><div class="pnl-label">Total Payable</div><div class="pnl-value">@(Model.SupplierPayables.TotalAmount.ToRs())</div></div>
                         </div>
                         <div class="col-6 col-md-3">
-                            <div class="pnl-box pnl-profit"><div class="pnl-label">Total Paid</div><div class="pnl-value positive">Rs. @Model.SupplierPayables.TotalPaid.ToString("N0")</div></div>
+                            <div class="pnl-box pnl-profit"><div class="pnl-label">Total Paid</div><div class="pnl-value positive">@(Model.SupplierPayables.TotalPaid.ToRs())</div></div>
                         </div>
                         <div class="col-6 col-md-3">
-                            <div class="pnl-box"><div class="pnl-label">Pending</div><div class="pnl-value negative">Rs. @Model.SupplierPayables.TotalPending.ToString("N0")</div></div>
+                            <div class="pnl-box"><div class="pnl-label">Pending</div><div class="pnl-value negative">@(Model.SupplierPayables.TotalPending.ToRs())</div></div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="pnl-box"><div class="pnl-label">Overdue</div><div class="pnl-value @(Model.SupplierPayables.OverdueCount > 0 ? "negative" : "")">@Model.SupplierPayables.OverdueCount entries</div></div>
@@ -688,9 +688,9 @@
                                     <tr>
                                         <td class="fw-semibold">@s.SupplierName</td>
                                         <td class="text-center"><span class="badge bg-secondary">@s.PayableCount</span></td>
-                                        <td class="text-end amount-cell">Rs. @s.TotalAmount.ToString("N2")</td>
-                                        <td class="text-end amount-cell positive">Rs. @s.PaidAmount.ToString("N2")</td>
-                                        <td class="text-end amount-cell @(s.PendingAmount > 0 ? "negative" : "")">Rs. @s.PendingAmount.ToString("N2")</td>
+                                        <td class="text-end amount-cell">@(s.TotalAmount.ToRs())</td>
+                                        <td class="text-end amount-cell positive">@(s.PaidAmount.ToRs())</td>
+                                        <td class="text-end amount-cell @(s.PendingAmount > 0 ? "negative" : "")">@(s.PendingAmount.ToRs())</td>
                                         <td class="text-center">
                                             @if (s.OverdueCount > 0)
                                             {

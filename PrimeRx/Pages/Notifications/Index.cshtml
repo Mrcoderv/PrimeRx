@@ -156,7 +156,7 @@ else
                                     <small class="text-muted">@bill.CustomerPhone</small>
                                 </td>
                                 <td>@bill.BillDate.ToString("dd-MM-yyyy")</td>
-                                <td class="text-danger fw-bold">Rs. @bill.DueAmount.ToString("N2")</td>
+                                <td class="text-danger fw-bold">@(bill.DueAmount.ToRs())</td>
                                 <td>
                                     <a asp-page="/Due/Pay" asp-route-id="@bill.Id" class="btn btn-sm btn-success">Collect</a>
                                 </td>

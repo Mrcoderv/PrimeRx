@@ -604,6 +604,17 @@ body.app-body {
   color: #F1F5F9;
 }
 .form-control::placeholder { color: var(--rx-form-placeholder); }
+/* Ensure number inputs always show their value */
+input[type="number"].form-control,
+input[type="number"].form-control-sm {
+  color: var(--rx-form-text);
+  -moz-appearance: textfield;
+}
+input[type="number"].form-control::-webkit-inner-spin-button,
+input[type="number"].form-control::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 .form-label { color: var(--rx-label-color); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.4rem; }
 .form-text { color: var(--rx-text-muted); }
 
@@ -870,10 +881,10 @@ a:hover { color: var(--rx-link-hover); }
   --z-offcanvas: 1040;
   --z-modal-backdrop: 1050;
   --z-modal: 1060;
-  --z-popup: 1070;
-  --z-batch-picker: 1075;
-  --z-tooltip: 1080;
-  --z-toast: 1090;
+  --z-popup: 9999;
+  --z-batch-picker: 9998;
+  --z-tooltip: 10000;
+  --z-toast: 10010;
   --z-search-overlay: 99999;
 }
 
@@ -885,9 +896,25 @@ a:hover { color: var(--rx-link-hover); }
 
 /* Fix for Tom Select / any autocomplete dropdowns */
 .ts-dropdown,
+.ts-wrapper .ts-dropdown,
+.tom-select .ts-dropdown,
 .select2-dropdown,
 .ui-autocomplete,
-.autocomplete-suggestions { z-index: var(--z-popup) !important; }
+.autocomplete-suggestions,
+.search-results-dropdown { z-index: var(--z-popup) !important; }
+
+/* Search container ensures proper stacking context */
+.search-container,
+.medicine-search-wrapper {
+    position: relative;
+    z-index: 1000;
+}
+
+/* Higher priority for purchase and billing pages */
+.purchase-page .ts-wrapper .ts-dropdown,
+.billing-page .ts-wrapper .ts-dropdown {
+    z-index: 10500 !important;
+}
 
 /* Ageing due section and due-related tables */
 .ageing-table-wrap,

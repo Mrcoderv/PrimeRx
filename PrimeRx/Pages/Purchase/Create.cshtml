@@ -34,22 +34,22 @@
                            aria-expanded="false"
                            aria-autocomplete="list"
                            aria-controls="medicinePopup">
-                    <div id="medicinePopup"
-                         class="medicine-popup"
-                         role="listbox"
-                         style="display:none;">
-                        <div class="medicine-popup-header">
-                            <span style="width:55%">MEDICINE</span>
-                            <span style="width:25%">PRICE</span>
-                            <span style="width:20%">STOCK</span>
-                        </div>
-                        <div class="medicine-popup-body" id="medicinePopupBody"></div>
-                        <div class="medicine-popup-footer">
-                            <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> Navigate</span>
-                            <span><kbd>Enter</kbd> Select</span>
-                            <span><kbd>Esc</kbd> Close</span>
-                        </div>
-                    </div>
+                </div>
+            </div>
+            <div id="medicinePopup"
+                 class="medicine-popup"
+                 role="listbox"
+                 style="display:none;">
+                <div class="medicine-popup-header">
+                    <span style="width:55%">MEDICINE</span>
+                    <span style="width:25%">PRICE</span>
+                    <span style="width:20%">STOCK</span>
+                </div>
+                <div class="medicine-popup-body" id="medicinePopupBody"></div>
+                <div class="medicine-popup-footer">
+                    <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> Navigate</span>
+                    <span><kbd>Enter</kbd> Select</span>
+                    <span><kbd>Esc</kbd> Close</span>
                 </div>
             </div>
 
@@ -59,17 +59,17 @@
                     <table class="table table-pro mb-0" id="itemsTable">
                         <thead>
                             <tr>
-                                <th>Medicine</th>
-                                <th style="width:90px">Batch #</th>
-                                <th style="width:105px">Expiry</th>
-                                <th style="width:70px">Qty</th>
-                                <th style="width:65px" title="Free/Bonus units">Free</th>
-                                <th style="width:95px">Rate</th>
-                                <th style="width:65px" title="Discount %">Disc%</th>
-                                <th style="width:70px">CC</th>
-                                <th style="width:85px">MRP</th>
-                                <th style="width:85px">Amount</th>
-                                <th style="width:36px"></th>
+                                <th style="min-width:180px">Medicine</th>
+                                <th class="text-center" style="width:95px">Batch #</th>
+                                <th class="text-center" style="width:110px">Expiry</th>
+                                <th class="text-end" style="width:80px">Qty</th>
+                                <th class="text-end" style="width:75px" title="Free/Bonus units">Free</th>
+                                <th class="text-end" style="width:105px" title="Unit Rate">Rate</th>
+                                <th class="text-end" style="width:78px" title="Discount Percentage">Disc%</th>
+                                <th class="text-end" style="width:85px" title="Conversion Charge">CC</th>
+                                <th class="text-end" style="width:105px">MRP</th>
+                                <th class="text-end" style="width:105px">Amount</th>
+                                <th style="width:40px"></th>
                             </tr>
                         </thead>
                         <tbody id="itemsBody">
@@ -187,21 +187,6 @@
         </div>
     </div>
 </form>
-
-<!-- Floating medicine search popup (position:fixed, z-index:9999) -->
-<div id="medicinePopup" class="medicine-popup" role="listbox" style="display:none;">
-    <div class="medicine-popup-header">
-        <span style="width:55%">MEDICINE</span>
-        <span style="width:25%">PRICE</span>
-        <span style="width:20%">STOCK</span>
-    </div>
-    <div id="medicinePopupBody" class="medicine-popup-body"></div>
-    <div class="medicine-popup-footer">
-        <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> Navigate</span>
-        <span><kbd>Enter</kbd> Select</span>
-        <span><kbd>Esc</kbd> Close</span>
-    </div>
-</div>
 
 <!-- Floating Calculator -->
 <div id="floatingCalc" class="floating-calc" style="display:none">

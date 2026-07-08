@@ -560,7 +560,7 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
                         table.Cell().Text(bill.PaymentStatus);
                     }
                 });
-                page.Footer().AlignRight().Text($"Total: {report.TotalSales:N2}");
+                page.Footer().AlignRight().Text($"Total: {report.TotalSales.ToRs()}");
             });
         }).GeneratePdf();
     }
@@ -626,7 +626,7 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
                         table.Cell().Text(p.AmountPaid.ToString("N2")).AlignRight();
                     }
                 });
-                page.Footer().AlignRight().Text($"Total Collected: {report.TotalCollected:N2}");
+                page.Footer().AlignRight().Text($"Total Collected: {report.TotalCollected.ToRs()}");
             });
         }).GeneratePdf();
     }
@@ -732,7 +732,7 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
                         table.Cell().Text(p.TotalAmount.ToString("N2")).AlignRight();
                     }
                 });
-                page.Footer().AlignRight().Text($"Total: {report.TotalAmount:N2}");
+                page.Footer().AlignRight().Text($"Total: {report.TotalAmount.ToRs()}");
             });
         }).GeneratePdf();
     }

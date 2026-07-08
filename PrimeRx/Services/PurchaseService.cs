@@ -114,7 +114,7 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
                 DueDate = DateTime.Today.AddDays(creditDays),
                 Status = creditApplied >= total ? PayableStatus.Paid : PayableStatus.Pending,
                 Description = creditApplied > 0
-                    ? $"Auto-created from purchase on {request.PurchaseDate:dd MMM yyyy} — Rs. {creditApplied:N2} adjusted from available credit notes"
+                    ? $"Auto-created from purchase on {request.PurchaseDate:dd MMM yyyy} — {creditApplied.ToRs()} adjusted from available credit notes"
                     : $"Auto-created from purchase on {request.PurchaseDate:dd MMM yyyy}",
                 CreatedAt = DateTime.Now
             });

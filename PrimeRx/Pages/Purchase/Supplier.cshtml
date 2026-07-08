@@ -55,14 +55,14 @@
     <div class="col-6 col-lg-3">
         <div class="stat-card stat-info">
             <div class="stat-label">Total Spend</div>
-            <div class="stat-value">Rs. @Model.TotalSpend.ToString("N0")</div>
+            <div class="stat-value">@(Model.TotalSpend.ToRs())</div>
             <div class="stat-foot">@Model.TotalItems units purchased</div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
         <div class="stat-card @(Model.PendingPayable > 0 ? "stat-warning" : "stat-success")">
             <div class="stat-label">Pending Payable</div>
-            <div class="stat-value">Rs. @Model.PendingPayable.ToString("N0")</div>
+            <div class="stat-value">@(Model.PendingPayable.ToRs())</div>
             <div class="stat-foot">
                 @if (Model.OverdueCount > 0)
                 {
@@ -82,7 +82,7 @@
     <div class="col-6 col-lg-3">
         <div class="stat-card stat-success">
             <div class="stat-label">Avg Invoice</div>
-            <div class="stat-value">Rs. @Model.AvgInvoice.ToString("N0")</div>
+            <div class="stat-value">@(Model.AvgInvoice.ToRs())</div>
             <div class="stat-foot">Per purchase</div>
         </div>
     </div>
@@ -127,7 +127,7 @@
                                         <td class="text-center">
                                             <span class="badge bg-secondary">@p.Items.Count</span>
                                         </td>
-                                        <td class="text-end fw-semibold">Rs. @p.TotalAmount.ToString("N2")</td>
+                                        <td class="text-end fw-semibold">@(p.TotalAmount.ToRs())</td>
                                         <td><small class="text-muted">@(p.CreatedBy ?? "—")</small></td>
                                         <td>
                                             <div class="d-flex gap-1">
@@ -185,9 +185,9 @@
                                                                     }
                                                                 </td>
                                                                 <td class="text-center">@item.Quantity</td>
-                                                                <td class="text-end">Rs. @item.PurchasePrice.ToString("N2")</td>
-                                                                <td class="text-end">Rs. @item.MRP.ToString("N2")</td>
-                                                                <td class="text-end fw-semibold">Rs. @item.Amount.ToString("N2")</td>
+                                                                <td class="text-end">@(item.PurchasePrice.ToRs())</td>
+                                                                <td class="text-end">@(item.MRP.ToRs())</td>
+                                                                <td class="text-end fw-semibold">@(item.Amount.ToRs())</td>
                                                             </tr>
                                                         }
                                                     </tbody>
@@ -196,7 +196,7 @@
                                                             <td colspan="3" class="text-end fw-semibold text-muted">Invoice total</td>
                                                             <td class="text-center fw-semibold">@p.Items.Sum(i => i.Quantity)</td>
                                                             <td colspan="2"></td>
-                                                            <td class="text-end fw-bold">Rs. @p.TotalAmount.ToString("N2")</td>
+                                                            <td class="text-end fw-bold">@(p.TotalAmount.ToRs())</td>
                                                         </tr>
                                                     </tfoot>
                                                 </table>
@@ -208,7 +208,7 @@
                             <tfoot>
                                 <tr class="report-total-row">
                                     <td colspan="3" class="text-end"><strong>All-time total</strong></td>
-                                    <td class="text-end fw-bold">Rs. @Model.TotalSpend.ToString("N2")</td>
+                                    <td class="text-end fw-bold">@(Model.TotalSpend.ToRs())</td>
                                     <td colspan="2"></td>
                                 </tr>
                             </tfoot>
@@ -259,7 +259,7 @@
                                     </div>
                                     <div class="text-end ms-2">
                                         <div class="small fw-bold @(pay.PendingAmount > 0 ? "text-danger" : "text-success")">
-                                            Rs. @pay.PendingAmount.ToString("N0")
+                                            @(pay.PendingAmount.ToRs())
                                         </div>
                                         @{
                                             var cls = pay.Status switch { "Paid" => "bg-success", "Partial" => "bg-warning text-dark", _ => "bg-secondary" };
@@ -272,7 +272,7 @@
                     </ul>
                     <div class="px-3 py-2 border-top d-flex justify-content-between small">
                         <span class="text-muted">Total pending</span>
-                        <strong class="text-danger">Rs. @Model.PendingPayable.ToString("N2")</strong>
+                        <strong class="text-danger">@(Model.PendingPayable.ToRs())</strong>
                     </div>
                 }
             </div>
@@ -298,7 +298,7 @@
                                         <div class="text-muted" style="font-size:0.75rem">@med.Qty units</div>
                                     </div>
                                 </div>
-                                <span class="small fw-bold">Rs. @med.Spend.ToString("N0")</span>
+                                <span class="small fw-bold">@(med.Spend.ToRs())</span>
                             </li>
                             rank++;
                         }

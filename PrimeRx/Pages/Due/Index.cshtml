@@ -15,7 +15,7 @@
 <div class="panel-card mb-4">
     <div class="panel-header d-flex justify-content-between align-items-center">
         <h5><i class="bi bi-clock-history me-2"></i>Ageing Analysis (Outstanding Dues)</h5>
-        <span class="badge bg-secondary">Total: Rs. @Model.TotalOutstanding.ToString("N0")</span>
+        <span class="badge bg-secondary">Total: @(Model.TotalOutstanding.ToRs())</span>
     </div>
     <div class="panel-body">
         <div class="row g-2 text-center">
@@ -23,28 +23,28 @@
                 <div class="pnl-box">
                     <div class="pnl-label">@Model.Age_0_30.Label</div>
                     <div class="pnl-value" style="font-size:1.1rem;">@Model.Age_0_30.Count</div>
-                    <div class="small text-muted">Rs. @Model.Age_0_30.Amount.ToString("N0")</div>
+                    <div class="small text-muted">@(Model.Age_0_30.Amount.ToRs())</div>
                 </div>
             </div>
             <div class="col-3">
                 <div class="pnl-box" style="border-color:rgba(245,158,11,0.3);">
                     <div class="pnl-label">@Model.Age_31_60.Label</div>
                     <div class="pnl-value" style="font-size:1.1rem;color:#d97706;">@Model.Age_31_60.Count</div>
-                    <div class="small text-muted">Rs. @Model.Age_31_60.Amount.ToString("N0")</div>
+                    <div class="small text-muted">@(Model.Age_31_60.Amount.ToRs())</div>
                 </div>
             </div>
             <div class="col-3">
                 <div class="pnl-box" style="border-color:rgba(239,68,68,0.3);">
                     <div class="pnl-label">@Model.Age_61_90.Label</div>
                     <div class="pnl-value" style="font-size:1.1rem;color:#dc2626;">@Model.Age_61_90.Count</div>
-                    <div class="small text-muted">Rs. @Model.Age_61_90.Amount.ToString("N0")</div>
+                    <div class="small text-muted">@(Model.Age_61_90.Amount.ToRs())</div>
                 </div>
             </div>
             <div class="col-3">
                 <div class="pnl-box" style="border-color:rgba(220,38,38,0.5);">
                     <div class="pnl-label">@Model.Age_90_Plus.Label</div>
                     <div class="pnl-value" style="font-size:1.1rem;color:#991b1b;">@Model.Age_90_Plus.Count</div>
-                    <div class="small text-muted">Rs. @Model.Age_90_Plus.Amount.ToString("N0")</div>
+                    <div class="small text-muted">@(Model.Age_90_Plus.Amount.ToRs())</div>
                 </div>
             </div>
         </div>
@@ -89,9 +89,9 @@
                             <td>@bill.BillDate.ToString("dd-MM-yyyy")</td>
                             <td>@bill.CustomerName</td>
                             <td>@bill.CustomerPhone</td>
-                            <td class="text-end">Rs. @bill.FinalAmount.ToString("N2")</td>
-                            <td class="text-end positive">Rs. @bill.PaidAmount.ToString("N2")</td>
-                            <td class="text-end negative fw-semibold">Rs. @bill.DueAmount.ToString("N2")</td>
+                            <td class="text-end">@(bill.FinalAmount.ToRs())</td>
+                            <td class="text-end positive">@(bill.PaidAmount.ToRs())</td>
+                            <td class="text-end negative fw-semibold">@(bill.DueAmount.ToRs())</td>
                             <td>@daysSince d</td>
                             <td><span class="badge-status @(bill.PaymentStatus == "Due" ? "due" : "partial")">@bill.PaymentStatus</span></td>
                             <td>

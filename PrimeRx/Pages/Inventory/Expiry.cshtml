@@ -72,7 +72,7 @@
                         <td>
                             <span class="badge @urgencyBadge">@daysLeft days</span>
                         </td>
-                        <td>Rs. @m.MRP.ToString("N2")</td>
+                        <td>@(m.MRP.ToRs())</td>
                         <td>
                             <a asp-page="/Inventory/Adjust" asp-route-id="@m.Id" class="btn btn-sm btn-outline-warning">Adjust Stock</a>
                         </td>

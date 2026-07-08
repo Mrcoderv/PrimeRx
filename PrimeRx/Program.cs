@@ -75,6 +75,7 @@ builder.Services.AddRazorPages(options =>
 });
 
 builder.Services.AddTransient<IEmailSender<IdentityUser>, EmailSender>();
+builder.Services.AddSingleton<OtpStore>();
 builder.Services.AddScoped<InventoryService>();
 builder.Services.AddScoped<BillingService>();
 builder.Services.AddScoped<DueService>();

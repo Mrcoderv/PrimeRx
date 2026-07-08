@@ -122,16 +122,16 @@ public class PdfGenerator
                     // ==================== TOTALS ====================
                     col.Item().AlignRight().Column(c =>
                     {
-                        c.Item().Text($"Subtotal          : {bill.TotalAmount:N2}");
+                        c.Item().Text($"Subtotal          : {bill.TotalAmount.ToRs()}");
                         if (bill.DiscountAmount > 0)
-                            c.Item().Text($"Discount          : -{bill.DiscountAmount:N2}");
+                            c.Item().Text($"Discount          : -{bill.DiscountAmount.ToRs()}");
                         if (bill.TaxAmount > 0)
-                            c.Item().Text($"{company.TaxLabel ?? "Tax"}     : {bill.TaxAmount:N2}");
+                            c.Item().Text($"{company.TaxLabel ?? "Tax"}     : {bill.TaxAmount.ToRs()}");
 
-                        c.Item().Text($"**Net Total       : {bill.FinalAmount:N2}**").Bold().FontSize(11);
+                        c.Item().Text($"**Net Total       : {bill.FinalAmount.ToRs()}**").Bold().FontSize(11);
 
                         if (bill.DueAmount > 0)
-                            c.Item().Text($"Due Amount        : {bill.DueAmount:N2}").FontColor(Colors.Red.Medium);
+                            c.Item().Text($"Due Amount        : {bill.DueAmount.ToRs()}").FontColor(Colors.Red.Medium);
 
                         c.Item().PaddingTop(5).Text($"Payment Method : {bill.PaymentMethod}");
                     });

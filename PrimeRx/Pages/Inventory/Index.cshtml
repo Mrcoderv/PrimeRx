@@ -131,8 +131,8 @@
                         <td>@m.GenericName</td>
                         <td>@m.Category</td>
                         <td>@m.StockQuantity</td>
-                        <td>Rs. @m.MRP.ToString("N2")</td>
-                        <td>Rs. @m.PurchasePrice.ToString("N2")</td>
+                        <td>@(m.MRP.ToRs())</td>
+                        <td>@(m.PurchasePrice.ToRs())</td>
                         <td>@(m.ExpiryDate?.ToString("dd-MM-yyyy") ?? "-")</td>
                         <td>
                             <span class="badge-status @(lowStock ? "partial" : "paid")">
@@ -180,7 +180,7 @@
                                                     <tr class="@rowClass">
                                                         <td class="fw-semibold">@b.BatchNumber</td>
                                                         <td class="text-center fw-bold">@b.Quantity</td>
-                                                        <td class="text-end">Rs. @b.PurchasePrice.ToString("N2")</td>
+                                                        <td class="text-end">@(b.PurchasePrice.ToRs())</td>
                                                         <td>
                                                             @if (b.ExpiryDate.HasValue)
                                                             {

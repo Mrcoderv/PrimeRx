@@ -37,7 +37,7 @@
         <div class="card shadow-sm h-100 border-0">
             <div class="card-body">
                 <div class="text-muted small">Total</div>
-                <div class="h5 mb-0">Rs. @Model.Total.ToString("N2")</div>
+                <div class="h5 mb-0">@(Model.Total.ToRs())</div>
             </div>
         </div>
     </div>
@@ -48,7 +48,7 @@
             <div class="card shadow-sm h-100 border-0">
                 <div class="card-body p-2">
                     <div class="text-muted" style="font-size:.72rem;">@ExpenseCategories.Display(c)</div>
-                    <div class="fw-bold mb-0" style="font-size:.9rem;">Rs. @amount.ToString("N2")</div>
+                    <div class="fw-bold mb-0" style="font-size:.9rem;">@(amount.ToRs())</div>
                 </div>
             </div>
         </div>
@@ -93,7 +93,7 @@
                                 }
                                 else { <span>—</span> }
                             </td>
-                            <td class="text-end fw-bold">Rs. @e.Amount.ToString("N2")</td>
+                            <td class="text-end fw-bold">@(e.Amount.ToRs())</td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-outline-primary me-1"
                                         data-bs-toggle="modal" data-bs-target="#editModal"

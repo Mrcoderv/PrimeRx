@@ -60,7 +60,7 @@
                         <td class="fw-semibold">@b.Medicine.Name</td>
                         <td>@b.BatchNumber</td>
                         <td class="text-center">@b.Quantity</td>
-                        <td class="text-end">Rs. @b.PurchasePrice.ToString("N2")</td>
+                        <td class="text-end">@(b.PurchasePrice.ToRs())</td>
                         <td>@(string.IsNullOrWhiteSpace(b.PurchaseSource) ? "—" : b.PurchaseSource)</td>
                         <td>
                             @if (b.ExpiryDate.HasValue)

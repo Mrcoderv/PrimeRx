@@ -1,0 +1,116 @@
+@page
+@model PrimeRx.Pages.Billing.BillItemsModel
+@{
+    ViewData["Title"] = "Bill Items";
+    var subtotal = Model.Items.Sum(i => i.Amount);
+    var lineDiscount = Model.Items.Sum(i => i.DiscAmount);
+    var totalDiscount = lineDiscount + Model.BillDiscountAmount;
+    var netAmount = subtotal - totalDiscount;
+}
+
+<div class="bill-items-page">
+    <div class="page-header">
+        <h1 class="page-title">Bill Items</h1>
+        <p class="page-subtitle">Review and manage line items for the current bill</p>
+    </div>
+
+    <div class="bill-items-card">
+        <div class="card-header">
+            <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <h5>Bill Items</h5>
+            <span class="badge bg-primary rounded-pill ms-auto" style="font-size:0.7rem;font-weight:600;background:rgba(37,99,235,0.15) !important;color:var(--rx-blue-400) !important;border:1px solid rgba(37,99,235,0.2)">@Model.Items.Count item@(Model.Items.Count != 1 ? "s" : "")</span>
+        </div>
+
+        <div class="card-body">
+            <div class="bill-items-table-wrapper">
+                <table class="bill-items-table">
+                    <thead>
+                        <tr>
+                            <th class="col-medicine">Medicine</th>
+                            <th class="col-rate num-cell">Rate</th>
+                            <th class="col-qty num-cell">Qty</th>
+                            <th class="col-disc-pct num-cell">Disc%</th>
+                            <th class="col-disc-amt num-cell">Disc Amt</th>
+                            <th class="col-amount num-cell">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td class="col-medicine">
+                                    <div class="medicine-cell">
+                                        <span class="medicine-name">@item.MedicineName</span>
+                                        <div class="medicine-stock-row">
+                                            <span class="stock-label">Stock:</span>
+                                            <span class="stock-value">@item.Stock</span>
+                                            <button type="button" class="auto-batch-btn" title="Assign or change batch">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                                    <path d="M14 17h7m-3.5-3.5v7"/>
+                                                </svg>
+                                                Auto batch
+                                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-left:1px"><polyline points="6 9 12 15 18 9"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="col-rate num-cell">
+                                    <span class="num-value">@item.Rate.ToString("N2")</span>
+                                </td>
+                                <td class="col-qty num-cell">
+                                    <span class="num-value">@item.Qty</span>
+                                </td>
+                                <td class="col-disc-pct num-cell">
+                                    <span class="num-value@(item.DiscPercent > 0 ? " text-danger" : " num-muted")">@item.DiscPercent.ToString("N2")</span>
+                                </td>
+                                <td class="col-disc-amt num-cell">
+                                    <span class="num-value@(item.DiscAmount > 0 ? " text-danger" : " num-muted")">@item.DiscAmount.ToString("N2")</span>
+                                </td>
+                                <td class="col-amount amount-cell">
+                                    @item.Amount.ToString("N2")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="bill-items-totals">
+                <div class="totals-inner">
+                    <div class="total-row">
+                        <span class="total-label">Subtotal</span>
+                        <span class="total-value">@(subtotal.ToRs())</span>
+                    </div>
+                    @if (lineDiscount > 0)
+                    {
+                        <div class="total-row total-discount">
+                            <span class="total-label">Item Discount</span>
+                            <span class="total-value">- @(lineDiscount.ToRs())</span>
+                        </div>
+                    }
+                    <div class="total-row total-discount">
+                        <span class="total-label">Discount (@Model.BillDiscountPercent%)</span>
+                        <span class="total-value">- @(Model.BillDiscountAmount.ToRs())</span>
+                    </div>
+                    <div class="total-row total-net">
+                        <span class="total-label">Net Amount</span>
+                        <span class="total-value">@(netAmount.ToRs())</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/bill-items.css" asp-append-version="true" />
+}

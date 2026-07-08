@@ -76,8 +76,8 @@
                         <td>@if (!string.IsNullOrEmpty(m.FormType)) {
                             <span class="badge bg-secondary bg-opacity-50 text-body">@m.FormType</span>
                         }</td>
-                        <td class="text-end">Rs. @m.MRP.ToString("N2")</td>
-                        <td class="text-end text-muted">Rs. @m.PurchasePrice.ToString("N2")</td>
+                        <td class="text-end">@(m.MRP.ToRs())</td>
+                        <td class="text-end text-muted">@(m.PurchasePrice.ToRs())</td>
                         <td class="text-end @(m.StockQuantity <= m.LowStockThreshold ? "text-warning fw-bold" : "")">@m.StockQuantity</td>
                         <td class="text-center">
                             <span class="badge @(m.IsActive ? "bg-success" : "bg-secondary")">@(m.IsActive ? "Active" : "Inactive")</span>

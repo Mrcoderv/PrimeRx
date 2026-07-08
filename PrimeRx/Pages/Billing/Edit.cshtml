@@ -39,23 +39,23 @@
                                aria-expanded="false"
                                aria-autocomplete="list"
                                aria-controls="medicinePopup">
-                        <div id="medicinePopup"
-                             class="medicine-popup"
-                             role="listbox"
-                             style="display:none;">
-                            <div class="medicine-popup-header">
-                                <span class="mpc-name">Name</span>
-                                <span class="mpc-batch">Batch</span>
-                                <span class="mpc-stock">Stock</span>
-                                <span class="mpc-rate">Rate</span>
-                            </div>
-                            <div class="medicine-popup-body" id="medicinePopupBody"></div>
-                            <div class="medicine-popup-footer">
-                                <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
-                                <span><kbd>Enter</kbd> Add</span>
-                                <span><kbd>Esc</kbd> Close</span>
-                            </div>
-                        </div>
+                    </div>
+                </div>
+                <div id="medicinePopup"
+                     class="medicine-popup"
+                     role="listbox"
+                     style="display:none;">
+                    <div class="medicine-popup-header">
+                        <span class="mpc-name">Name</span>
+                        <span class="mpc-batch">Batch</span>
+                        <span class="mpc-stock">Stock</span>
+                        <span class="mpc-rate">Rate</span>
+                    </div>
+                    <div class="medicine-popup-body" id="medicinePopupBody"></div>
+                    <div class="medicine-popup-footer">
+                        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+                        <span><kbd>Enter</kbd> Add</span>
+                        <span><kbd>Esc</kbd> Close</span>
                     </div>
                 </div>
 
@@ -66,17 +66,17 @@
                             <thead>
                                 <tr>
                                     <th>Medicine</th>
-                                    <th style="width:100px">Rate</th>
-                                    <th style="width:80px">Qty</th>
-                                    <th style="width:90px">Disc %</th>
-                                    <th style="width:100px">Disc Amt</th>
-                                    <th style="width:100px">Amount</th>
-                                    <th style="width:50px"></th>
+                                    <th class="text-end" style="width:90px" title="Unit Rate">Rate</th>
+                                    <th class="text-end" style="width:75px">Qty</th>
+                                    <th class="text-end" style="width:75px" title="Discount Percentage">Disc%</th>
+                                    <th class="text-end" style="width:95px">Disc Amt</th>
+                                    <th class="text-end" style="width:100px">Amount</th>
+                                    <th style="width:36px"></th>
                                 </tr>
                             </thead>
                             <tbody id="itemsBody">
                                 <tr id="emptyRow">
-                                    <td colspan="6" class="billing-empty-msg">Search and add medicines above</td>
+                                    <td colspan="7" class="billing-empty-msg">Search and add medicines above</td>
                                 </tr>
                             </tbody>
                         </table>

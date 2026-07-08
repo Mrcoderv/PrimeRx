@@ -6,7 +6,7 @@ using PrimeRx.Services;
 
 namespace PrimeRx.Areas.Identity.Pages.Account;
 
-public class ResetPasswordModel(
+public class VerifyOtpModel(
     UserManager<IdentityUser> userManager,
     OtpStore otpStore) : PageModel
 {
@@ -20,22 +20,14 @@ public class ResetPasswordModel(
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        [DataType(DataType.Password)]
-        public string Password { get; set; } = string.Empty;
-
-        [DataType(DataType.Password)]
-        [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-        public string ConfirmPassword { get; set; } = string.Empty;
+        [Display(Name = "OTP Code")]
+        [RegularExpression(@"^\d{6}$", ErrorMessage = "Enter a valid 6-digit OTP.")]
+        public string OtpCode { get; set; } = string.Empty;
     }
 
     public IActionResult OnGet(string? email)
     {
         if (string.IsNullOrEmpty(email))
-            return RedirectToPage("./ForgotPassword");
-
-        var normalized = email.ToUpperInvariant();
-        if (otpStore.GetVerifiedToken(normalized) == null)
             return RedirectToPage("./ForgotPassword");
 
         Input.Email = email;
@@ -48,11 +40,10 @@ public class ResetPasswordModel(
             return Page();
 
         var normalized = Input.Email.ToUpperInvariant();
-        var resetToken = otpStore.GetVerifiedToken(normalized);
 
-        if (resetToken == null)
+        if (!otpStore.VerifyOtp(normalized, Input.OtpCode))
         {
-            ModelState.AddModelError(string.Empty, "OTP verification expired. Please start over.");
+            ModelState.AddModelError(string.Empty, "Invalid or expired OTP. Please request a new one.");
             return Page();
         }
 
@@ -60,16 +51,9 @@ public class ResetPasswordModel(
         if (user == null)
             return RedirectToPage("./Login");
 
-        var result = await userManager.ResetPasswordAsync(user, resetToken, Input.Password);
-        if (result.Succeeded)
-        {
-            otpStore.Cleanup(normalized);
-            return RedirectToPage("./Login");
-        }
+        var resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
+        otpStore.StoreVerifiedToken(normalized, resetToken);
 
-        foreach (var error in result.Errors)
-            ModelState.AddModelError(string.Empty, error.Description);
-
-        return Page();
+        return RedirectToPage("./ResetPassword", new { email = Input.Email });
     }
 }
