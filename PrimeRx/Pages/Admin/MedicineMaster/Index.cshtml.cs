@@ -8,6 +8,7 @@ namespace PrimeRx.Pages.Admin.MedicineMaster;
 public class IndexModel(MedicineMasterService service) : PageModel
 {
     public List<Models.MedicineMaster> Masters { get; set; } = [];
+    public HashSet<string> GenericNamesInStock { get; set; } = [];
     public string? Search { get; set; }
     public string? Message { get; set; }
     public bool IsError { get; set; }
@@ -19,6 +20,7 @@ public class IndexModel(MedicineMasterService service) : PageModel
         Message = message;
         IsError = isError;
         Masters = await service.GetAllAsync(search);
+        GenericNamesInStock = await service.GetGenericNamesWithStockAsync();
     }
 
     public async Task<IActionResult> OnGetTemplateAsync()

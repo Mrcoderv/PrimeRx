@@ -35,6 +35,16 @@ public class MedicineMasterService(ApplicationDbContext context)
     public async Task<MedicineMaster?> GetByIdAsync(int id) =>
         await context.MedicineMasters.FindAsync(id);
 
+    public async Task<HashSet<string>> GetGenericNamesWithStockAsync()
+    {
+        var names = await context.Medicines
+            .Where(m => m.StockQuantity > 0)
+            .Select(m => m.GenericName)
+            .Distinct()
+            .ToListAsync();
+        return [.. names.Where(n => n != null).Select(n => n!.ToLower())];
+    }
+
     public async Task<List<MedicineMaster>> SearchAsync(string term, int limit = 20)
     {
         if (string.IsNullOrWhiteSpace(term)) return [];
@@ -165,10 +175,8 @@ public class MedicineMasterService(ApplicationDbContext context)
         sheet.Cells[1, 5].Value = "Strength";
         sheet.Cells[1, 6].Value = "Unit";
         sheet.Cells[1, 7].Value = "Category";
-        sheet.Cells[1, 8].Value = "HSN Code";
-        sheet.Cells[1, 9].Value = "Rack / Location";
 
-        using var range = sheet.Cells[1, 1, 1, 9];
+        using var range = sheet.Cells[1, 1, 1, 7];
         range.Style.Font.Bold = true;
         range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
         range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
@@ -180,10 +188,8 @@ public class MedicineMasterService(ApplicationDbContext context)
         sheet.Cells[2, 5].Value = "500mg";
         sheet.Cells[2, 6].Value = "Strip";
         sheet.Cells[2, 7].Value = "Analgesic";
-        sheet.Cells[2, 8].Value = "300490";
-        sheet.Cells[2, 9].Value = "A-12";
 
-        for (var c = 1; c <= 9; c++) sheet.Column(c).AutoFit();
+        for (var c = 1; c <= 7; c++) sheet.Column(c).AutoFit();
         return package.GetAsByteArray();
     }
 
@@ -198,10 +204,8 @@ public class MedicineMasterService(ApplicationDbContext context)
         sheet.Cells[1, 5].Value = "Strength";
         sheet.Cells[1, 6].Value = "Unit";
         sheet.Cells[1, 7].Value = "Category";
-        sheet.Cells[1, 8].Value = "HSN Code";
-        sheet.Cells[1, 9].Value = "Rack / Location";
 
-        using var range = sheet.Cells[1, 1, 1, 9];
+        using var range = sheet.Cells[1, 1, 1, 7];
         range.Style.Font.Bold = true;
 
         var row = 2;
@@ -214,12 +218,10 @@ public class MedicineMasterService(ApplicationDbContext context)
             sheet.Cells[row, 5].Value = m.Strength;
             sheet.Cells[row, 6].Value = m.Unit;
             sheet.Cells[row, 7].Value = m.Category;
-            sheet.Cells[row, 8].Value = m.HSNCode;
-            sheet.Cells[row, 9].Value = m.RackLocation;
             row++;
         }
 
-        for (var c = 1; c <= 9; c++) sheet.Column(c).AutoFit();
+        for (var c = 1; c <= 7; c++) sheet.Column(c).AutoFit();
         return package.GetAsByteArray();
     }
 
@@ -227,10 +229,10 @@ public class MedicineMasterService(ApplicationDbContext context)
     {
         using var ms = new MemoryStream();
         using var writer = new StreamWriter(ms);
-        writer.WriteLine("Generic Name,Brand Name,Manufacturer,Form,Strength,Unit,Category,HSN Code,Rack / Location");
+        writer.WriteLine("Generic Name,Brand Name,Manufacturer,Form,Strength,Unit,Category");
         foreach (var m in list)
         {
-            writer.WriteLine($"{EscapeCsv(m.GenericName)},{EscapeCsv(m.BrandName)},{EscapeCsv(m.Manufacturer)},{EscapeCsv(m.Form)},{EscapeCsv(m.Strength)},{EscapeCsv(m.Unit)},{EscapeCsv(m.Category)},{EscapeCsv(m.HSNCode)},{EscapeCsv(m.RackLocation)}");
+            writer.WriteLine($"{EscapeCsv(m.GenericName)},{EscapeCsv(m.BrandName)},{EscapeCsv(m.Manufacturer)},{EscapeCsv(m.Form)},{EscapeCsv(m.Strength)},{EscapeCsv(m.Unit)},{EscapeCsv(m.Category)}");
         }
         writer.Flush();
         return ms.ToArray();

@@ -55,8 +55,7 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
 
         foreach (var line in request.Items)
         {
-            var medicine = await context.Medicines.FindAsync(line.MedicineId)
-                ?? throw new InvalidOperationException($"Medicine ID {line.MedicineId} not found.");
+            var medicine = await ResolveMedicineAsync(line.MedicineId);
 
             if (line.Quantity <= 0)
                 throw new InvalidOperationException($"Quantity must be > 0 for '{medicine.Name}'.");
@@ -134,6 +133,38 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
         return purchase;
     }
 
+    /// <summary>
+    /// Resolves a medicine ID to a <see cref="Medicine"/> record.
+    /// If <paramref name="medicineId"/> is negative, it represents a <see cref="MedicineMaster"/> entry
+    /// that hasn't been added to local inventory yet; this method creates a <see cref="Medicine"/> from
+    /// the master catalog on the fly and returns the newly-created record.
+    /// </summary>
+    private async Task<Medicine> ResolveMedicineAsync(int medicineId)
+    {
+        if (medicineId > 0)
+        {
+            return await context.Medicines.FindAsync(medicineId)
+                ?? throw new InvalidOperationException($"Medicine ID {medicineId} not found.");
+        }
+
+        var master = await context.MedicineMasters.FindAsync(-medicineId)
+            ?? throw new InvalidOperationException($"MedicineMaster ID {-medicineId} not found.");
+
+        var medicine = new Medicine
+        {
+            Name = master.DisplayName,
+            GenericName = master.GenericName,
+            Manufacturer = master.Manufacturer,
+            FormType = master.Form,
+            Category = master.Category,
+            IsActive = true,
+            LowStockThreshold = 10
+        };
+
+        await inventoryService.CreateAsync(medicine);
+        return medicine;
+    }
+
     /// <summary>Applies available (unused) credit notes for a supplier against a new purchase total, oldest first. Returns the amount applied.</summary>
     private async Task<decimal> ApplyAvailableCreditAsync(string supplierName, decimal total)
     {
@@ -208,8 +239,7 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
 
         foreach (var line in request.Items)
         {
-            var medicine = await context.Medicines.FindAsync(line.MedicineId)
-                ?? throw new InvalidOperationException($"Medicine ID {line.MedicineId} not found.");
+            var medicine = await ResolveMedicineAsync(line.MedicineId);
 
             if (line.Quantity <= 0)
                 throw new InvalidOperationException($"Quantity must be > 0 for '{medicine.Name}'.");

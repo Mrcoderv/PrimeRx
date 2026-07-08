@@ -88,6 +88,7 @@ builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<BackupService>();
 builder.Services.AddScoped<PayableService>();
 builder.Services.AddSingleton<PdfGenerator>();
+builder.Services.AddScoped<MedicineMasterService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<UpdateService>();
 
