@@ -57,6 +57,9 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
         {
             var medicine = await ResolveMedicineAsync(line.MedicineId);
 
+            if (string.IsNullOrWhiteSpace(line.BatchNumber))
+                throw new InvalidOperationException($"Batch number is required for '{medicine.Name}'.");
+
             if (line.Quantity <= 0)
                 throw new InvalidOperationException($"Quantity must be > 0 for '{medicine.Name}'.");
 
@@ -240,6 +243,9 @@ public class PurchaseService(ApplicationDbContext context, InventoryService inve
         foreach (var line in request.Items)
         {
             var medicine = await ResolveMedicineAsync(line.MedicineId);
+
+            if (string.IsNullOrWhiteSpace(line.BatchNumber))
+                throw new InvalidOperationException($"Batch number is required for '{medicine.Name}'.");
 
             if (line.Quantity <= 0)
                 throw new InvalidOperationException($"Quantity must be > 0 for '{medicine.Name}'.");

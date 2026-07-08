@@ -232,7 +232,11 @@
             mrp: mrp,
             conversionCharge: 0,
             batchNumber: '',
-            expiryDate: ''
+            expiryDate: (() => {
+                const d = new Date();
+                d.setFullYear(d.getFullYear() + 2);
+                return d.toISOString().substring(0, 10);
+            })()
         });
         renderTable();
         // Focus the qty input of the new row
@@ -675,5 +679,18 @@
         }));
         itemsJsonInput.value = JSON.stringify(payload);
     }
+
+    // ── Form validation ───────────────────────────────────────────────────────
+    document.getElementById('purchaseForm')?.addEventListener('submit', function(e) {
+        const missingBatch = items.filter(i => !i.batchNumber?.trim());
+        if (missingBatch.length) {
+            e.preventDefault();
+            const names = missingBatch.map(i => i.medicineName).join(', ');
+            alert(`Batch number is required for: ${names}`);
+            // Focus the first missing batch input
+            const firstInput = document.querySelector('.batch-input');
+            if (firstInput) firstInput.focus();
+        }
+    });
 
 })();

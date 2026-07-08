@@ -22,6 +22,7 @@
 | **Purchase Entry** | Multi-item purchase recording with **CC (Conversion Charges)**, batch number & expiry tracking, smart Enter key navigation (dakadak), floating calculator, batch info panel, medicine master auto-fill, per-item discount, MRP auto-calculation, supplier management, credit purchase with auto-payable |
 | **Inventory** | Stock view, add medicines (Staff & Admin), batch management, expiry tracking, stock adjustments, transaction history |
 | **Due Payments** | Search customers, partial/full collection, payment history |
+| **Ageing Dues** | Unified supplier payable & customer receivable ageing report with date filters, age color-coding, separate PDF exports |
 | **Reports** | Sales bar charts, medicine pie charts, daily/monthly reports, P&L, inventory & expiry (PDF/Excel), supplier profit |
 | **Admin** | Company profile, staff account management, medicine master catalog, supplier management, full medicine catalog control |
 
@@ -161,6 +162,68 @@ PrimeRx/
 7. Batch info panel showing medicine details on focus
 8. Total section: Subtotal, Discount, Total CC, Net Amount
 9. Save → stock updated, batch records created, payable auto-created for credit purchases
+
+---
+
+---
+
+## Keyboard Shortcuts
+
+### Global
+
+| Shortcut | Action |
+|----------|--------|
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> | Open/Close global feature search |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> | Open floating calculator on active input |
+| <kbd>Alt</kbd>+<kbd>C</kbd> (calculator open) | Insert calculator value into active field |
+| <kbd>Esc</kbd> | Close popups / search overlay / help modal |
+
+### Ageing Dues Page
+
+| Shortcut | Action |
+|----------|--------|
+| <kbd>F1</kbd> | Show keyboard shortcut help overlay |
+| <kbd>Alt</kbd>+<kbd>1</kbd> | Generate Supplier PDF |
+| <kbd>Alt</kbd>+<kbd>2</kbd> | Generate Customer PDF |
+| <kbd>Alt</kbd>+<kbd>F</kbd> | Focus Party filter dropdown |
+| <kbd>Alt</kbd>+<kbd>C</kbd> | Clear all filters |
+| <kbd>Enter</kbd> (on filter form) | Apply filters |
+
+### Billing Page (POS)
+
+| Shortcut | Action |
+|----------|--------|
+| <kbd>Enter</kbd> (Rate input) | Move to Qty field |
+| <kbd>Enter</kbd> (Qty input) | Move to Disc% field |
+| <kbd>Enter</kbd> (Disc% input) | Move to search bar |
+| <kbd>1</kbd>-<kbd>9</kbd> | Quick-set quantity on last added item |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> / Right-click | Open floating calculator on Rate/Qty/Disc fields |
+| <kbd>↑</kbd><kbd>↓</kbd> (popup open) | Navigate search results |
+| <kbd>Enter</kbd> (popup open) | Select highlighted medicine |
+| <kbd>Esc</kbd> (popup open) | Close medicine search popup |
+
+### Purchase Entry Page
+
+| Shortcut | Action |
+|----------|--------|
+| <kbd>Enter</kbd> (consecutive fields) | Batch# → Expiry → Qty → Free → Rate → Disc% → CC → MRP → next search |
+| <kbd>↑</kbd><kbd>↓</kbd> (table) | Navigate between rows in same column |
+| <kbd>↑</kbd><kbd>↓</kbd> (popup open) | Navigate search results |
+| <kbd>Enter</kbd> (popup open) | Select highlighted medicine |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> / Right-click | Open floating calculator on Qty/Rate/CC fields |
+| <kbd>Esc</kbd> (popup open) | Close medicine search popup |
+
+### Calculator (Floating)
+
+| Shortcut | Action |
+|----------|--------|
+| <kbd>0</kbd>-<kbd>9</kbd>, <kbd>.</kbd> | Input numbers/decimal |
+| <kbd>+</kbd>, <kbd>-</kbd>, <kbd>*</kbd>, <kbd>/</kbd>, <kbd>%</kbd> | Operators |
+| <kbd>Enter</kbd> / <kbd>=</kbd> | Evaluate expression |
+| <kbd>Backspace</kbd> | Delete last character |
+| <kbd>Esc</kbd> / <kbd>C</kbd> | Clear display |
+| <kbd>U</kbd> | Insert value into active field |
+| <kbd>Alt</kbd>+<kbd>C</kbd> | Insert value (when typing in another input) |
 
 ---
 

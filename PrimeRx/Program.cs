@@ -26,6 +26,8 @@ Log.Logger = new LoggerConfiguration()
         outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 
@@ -87,6 +89,7 @@ builder.Services.AddScoped<PurchaseReturnService>();
 builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<BackupService>();
 builder.Services.AddScoped<PayableService>();
+builder.Services.AddScoped<AgingDueService>();
 builder.Services.AddSingleton<PdfGenerator>();
 builder.Services.AddScoped<MedicineMasterService>();
 builder.Services.AddScoped<NotificationService>();

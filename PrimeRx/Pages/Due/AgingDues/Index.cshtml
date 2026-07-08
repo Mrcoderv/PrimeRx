@@ -1,0 +1,402 @@
+@page
+@model PrimeRx.Pages.Due.AgingDues.IndexModel
+@{
+    ViewData["Title"] = "Ageing Dues";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Ageing Dues</h1>
+        <p class="page-subtitle">Supplier payables and customer receivables ageing report</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-page-handler="SupplierPdf"
+           asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
+           asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           asp-route-asOn="@Model.AsOnDate?.ToString("yyyy-MM-dd")"
+           class="btn btn-outline-warning">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Supplier PDF
+        </a>
+        <a asp-page-handler="CustomerPdf"
+           asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
+           asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           asp-route-asOn="@Model.AsOnDate?.ToString("yyyy-MM-dd")"
+           class="btn btn-outline-info">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Customer PDF
+        </a>
+    </div>
+</div>
+
+<!-- Company header -->
+<div class="ageing-report-header mb-3">
+    <h3 class="mb-1">@Model.Report.CompanyName</h3>
+    @if (!string.IsNullOrWhiteSpace(Model.Report.CompanyAddress))
+    {
+        <p class="mb-0 text-muted">@Model.Report.CompanyAddress</p>
+    }
+    <h5 class="mt-2 mb-0"><strong>@Model.Report.Title</strong></h5>
+    <small class="text-muted">Generated: @Model.Report.GeneratedAt.ToString("dd MMM yyyy HH:mm")</small>
+</div>
+
+<!-- Filters -->
+<div class="panel-card mb-4">
+    <div class="panel-body">
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+            <div>
+                <label class="form-label small mb-1" for="party">Party</label>
+                <select name="party" id="party" class="form-select form-select-sm" style="min-width:140px">
+                    <option value="">All</option>
+                    <option value="Supplier" selected="@(Model.PartyFilter == "Supplier")">Supplier</option>
+                    <option value="Customer" selected="@(Model.PartyFilter == "Customer")">Customer</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label small mb-1" for="from">From Date</label>
+                <input type="date" name="from" id="from" value="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                       class="form-control form-control-sm" />
+            </div>
+            <div>
+                <label class="form-label small mb-1" for="to">To Date</label>
+                <input type="date" name="to" id="to" value="@Model.ToDate?.ToString("yyyy-MM-dd")"
+                       class="form-control form-control-sm" />
+            </div>
+            <div>
+                <label class="form-label small mb-1" for="asOn">As on Date</label>
+                <input type="date" name="asOn" id="asOn" value="@Model.AsOnDate?.ToString("yyyy-MM-dd")"
+                       class="form-control form-control-sm" />
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-accent btn-sm">
+                    <i class="bi bi-funnel me-1"></i>Filter
+                </button>
+                <a asp-page="/Due/AgingDues/Index" class="btn btn-outline-secondary btn-sm">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-primary">
+            <div class="stat-label">Total Entries</div>
+            <div class="stat-value">@Model.Report.TotalCount</div>
+            <div class="stat-foot">Due records</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-warning">
+            <div class="stat-label">Supplier Total</div>
+            <div class="stat-value">@(Model.Report.SupplierTotal.ToRs())</div>
+            <div class="stat-foot">Payables outstanding</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-info">
+            <div class="stat-label">Customer Total</div>
+            <div class="stat-value">@(Model.Report.CustomerTotal.ToRs())</div>
+            <div class="stat-foot">Receivables outstanding</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-danger">
+            <div class="stat-label">Grand Total</div>
+            <div class="stat-value">@(Model.Report.GrandTotal.ToRs())</div>
+            <div class="stat-foot">Total outstanding</div>
+        </div>
+    </div>
+</div>
+
+@{
+    void RenderDueTable(string id, List<AgingDueRow> rows, string emptyMessage)
+    {
+        <div class="table-responsive">
+            <table class="table table-pro mb-0 ageing-dues-table" id="@id">
+                <thead>
+                    <tr>
+                        <th>Party Name</th>
+                        <th>Date</th>
+                        <th>Inv. No</th>
+                        <th>Narration</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-end">Age (Days)</th>
+                        <th class="text-end">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!rows.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox d-block mb-1 opacity-40" style="font-size:1.5rem;"></i>
+                                @emptyMessage
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var r in rows)
+                        {
+                            var ageClass = r.AgeDays > 90 ? "age-90-plus"
+                                : r.AgeDays > 60 ? "age-61-90"
+                                : r.AgeDays > 30 ? "age-31-60"
+                                : "";
+                            <tr class="@ageClass">
+                                <td><strong>@r.PartyName</strong></td>
+                                <td>@r.Date.ToString("dd-MM-yyyy")</td>
+                                <td class="text-muted small">@(r.InvoiceNo ?? "\u2014")</td>
+                                <td class="small text-muted">@(r.Narration ?? "\u2014")</td>
+                                <td class="text-end">@r.Amount.ToString("N2")</td>
+                                <td class="text-end">
+                                    @if (r.AgeDays > 90)
+                                    {
+                                        <span class="text-danger fw-bold">@r.AgeDays</span>
+                                    }
+                                    else if (r.AgeDays > 60)
+                                    {
+                                        <span class="text-warning fw-semibold">@r.AgeDays</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@r.AgeDays</span>
+                                    }
+                                </td>
+                                <td class="text-end fw-bold" style="color:var(--danger)">@r.Balance.ToString("N2")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+<!-- Supplier Dues Section -->
+<div class="panel-card mb-4">
+    <div class="panel-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-truck me-2"></i>Supplier Dues (Payables)
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-secondary">@Model.Report.SupplierRows.Count record(s)</span>
+            <strong class="text-warning">@Model.Report.SupplierTotal.ToRs()</strong>
+        </div>
+    </div>
+    <div class="p-0 panel-body-flush">
+        @{ RenderDueTable("supplier-dues-table", Model.Report.SupplierRows, "No supplier payable records found."); }
+    </div>
+</div>
+
+<!-- Customer Dues Section -->
+<div class="panel-card mb-4">
+    <div class="panel-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-people me-2"></i>Customer Dues (Receivables)
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-secondary">@Model.Report.CustomerRows.Count record(s)</span>
+            <strong class="text-info">@Model.Report.CustomerTotal.ToRs()</strong>
+        </div>
+    </div>
+    <div class="p-0 panel-body-flush">
+        @{ RenderDueTable("customer-dues-table", Model.Report.CustomerRows, "No customer receivable records found."); }
+    </div>
+</div>
+
+<!-- Grand Total Footer -->
+@if (Model.Report.SupplierRows.Any() || Model.Report.CustomerRows.Any())
+{
+    <div class="panel-card">
+        <div class="panel-body d-flex justify-content-between align-items-center">
+            <strong style="font-size:1.1rem;">Grand Total</strong>
+            <strong style="color:var(--danger); font-size:1.2rem;">@Model.Report.GrandTotal.ToRs()</strong>
+        </div>
+    </div>
+}
+
+<div class="shortcuts-bar">
+    <span class="shortcut-item"><kbd>F1</kbd> Help</span>
+    <span class="shortcut-item"><kbd>Alt</kbd>+<kbd>1</kbd> Supplier PDF</span>
+    <span class="shortcut-item"><kbd>Alt</kbd>+<kbd>2</kbd> Customer PDF</span>
+    <span class="shortcut-item"><kbd>Alt</kbd>+<kbd>F</kbd> Focus Filter</span>
+    <span class="shortcut-item"><kbd>Alt</kbd>+<kbd>C</kbd> Clear Filters</span>
+    <span class="shortcut-item"><kbd>Enter</kbd> Apply Filter</span>
+    <span class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>K</kbd> Search</span>
+    <span class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> Calculator</span>
+</div>
+
+@section Styles {
+<style>
+    .ageing-report-header {
+        background: var(--rx-panel);
+        border: 1px solid var(--rx-border);
+        border-radius: var(--rx-radius);
+        padding: 1rem 1.25rem;
+    }
+    [data-bs-theme="light"] .ageing-report-header {
+        background: #ffffff;
+    }
+    .ageing-report-header h3 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--rx-heading);
+    }
+    .ageing-report-header h5 {
+        font-size: 1rem;
+        color: var(--rx-cyan);
+    }
+    .ageing-report-header small {
+        font-size: 0.75rem;
+    }
+    .ageing-dues-table tbody td {
+        vertical-align: middle;
+    }
+    .ageing-dues-table tbody tr.age-31-60 {
+        background: rgba(245,158,11,0.06);
+    }
+    .ageing-dues-table tbody tr.age-61-90 {
+        background: rgba(239,68,68,0.06);
+    }
+    .ageing-dues-table tbody tr.age-90-plus {
+        background: rgba(220,38,38,0.1);
+    }
+    .shortcuts-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+        padding: 0.5rem 1rem;
+        background: var(--rx-surface);
+        border: 1px solid var(--rx-border);
+        border-radius: 10px;
+        font-size: 0.75rem;
+        color: var(--rx-text-muted);
+        margin-top: 1rem;
+    }
+    .shortcuts-bar kbd {
+        display: inline-block;
+        padding: 0.1em 0.4em;
+        background: rgba(128,128,128,0.12);
+        border: 1px solid rgba(128,128,128,0.2);
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-family: inherit;
+        color: var(--rx-text-muted);
+        margin-right: 0.15em;
+    }
+    .shortcuts-bar .shortcut-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        white-space: nowrap;
+    }
+</style>
+}
+
+@section Scripts {
+<script>
+(function () {
+    'use strict';
+
+    var activeModal = null;
+
+    function closeModal() {
+        if (activeModal) {
+            activeModal.remove();
+            activeModal = null;
+        }
+    }
+
+    function showShortcutsHelp() {
+        closeModal();
+        var overlay = document.createElement('div');
+        overlay.className = 'global-search-overlay gs-open';
+        overlay.style.cssText = 'z-index:100000;display:flex;align-items:center;justify-content:center;';
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) closeModal();
+        });
+        overlay.innerHTML =
+            '<div style="background:var(--rx-card-bg);border:1px solid var(--rx-border);border-radius:16px;padding:1.5rem;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">' +
+            '<h5 style="margin:0;color:var(--rx-heading);"><i class="bi bi-keyboard me-2"></i>Keyboard Shortcuts</h5>' +
+            '<button onclick="var e=document.querySelector(\'.global-search-overlay\');if(e)e.remove();" style="border:none;background:none;font-size:1.4rem;color:var(--rx-text-muted);cursor:pointer;">&times;</button>' +
+            '</div>' +
+            '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
+            '<tr><td style="padding:0.4rem 0.5rem;"><kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">Alt</kbd>+<kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">1</kbd></td><td style="padding:0.4rem 0.5rem;color:var(--rx-text);">Supplier PDF</td></tr>' +
+            '<tr><td style="padding:0.4rem 0.5rem;"><kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">Alt</kbd>+<kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">2</kbd></td><td style="padding:0.4rem 0.5rem;color:var(--rx-text);">Customer PDF</td></tr>' +
+            '<tr><td style="padding:0.4rem 0.5rem;"><kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">Alt</kbd>+<kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">F</kbd></td><td style="padding:0.4rem 0.5rem;color:var(--rx-text);">Focus Party filter</td></tr>' +
+            '<tr><td style="padding:0.4rem 0.5rem;"><kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">Enter</kbd></td><td style="padding:0.4rem 0.5rem;color:var(--rx-text);">Apply filters</td></tr>' +
+            '<tr><td style="padding:0.4rem 0.5rem;"><kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">Alt</kbd>+<kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">C</kbd></td><td style="padding:0.4rem 0.5rem;color:var(--rx-text);">Clear all filters</td></tr>' +
+            '<tr><td style="padding:0.4rem 0.5rem;"><kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">F1</kbd></td><td style="padding:0.4rem 0.5rem;color:var(--rx-text);">Show this help</td></tr>' +
+            '<tr><td style="padding:0.4rem 0.5rem;"><kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">Esc</kbd></td><td style="padding:0.4rem 0.5rem;color:var(--rx-text);">Close help / Calculator clear</td></tr>' +
+            '<tr><td style="padding:0.4rem 0.5rem;"><kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">Ctrl</kbd>+<kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">K</kbd></td><td style="padding:0.4rem 0.5rem;color:var(--rx-text);">Global search</td></tr>' +
+            '<tr><td style="padding:0.4rem 0.5rem;"><kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">Ctrl</kbd>+<kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">Shift</kbd>+<kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">C</kbd></td><td style="padding:0.4rem 0.5rem;color:var(--rx-text);">Floating calculator on active field</td></tr>' +
+            '</table>' +
+            '<div style="margin-top:0.75rem;text-align:center;font-size:0.75rem;color:var(--rx-text-muted);">Press <kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">Esc</kbd> to close</div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+        activeModal = overlay;
+    }
+
+    document.addEventListener('keydown', function (e) {
+        var tag = e.target.tagName;
+        var inInput = tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
+
+        // F1 — help
+        if (e.key === 'F1') {
+            e.preventDefault();
+            showShortcutsHelp();
+            return;
+        }
+
+        // Escape — close help modal if open
+        if (e.key === 'Escape' && activeModal) {
+            e.preventDefault();
+            closeModal();
+            return;
+        }
+
+        // Only process Alt+ shortcuts when not typing in inputs
+        if (!e.altKey || inInput) return;
+
+        switch (e.key.toLowerCase()) {
+            case '1': {
+                e.preventDefault();
+                var supplierBtn = document.querySelector('a[asp-page-handler="SupplierPdf"]');
+                if (supplierBtn) supplierBtn.click();
+                break;
+            }
+            case '2': {
+                e.preventDefault();
+                var customerBtn = document.querySelector('a[asp-page-handler="CustomerPdf"]');
+                if (customerBtn) customerBtn.click();
+                break;
+            }
+            case 'f': {
+                e.preventDefault();
+                var partySelect = document.getElementById('party');
+                if (partySelect) partySelect.focus();
+                break;
+            }
+            case 'c': {
+                e.preventDefault();
+                var clearLink = document.querySelector('a[asp-page="/Due/AgingDues/Index"]');
+                if (clearLink) clearLink.click();
+                break;
+            }
+        }
+    });
+
+    // Enter key on filter form submits it
+    var filterForm = document.querySelector('form[method="get"]');
+    if (filterForm) {
+        filterForm.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                var filterBtn = filterForm.querySelector('button[type="submit"]');
+                if (filterBtn) filterBtn.click();
+            }
+        });
+    }
+})();
+</script>
+}

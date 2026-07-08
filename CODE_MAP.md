@@ -17,6 +17,7 @@ flowchart TB
         Purchase["/Purchase/*"]
         Inventory["/Inventory/*"]
         Due["/Due"]
+        AgingDues["/Due/AgingDues"]
         Reports["/Reports"]
         Expenses["/Expenses"]
         Admin["/Admin/*"]
@@ -28,6 +29,7 @@ flowchart TB
         PS[PurchaseService]
         PRS[PurchaseReturnService]
         DS[DueService]
+        ADS[AgingDueService]
         RS[ReportService]
         DBS[DashboardService]
         ES[ExpenseService]
@@ -46,6 +48,7 @@ flowchart TB
     end
 
     UI --> Services
+    AgingDues --> ADS
     Services --> DB
     DB --> SQLite
     BS --> PDF
@@ -78,6 +81,11 @@ PrimeRx/
 │   │   ├── Billing/               # POS, History, Edit
 │   │   ├── Inventory/             # Stock, Batches, Expiry, Adjust, StockExchange
 │   │   ├── Dashboard/             # Analytics KPIs and charts
+│   │   ├── Due/
+│   │   │   ├── AgingDues/         # Ageing dues report (supplier + customer)
+│   │   │   ├── Payables/Ageing/   # Payable ageing report
+│   │   │   ├── Index              # Due bills listing & collection
+│   │   │   └── Pay                # Record due payment
 │   │   ├── Reports/               # Sales, inventory, profit reports
 │   │   ├── Expenses/              # Expense entry
 │   │   ├── Notifications/         # Notification center
@@ -107,7 +115,7 @@ PrimeRx/
 | **Roles** | `Admin`, `Staff` via `AddRoles<IdentityRole>()` |
 | **Policies** | `StaffAccess` → Admin or Staff; `AdminOnly` → Admin only |
 | **Page auth** | Purchase, Billing, Dashboard, Inventory, Due, Reports, Expenses → Staff; Admin folder → Admin; Setup & Index → anonymous |
-| **DI registrations** | `InventoryService`, `BillingService`, `PurchaseService`, `PurchaseReturnService`, `DueService`, `ReportService`, `DashboardService`, `ExpenseService`, `AuditLogService`, `BackupService`, `MedicineMasterService`, `UpdateService` (scoped); `PdfGenerator` (singleton) |
+| **DI registrations** | `InventoryService`, `BillingService`, `PurchaseService`, `PurchaseReturnService`, `DueService`, `AgingDueService`, `ReportService`, `DashboardService`, `ExpenseService`, `AuditLogService`, `BackupService`, `MedicineMasterService`, `UpdateService` (scoped); `PdfGenerator` (singleton) |
 | **Startup migration** | Runs `MigrateAsync()` and `RoleSeeder.SeedAsync()` on launch |
 | **Middleware order** | SetupMiddleware → Routing → Authentication → Authorization → Razor Pages |
 | **HTTPS** | Only enabled when `ASPNETCORE_URLS` contains `https` |
@@ -210,6 +218,20 @@ Outstanding bill tracking and payment collection.
 | `GetDueBillsAsync(search)` | public | Lists bills with `DueAmount > 0`; optional customer/bill search |
 | `RecordPaymentAsync(request)` | public | Records partial or full payment; updates bill status to Paid or Partially Paid |
 | `GetPaymentHistoryAsync(billId)` | public | All due payments for a specific bill |
+
+---
+
+### AgingDueService
+
+Unified ageing report for supplier payables and customer receivables.
+
+| Method | Visibility | Description |
+|--------|------------|-------------|
+| `GetReportAsync(partyType, fromDate, toDate, asOnDate)` | public | Queries Payables table for supplier dues + Bills (DueAmount > 0) for customer receivables; returns separated lists with age calculations |
+| `GetPayableRowsAsync(fromDate, toDate, asOnDate)` | private | Filters and projects payable records into AgingDueRows |
+| `GetReceivableRowsAsync(fromDate, toDate, asOnDate)` | private | Filters and projects bill records into AgingDueRows |
+| `RenderDueTable(TableDescriptor, rows)` | private static | Renders a QuestPDF table for a list of ageing rows |
+| `ExportToPdf(report)` | public | Generates A4 PDF with company header, separate supplier/customer sections, subtotals, age color-coding, grand total |
 
 ---
 
@@ -629,6 +651,8 @@ Return line: PurchaseReturnId, MedicineId, MedicineName, BatchNumber, Quantity, 
 | `PurchaseCreateRequest` | PurchaseService | Purchase creation payload (with PaymentType, CreditDays) |
 | `PurchaseReturnLineItem` | PurchaseReturn UI | One returned item |
 | `PurchaseReturnCreateRequest` | PurchaseReturnService | Return creation request |
+| `AgingDueRow` | AgingDues page | Single due entry: PartyName, PartyType, Date, InvoiceNo, Narration, Amount, PaidAmount, Balance, AgeDays |
+| `AgingDueReport` | AgingDues page | Full report with SupplierRows, CustomerRows, SupplierTotal, CustomerTotal, GrandTotal, filter state, PDF export |
 
 ---
 
@@ -704,6 +728,9 @@ Return line: PurchaseReturnId, MedicineId, MedicineName, BatchNumber, Quantity, 
 | **Due/Index** | `/Due` | `OnGetAsync` | Lists outstanding due bills |
 | **Due/Pay** | `/Due/Pay` | `OnGetAsync` | Payment form for a specific bill |
 | | | `OnPostAsync` | Records payment via `DueService.RecordPaymentAsync` |
+| **Due/AgingDues/Index** | `/Due/AgingDues` | `OnGetAsync` | Unified ageing dues report with supplier/customer sections |
+| | | `OnGetSupplierPdfAsync` | Exports supplier payables to PDF (QuestPDF) |
+| | | `OnGetCustomerPdfAsync` | Exports customer receivables to PDF (QuestPDF) |
 
 ### Reports
 
