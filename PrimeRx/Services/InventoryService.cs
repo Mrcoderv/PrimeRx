@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using PrimeRx.Data;
 using PrimeRx.Models;
 using PrimeRx.Models.ViewModels;
@@ -7,6 +8,10 @@ namespace PrimeRx.Services;
 
 public class InventoryService(ApplicationDbContext context)
 {
+    static InventoryService()
+    {
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+    }
     public async Task<List<Medicine>> GetAllAsync(string? search = null, bool includeInactive = false)
     {
         var query = context.Medicines.AsQueryable();
