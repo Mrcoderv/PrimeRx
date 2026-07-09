@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PrimeRx.Data;
@@ -36,6 +37,16 @@ builder.WebHost.UseUrls("http://0.0.0.0:5000");
 var sqliteConnection = DatabasePath.ResolveSqliteConnectionString(
     builder.Configuration.GetConnectionString("DefaultConnection"),
     builder.Environment.ContentRootPath);
+
+// Persist Data Protection keys to disk so login cookies, antiforgery tokens,
+// and other protected data survive app restarts/updates instead of being
+// silently invalidated (which otherwise force every signed-in user to
+// re-login whenever the process recycles).
+var dataProtectionDir = Path.Combine(builder.Environment.ContentRootPath, "Data", "keys");
+Directory.CreateDirectory(dataProtectionDir);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionDir))
+    .SetApplicationName("PrimeRx");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(sqliteConnection)
@@ -177,7 +188,9 @@ _ = Task.Run(async () =>
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error checking for updates: {ex.Message}");
+        // Update checks are best-effort and expected to fail when no releases
+        // repo/network is configured (e.g. local dev). Log at debug level only.
+        Log.Debug(ex, "Update check skipped (non-fatal)");
     }
 });
 

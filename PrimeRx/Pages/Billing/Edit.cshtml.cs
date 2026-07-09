@@ -11,7 +11,6 @@ namespace PrimeRx.Pages.Billing;
 
 public class EditModel(
     BillingService billingService,
-    InventoryService inventoryService,
     UserManager<IdentityUser> userManager) : PageModel
 {
     [BindProperty]

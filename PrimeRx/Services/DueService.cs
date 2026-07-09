@@ -18,7 +18,7 @@ public class DueService(ApplicationDbContext context, NotificationService notifi
             var term = search.Trim().ToLower();
             query = query.Where(b =>
                 b.CustomerName.ToLower().Contains(term) ||
-                b.CustomerPhone.Contains(term) ||
+                (b.CustomerPhone != null && b.CustomerPhone.Contains(term)) ||
                 b.BillNumber.ToLower().Contains(term));
         }
 
