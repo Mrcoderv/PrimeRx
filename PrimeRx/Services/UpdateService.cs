@@ -120,7 +120,9 @@ public sealed class UpdateService : IDisposable
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[UpdateService] CheckForUpdates error: {ex.Message}");
+            // Expected in dev / before the releases repo has its first published
+            // release (404). Not fatal — the app just reports "no update available".
+            Serilog.Log.Debug(ex, "[UpdateService] CheckForUpdates skipped (non-fatal)");
             return NoUpdate(currentVersion);
         }
     }
