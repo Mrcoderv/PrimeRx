@@ -6,6 +6,13 @@ namespace PrimeRx.Services;
 
 public class EmailSender : IEmailSender<IdentityUser>
 {
+    private readonly IConfiguration _config;
+
+    public EmailSender(IConfiguration config)
+    {
+        _config = config;
+    }
+
     public async Task SendEmailAsync(string email, string subject, string htmlMessage)
     {
         await SendMailAsync(email, subject, htmlMessage);
@@ -31,20 +38,31 @@ public class EmailSender : IEmailSender<IdentityUser>
 
     private async Task SendMailAsync(string email, string subject, string htmlMessage)
     {
-        var fromAddress = new MailAddress("raghavap.339@gmail.com", "PrimeRx");
-        const string fromPassword = "yxht jwla vjkr idto";
+        var fromAddress = _config["Email:FromAddress"] ?? "";
+        var fromName = _config["Email:FromName"] ?? "PrimeRx";
+        var password = _config["Email:Password"] ?? "";
+        var host = _config["Email:SmtpHost"] ?? "smtp.gmail.com";
+        var port = int.TryParse(_config["Email:SmtpPort"], out var p) ? p : 587;
+
+        if (string.IsNullOrEmpty(fromAddress) || string.IsNullOrEmpty(password))
+        {
+            // Email not configured — skip silently (password reset, etc. won't work)
+            return;
+        }
+
+        var from = new MailAddress(fromAddress, fromName);
 
         using var smtp = new SmtpClient
         {
-            Host = "smtp.gmail.com",
-            Port = 587,
+            Host = host,
+            Port = port,
             EnableSsl = true,
             DeliveryMethod = SmtpDeliveryMethod.Network,
             UseDefaultCredentials = false,
-            Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+            Credentials = new NetworkCredential(fromAddress, password)
         };
 
-        using var message = new MailMessage(fromAddress, new MailAddress(email))
+        using var message = new MailMessage(from, new MailAddress(email))
         {
             Subject = subject,
             Body = htmlMessage,

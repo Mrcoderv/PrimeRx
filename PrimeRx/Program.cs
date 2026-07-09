@@ -71,6 +71,7 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizeFolder("/Due", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Reports", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Expenses", "StaffAccess");
+    options.Conventions.AuthorizeFolder("/Notifications", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Admin", "AdminOnly");
     options.Conventions.AllowAnonymousToPage("/Setup/Index");
     options.Conventions.AllowAnonymousToPage("/Index");
