@@ -44,9 +44,14 @@ var sqliteConnection = DatabasePath.ResolveSqliteConnectionString(
 // re-login whenever the process recycles).
 var dataProtectionDir = Path.Combine(builder.Environment.ContentRootPath, "Data", "keys");
 Directory.CreateDirectory(dataProtectionDir);
-builder.Services.AddDataProtection()
+var dataProtectionBuilder = builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionDir))
     .SetApplicationName("PrimeRx");
+
+if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+{
+    dataProtectionBuilder.ProtectKeysWithDpapi();
+}
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(sqliteConnection)
@@ -148,6 +153,12 @@ if (!app.Environment.IsDevelopment()
     {
         var launchUrl = app.Urls.FirstOrDefault(u => u.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
             ?? "http://localhost:5000";
+        
+        if (launchUrl.Contains("0.0.0.0"))
+        {
+            launchUrl = launchUrl.Replace("0.0.0.0", "localhost");
+        }
+
         try
         {
             Process.Start(new ProcessStartInfo(launchUrl) { UseShellExecute = true });
