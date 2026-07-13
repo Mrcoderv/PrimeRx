@@ -309,8 +309,8 @@
     function showShortcutsHelp() {
         closeModal();
         var overlay = document.createElement('div');
-        overlay.className = 'global-search-overlay gs-open';
-        overlay.style.cssText = 'z-index:100000;display:flex;align-items:center;justify-content:center;';
+        overlay.className = 'shortcuts-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);';
         overlay.addEventListener('click', function (e) {
             if (e.target === overlay) closeModal();
         });
