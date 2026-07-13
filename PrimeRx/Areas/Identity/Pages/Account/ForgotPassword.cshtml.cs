@@ -27,13 +27,12 @@ public class ForgotPasswordModel(
             return Page();
 
         var user = await userManager.FindByEmailAsync(Input.Email);
-        if (user == null)
-        {
-            return RedirectToPage("./ForgotPasswordConfirmation");
-        }
 
-        var otp = otpStore.GenerateOtp(Input.Email.ToUpperInvariant());
-        await emailSender.SendPasswordResetCodeAsync(user, Input.Email, otp);
+        if (user != null)
+        {
+            var otp = otpStore.GenerateOtp(Input.Email.ToUpperInvariant());
+            await emailSender.SendPasswordResetCodeAsync(user, Input.Email, otp);
+        }
 
         return RedirectToPage("./VerifyOtp", new { email = Input.Email });
     }

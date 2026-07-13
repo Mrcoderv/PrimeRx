@@ -1495,9 +1495,11 @@ a:hover { color: var(--rx-link-hover); }
   align-items: flex-start;
   justify-content: center;
   padding-top: 10vh;
+  pointer-events: none;
 }
 .global-search-overlay.gs-open {
   display: flex;
+  pointer-events: auto;
 }
 
 /* ── Modal ── */
