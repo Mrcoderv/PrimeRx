@@ -38,11 +38,16 @@ var sqliteConnection = DatabasePath.ResolveSqliteConnectionString(
     builder.Configuration.GetConnectionString("DefaultConnection"),
     builder.Environment.ContentRootPath);
 
-// Persist Data Protection keys to disk so login cookies, antiforgery tokens,
-// and other protected data survive app restarts/updates instead of being
-// silently invalidated (which otherwise force every signed-in user to
-// re-login whenever the process recycles).
-var dataProtectionDir = Path.Combine(builder.Environment.ContentRootPath, "Data", "keys");
+// Persist Data Protection keys to a stable, publish-independent location so
+// login cookies, antiforgery tokens, and other protected data survive
+// republishing and work identically under `dotnet run` and the published exe.
+// Using ContentRootPath was broken because `dotnet run` and the publish folder
+// have different ContentRootPaths, creating two separate key-rings — the
+// published exe could never decrypt tokens generated during `dotnet run` (and
+// vice-versa), silently breaking every POST form.
+var dataProtectionDir = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+    "PrimeRx", "DataProtection", "keys");
 Directory.CreateDirectory(dataProtectionDir);
 var dataProtectionBuilder = builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionDir))

@@ -181,13 +181,35 @@
         nameTd.appendChild(batchInfo);
 
         tr.appendChild(nameTd);
-        tr.innerHTML += `
-            <td class="text-end"><input type="number" class="form-control form-control-sm text-end rate-input" value="${item.rate ?? ''}" step="0.01" min="0"></td>
-            <td class="text-end"><input type="number" class="form-control form-control-sm text-end qty-input" value="${item.quantity ?? ''}" min="1" max="${item.availableStock}"></td>
-            <td class="text-end"><input type="number" class="form-control form-control-sm text-end disc-percent-input" value="${item.discountPercent ?? ''}" step="0.1" min="0" max="100"></td>
-            <td class="disc-amount text-end">${formatMoney(item.discountAmount ?? 0)}</td>
-            <td class="line-total text-end">${formatMoney((item.rate ?? 0) * (item.quantity ?? 0) - (item.discountAmount ?? 0))}</td>
-            <td><button type="button" class="btn btn-sm btn-outline-danger btn-remove-item">&times;</button></td>`;
+
+        const rateTd = document.createElement('td');
+        rateTd.className = 'text-end';
+        rateTd.innerHTML = `<input type="number" class="form-control form-control-sm text-end rate-input" value="${item.rate ?? ''}" step="0.01" min="0">`;
+        tr.appendChild(rateTd);
+
+        const qtyTd = document.createElement('td');
+        qtyTd.className = 'text-end';
+        qtyTd.innerHTML = `<input type="number" class="form-control form-control-sm text-end qty-input" value="${item.quantity ?? ''}" min="1" max="${item.availableStock}">`;
+        tr.appendChild(qtyTd);
+
+        const discTd = document.createElement('td');
+        discTd.className = 'text-end';
+        discTd.innerHTML = `<input type="number" class="form-control form-control-sm text-end disc-percent-input" value="${item.discountPercent ?? ''}" step="0.1" min="0" max="100">`;
+        tr.appendChild(discTd);
+
+        const discAmtTd = document.createElement('td');
+        discAmtTd.className = 'disc-amount text-end';
+        discAmtTd.textContent = formatMoney(item.discountAmount ?? 0);
+        tr.appendChild(discAmtTd);
+
+        const lineTotalTd = document.createElement('td');
+        lineTotalTd.className = 'line-total text-end';
+        lineTotalTd.textContent = formatMoney((item.rate ?? 0) * (item.quantity ?? 0) - (item.discountAmount ?? 0));
+        tr.appendChild(lineTotalTd);
+
+        const removeTd = document.createElement('td');
+        removeTd.innerHTML = `<button type="button" class="btn btn-sm btn-outline-danger btn-remove-item">&times;</button>`;
+        tr.appendChild(removeTd);
 
         tr.querySelector('.batch-btn').addEventListener('click', e => {
             e.stopPropagation();
