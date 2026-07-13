@@ -53,6 +53,25 @@ Open **http://localhost:5000** in your browser.
 
 > **Database:** SQLite file at `Data\primerx.db` — back up this file regularly to preserve all business data.
 
+### Windows Defender (New Device)
+
+On a new device, Windows Defender may block PrimeRx because the `.exe` is unsigned. Run the included fix script **as Administrator**:
+
+```powershell
+# Right-click PowerShell → Run as Administrator
+.\Fix-Defender.ps1
+```
+
+This adds folder and process exclusions so Defender won't interfere with PrimeRx or its database.
+
+If you prefer to fix it manually:
+1. Open **Windows Security** → **Virus & threat protection** → **Manage settings**
+2. Scroll to **Exclusions** → **Add or remove exclusions**
+3. Add exclusion → **Folder** → select `publish\win-x64`
+4. If **Controlled Folder Access** is enabled, add `PrimeRx.exe` as an allowed app
+
+If SmartScreen still appears when launching, click **"More info"** → **"Run anyway"**.
+
 ---
 
 ## Development Setup
@@ -241,6 +260,7 @@ PrimeRx/
 
 - Run `PrimeRx.exe` from the `publish\win-x64` folder
 - Keep the entire folder together (runtime + `wwwroot` + `Data` are required)
+- On a new device, run `Fix-Defender.ps1` as Administrator to prevent Windows Defender interference
 - For production, set a fixed port and consider running as a Windows Service or behind IIS
 - Back up `Data\primerx.db` daily
 

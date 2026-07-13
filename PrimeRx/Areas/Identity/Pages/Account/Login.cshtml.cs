@@ -3,10 +3,15 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using PrimeRx.Data;
 
 namespace PrimeRx.Areas.Identity.Pages.Account;
 
-public class LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger) : PageModel
+public class LoginModel(
+    SignInManager<IdentityUser> signInManager,
+    ILogger<LoginModel> logger,
+    ApplicationDbContext context) : PageModel
 {
     [BindProperty]
     public InputModel Input { get; set; } = new();
@@ -14,6 +19,8 @@ public class LoginModel(SignInManager<IdentityUser> signInManager, ILogger<Login
     public IList<AuthenticationScheme> ExternalLogins { get; set; } = [];
 
     public string? ReturnUrl { get; set; }
+
+    public bool IsSetupRequired { get; set; }
 
     [TempData]
     public string? ErrorMessage { get; set; }
@@ -41,6 +48,7 @@ public class LoginModel(SignInManager<IdentityUser> signInManager, ILogger<Login
         await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
         ReturnUrl = returnUrl;
+        IsSetupRequired = !await context.CompanyProfiles.AnyAsync();
     }
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
