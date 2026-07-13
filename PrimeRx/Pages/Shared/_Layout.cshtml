@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/bootstrap-icons.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PrimeRx.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/calculator.css" asp-append-version="true" />
@@ -256,11 +256,15 @@
                 return '/Notifications/Index';
             }
 
+            let notifFailCount = 0;
             async function loadNotifications() {
                 try {
                     const res = await fetch('/Notifications?handler=NotificationsJson');
                     if (!res.ok) return;
+                    const ct = res.headers.get('content-type') || '';
+                    if (!ct.includes('application/json')) return;
                     const d = await res.json();
+                    notifFailCount = 0;
 
                     const unread = d.unreadCount ?? 0;
                     if (unread > 0) {
@@ -313,8 +317,10 @@
                         });
                     });
                 } catch (err) {
-                    console.error('Failed to load notifications', err);
-                    items.innerHTML = '<div class="text-center py-3 text-muted small">Could not load notifications</div>';
+                    notifFailCount++;
+                    if (notifFailCount <= 2) {
+                        items.innerHTML = '<div class="text-center py-3 text-muted small">Could not load notifications</div>';
+                    }
                 }
             }
 
@@ -345,7 +351,7 @@
 
             document.getElementById('bellDropdown')?.addEventListener('show.bs.dropdown', loadNotifications);
             loadNotifications();
-            setInterval(loadNotifications, 60000);
+            setInterval(loadNotifications, 120000);
         })();
         </script>
     }
