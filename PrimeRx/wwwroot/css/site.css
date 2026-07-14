@@ -1157,6 +1157,7 @@ a:hover { color: var(--rx-link-hover); }
 
 .dash-card-body {
   padding: 1.25rem;
+  position: relative; /* contain absolutely-positioned chart-empty overlay */
 }
 
 .dash-link {
