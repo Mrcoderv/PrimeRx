@@ -318,7 +318,7 @@
             '<div style="background:var(--rx-card-bg);border:1px solid var(--rx-border);border-radius:16px;padding:1.5rem;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">' +
             '<h5 style="margin:0;color:var(--rx-heading);"><i class="bi bi-keyboard me-2"></i>Keyboard Shortcuts</h5>' +
-            '<button onclick="var e=document.querySelector(\'.global-search-overlay\');if(e)e.remove();" style="border:none;background:none;font-size:1.4rem;color:var(--rx-text-muted);cursor:pointer;">&times;</button>' +
+            '<button class="shortcuts-modal-close" style="border:none;background:none;font-size:1.4rem;color:var(--rx-text-muted);cursor:pointer;">&times;</button>' +
             '</div>' +
             '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">' +
             '<tr><td style="padding:0.4rem 0.5rem;"><kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">Alt</kbd>+<kbd style="padding:0.1em 0.4em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.2);border-radius:4px;font-size:0.7rem;">1</kbd></td><td style="padding:0.4rem 0.5rem;color:var(--rx-text);">Supplier PDF</td></tr>' +
@@ -335,6 +335,11 @@
             '</div>';
         document.body.appendChild(overlay);
         activeModal = overlay;
+
+        // Wire the × button to closeModal() — do NOT use querySelector('.global-search-overlay')
+        // here because that would target the layout's #globalSearchOverlay instead of this overlay.
+        var closeBtn = overlay.querySelector('.shortcuts-modal-close');
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
     }
 
     document.addEventListener('keydown', function (e) {
