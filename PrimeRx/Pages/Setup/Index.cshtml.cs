@@ -73,9 +73,6 @@ public class IndexModel(
 
         await userManager.AddToRoleAsync(user, AppRoles.Admin);
 
-        if (Input.SeedMedicines)
-            await MedicineSeeder.SeedAsync(context);
-
         await signInManager.SignInAsync(user, isPersistent: false);
         return RedirectToPage("/Billing/Index");
     }
@@ -106,8 +103,5 @@ public class IndexModel(
         [DataType(DataType.Password)]
         [Display(Name = "Admin Password")]
         public string AdminPassword { get; set; } = string.Empty;
-
-        [Display(Name = "Seed sample medicines")]
-        public bool SeedMedicines { get; set; } = true;
     }
 }

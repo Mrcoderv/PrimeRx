@@ -188,61 +188,72 @@ PrimeRx/
 
 ## Keyboard Shortcuts
 
+Press <kbd>F1</kbd> anywhere in the app to open the interactive shortcuts help modal. You can also click the
+keyboard icon in the top-right navbar.
+
 ### Global
 
 | Shortcut | Action |
 |----------|--------|
-| <kbd>Ctrl</kbd>+<kbd>K</kbd> | Open/Close global feature search |
-| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> | Open floating calculator on active input |
-| <kbd>Alt</kbd>+<kbd>C</kbd> (calculator open) | Insert calculator value into active field |
-| <kbd>Esc</kbd> | Close popups / search overlay / help modal |
+| <kbd>F1</kbd> | Open / close keyboard shortcuts help |
+| <kbd>Ctrl</kbd>+<kbd>K</kbd> | Open / close global feature search |
+| <kbd>Ctrl</kbd>+<kbd>N</kbd> | Navigate to new bill (POS) |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd> | Navigate to new purchase entry |
+| <kbd>Ctrl</kbd>+<kbd>S</kbd> | Save / submit the current form |
+| <kbd>Ctrl</kbd>+<kbd>P</kbd> | Print the current page |
+| <kbd>Esc</kbd> | Close any open popup, modal, or overlay |
+| <kbd>/</kbd> | Focus the medicine search bar (when not in an input) |
 
-### Ageing Dues Page
-
-| Shortcut | Action |
-|----------|--------|
-| <kbd>F1</kbd> | Show keyboard shortcut help overlay |
-| <kbd>Alt</kbd>+<kbd>1</kbd> | Generate Supplier PDF |
-| <kbd>Alt</kbd>+<kbd>2</kbd> | Generate Customer PDF |
-| <kbd>Alt</kbd>+<kbd>F</kbd> | Focus Party filter dropdown |
-| <kbd>Alt</kbd>+<kbd>C</kbd> | Clear all filters |
-| <kbd>Enter</kbd> (on filter form) | Apply filters |
-
-### Billing Page (POS)
+### Billing (POS)
 
 | Shortcut | Action |
 |----------|--------|
-| <kbd>Enter</kbd> (Rate input) | Move to Qty field |
-| <kbd>Enter</kbd> (Qty input) | Move to Disc% field |
-| <kbd>Enter</kbd> (Disc% input) | Move to search bar |
+| <kbd>Enter</kbd> (on Rate field) | Move to Qty field |
+| <kbd>Enter</kbd> (on Qty field) | Move to Disc% field |
+| <kbd>Enter</kbd> (on Disc% field) | Move to search bar (ready for next medicine) |
 | <kbd>1</kbd>-<kbd>9</kbd> | Quick-set quantity on last added item |
-| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> / Right-click | Open floating calculator on Rate/Qty/Disc fields |
-| <kbd>↑</kbd><kbd>↓</kbd> (popup open) | Navigate search results |
+| <kbd>F4</kbd> | Open floating calculator on Rate / Qty / Disc% field |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> / Right-click | Open floating calculator (alternative) |
+| <kbd>F2</kbd> | Open batch picker for current row |
+| <kbd>&uarr;</kbd><kbd>&darr;</kbd> (popup open) | Navigate medicine search results |
 | <kbd>Enter</kbd> (popup open) | Select highlighted medicine |
 | <kbd>Esc</kbd> (popup open) | Close medicine search popup |
 
-### Purchase Entry Page
+### Purchase Entry
 
 | Shortcut | Action |
 |----------|--------|
 | <kbd>Enter</kbd> (consecutive fields) | Batch# → Expiry → Qty → Free → Rate → Disc% → CC → MRP → next search |
-| <kbd>↑</kbd><kbd>↓</kbd> (table) | Navigate between rows in same column |
-| <kbd>↑</kbd><kbd>↓</kbd> (popup open) | Navigate search results |
+| <kbd>&uarr;</kbd><kbd>&darr;</kbd> (table) | Navigate between rows in the same column |
+| <kbd>F4</kbd> | Open floating calculator on Qty / Rate / CC / Disc / MRP field |
+| <kbd>F2</kbd> | Focus batch# input for current row |
+| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> / Right-click | Open floating calculator (alternative) |
+| <kbd>&uarr;</kbd><kbd>&darr;</kbd> (popup open) | Navigate medicine search results |
 | <kbd>Enter</kbd> (popup open) | Select highlighted medicine |
-| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> / Right-click | Open floating calculator on Qty/Rate/CC fields |
 | <kbd>Esc</kbd> (popup open) | Close medicine search popup |
 
-### Calculator (Floating)
+### Floating Calculator
 
 | Shortcut | Action |
 |----------|--------|
-| <kbd>0</kbd>-<kbd>9</kbd>, <kbd>.</kbd> | Input numbers/decimal |
+| <kbd>0</kbd>-<kbd>9</kbd>, <kbd>.</kbd> | Input numbers and decimal |
 | <kbd>+</kbd>, <kbd>-</kbd>, <kbd>*</kbd>, <kbd>/</kbd>, <kbd>%</kbd> | Operators |
 | <kbd>Enter</kbd> / <kbd>=</kbd> | Evaluate expression |
 | <kbd>Backspace</kbd> | Delete last character |
 | <kbd>Esc</kbd> / <kbd>C</kbd> | Clear display |
-| <kbd>U</kbd> | Insert value into active field |
+| <kbd>U</kbd> | Insert calculated value into active field |
 | <kbd>Alt</kbd>+<kbd>C</kbd> | Insert value (when typing in another input) |
+| <kbd>F4</kbd> | Toggle calculator on focused numeric field |
+
+### Inventory & Reports
+
+| Shortcut | Action |
+|----------|--------|
+| <kbd>Alt</kbd>+<kbd>1</kbd> | Generate Supplier ageing PDF |
+| <kbd>Alt</kbd>+<kbd>2</kbd> | Generate Customer ageing PDF |
+| <kbd>Alt</kbd>+<kbd>F</kbd> | Focus filter dropdown |
+| <kbd>Alt</kbd>+<kbd>C</kbd> | Clear all filters |
+| <kbd>Enter</kbd> (on filter form) | Apply filters |
 
 ---
 

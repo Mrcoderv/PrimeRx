@@ -4,7 +4,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-     <Version>2.0.3</Version>
+    <Version>3.0.0</Version>
+    <AssemblyVersion>3.0.0</AssemblyVersion>
+    <FileVersion>3.0.0</FileVersion>
     <AssemblyName>PrimeRx</AssemblyName>
     <RootNamespace>PrimeRx</RootNamespace>
     <Product>PrimeRx</Product>

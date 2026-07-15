@@ -123,12 +123,11 @@
                     </ul>
                 }
                 <ul class="navbar-nav align-items-center gap-2">
-                    <!-- Search trigger -->
+                    <!-- Keyboard shortcuts help -->
                     <li class="nav-item">
-                        <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" data-search-trigger title="Search (Ctrl+K)">
-                            <i class="bi bi-search"></i>
-                            <span class="d-none d-md-inline" style="font-size:0.8rem;">Search</span>
-                            <kbd class="d-none d-lg-inline" style="font-size:0.6rem;padding:0.05em 0.3em;">Ctrl K</kbd>
+                        <button type="button" class="rx-help-trigger" title="Keyboard Shortcuts (F1)"
+                                onclick="window.RxShortcuts?.openHelp()">
+                            <i class="bi bi-keyboard"></i>
                         </button>
                     </li>
                     <!-- Dark / Light mode toggle -->
@@ -184,10 +183,31 @@
         </small>
     </footer>
 
+    <!-- ── Global Search (z-index based, no overlay backdrop) ── -->
+    <div class="global-search-panel" id="globalSearchOverlay">
+        <div class="global-search-modal">
+            <div class="global-search-input-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" class="global-search-input" id="globalSearchInput"
+                       placeholder="Search features, pages..." autocomplete="off" spellcheck="false">
+                <button class="global-search-close" id="globalSearchClose" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div class="global-search-results" id="globalSearchResults">
+                <div class="gs-empty">Start typing to search...</div>
+            </div>
+            <div class="global-search-footer">
+                <span><kbd>↑↓</kbd> Navigate</span>
+                <span><kbd>Enter</kbd> Open</span>
+                <span><kbd>Esc</kbd> Close</span>
+            </div>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/calculator.js" asp-append-version="true"></script>
+    <script src="~/js/shortcuts.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
     <!-- ── Theme Toggle ─────────────────────────────────── -->
@@ -344,25 +364,5 @@
         })();
         </script>
     }
-
-    <!-- ── Global Search Overlay ──────────────────────────── -->
-    <div class="global-search-overlay" id="globalSearchOverlay">
-        <div class="global-search-modal">
-            <div class="global-search-input-wrap">
-                <i class="bi bi-search"></i>
-                <input type="text" class="global-search-input" id="globalSearchInput"
-                       placeholder="Search features, pages..." autocomplete="off" spellcheck="false">
-                <button class="global-search-close" id="globalSearchClose" type="button" aria-label="Close">&times;</button>
-            </div>
-            <div class="global-search-results" id="globalSearchResults">
-                <div class="gs-empty">Start typing to search...</div>
-            </div>
-            <div class="global-search-footer">
-                <span><kbd>↑↓</kbd> Navigate</span>
-                <span><kbd>Enter</kbd> Open</span>
-                <span><kbd>Esc</kbd> Close</span>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

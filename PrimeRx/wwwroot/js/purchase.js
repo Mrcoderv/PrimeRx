@@ -624,6 +624,36 @@
         }
     });
 
+    // ── F4 Calculator shortcut (qty, rate, cc fields) ──────────────────────
+    document.addEventListener('keydown', e => {
+        if (e.key === 'F4') {
+            const active = document.activeElement;
+            if (active && (active.classList.contains('qty-input') || active.classList.contains('rate-input') || active.classList.contains('cc-input') || active.classList.contains('mrp-input') || active.classList.contains('disc-input'))) {
+                e.preventDefault();
+                if (floatingCalc.style.display === 'none') {
+                    showCalc(active);
+                } else {
+                    hideCalc();
+                }
+            }
+        }
+    });
+
+    // ── F2 Batch info shortcut ─────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+        if (e.key === 'F2') {
+            const active = document.activeElement;
+            if (!active) return;
+            const tr = active.closest('tr');
+            if (!tr) return;
+            const batchInput = tr.querySelector('.batch-input');
+            if (batchInput) {
+                e.preventDefault();
+                batchInput.focus();
+            }
+        }
+    });
+
     // ── Totals ───────────────────────────────────────────────────────────────
     function updateTotals() {
         let subtotal = 0;
