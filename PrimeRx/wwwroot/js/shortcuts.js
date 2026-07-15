@@ -120,30 +120,54 @@
         const isInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT' || active.isContentEditable);
         const isModalOpen = overlay && overlay.style.display === 'flex';
         const isSearchOpen = document.getElementById('globalSearchOverlay')?.classList.contains('gs-open');
+        const isHelpSearch = active && active.id === 'rxHelpSearch';
 
-        // F1 — Help (always works, even in inputs)
+        // ── ALWAYS PREVENT BROWSER DEFAULTS for F-keys & Ctrl combos ──────
+        // These must fire before any early-returns so the browser never
+        // hijacks them (e.g. F1→browser help, F4→address bar, Ctrl+S→save page).
+
+        // F1 — Toggle help (works everywhere, even in inputs)
         if (e.key === 'F1') {
             e.preventDefault();
+            e.stopPropagation();
             if (isModalOpen) closeHelp();
             else openHelp();
             return;
         }
 
-        // Escape — close help
+        // F2 — Prevent browser default (some browsers focus sidebar/address bar).
+        // Actual batch-info logic lives in billing.js / purchase.js.
+        if (e.key === 'F2') {
+            e.preventDefault();
+        }
+
+        // F4 — Prevent browser default (address bar focus in Chrome/Edge).
+        // Actual calculator toggle lives in billing.js / purchase.js.
+        if (e.key === 'F4') {
+            e.preventDefault();
+        }
+
+        // Escape — close help modal
         if (e.key === 'Escape' && isModalOpen) {
             e.preventDefault();
             closeHelp();
             return;
         }
 
-        // Don't intercept shortcuts when typing in inputs (except Ctrl combos)
-        if (isInput && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            // F2/F4 still work in billing/purchase inputs — handled by billing.js/purchase.js
+        // ── Don't intercept further shortcuts when typing in inputs ───────
+        if (isInput && !e.ctrlKey && !e.altKey && !e.metaKey) return;
+
+        // Don't intercept when search overlay or help modal is open
+        if (isSearchOpen || isModalOpen) return;
+
+        // Ctrl+K — Global search (also handled in site.js; preventDefault here
+        // as a safety net in case site.js loads late)
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && !e.shiftKey) {
+            e.preventDefault();
+            const trigger = document.querySelector('[data-search-trigger]');
+            if (trigger) trigger.click();
             return;
         }
-
-        // Don't intercept when search or help is open
-        if (isSearchOpen || isModalOpen) return;
 
         // Ctrl+N — New Bill
         if ((e.ctrlKey || e.metaKey) && e.key === 'n' && !e.shiftKey) {
