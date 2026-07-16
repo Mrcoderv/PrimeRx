@@ -12,6 +12,7 @@
     <Product>PrimeRx</Product>
     <UserSecretsId>aspnet-PrimeRx-55998e17-9df6-4fc0-9435-410b0ae2987c</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

@@ -9,6 +9,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - PrimeRx</title>
+    <link rel="icon" href="~/favicon.ico" sizes="48x48" asp-append-version="true" />
+    <link rel="icon" href="~/favicon.svg" type="image/svg+xml" asp-append-version="true" />
+    <link rel="icon" type="image/png" sizes="96x96" href="~/favicon-96x96.png" asp-append-version="true" />
+    <link rel="apple-touch-icon" sizes="180x180" href="~/apple-touch-icon.png" asp-append-version="true" />
+    <link rel="manifest" href="~/site.webmanifest" />
+    <meta name="theme-color" content="#ffffff">
     <!-- Apply saved theme BEFORE paint to prevent flash -->
     <script>
         (function () {
@@ -45,7 +51,7 @@
                 }
                 else
                 {
-                    <span class="brand-logo">Rx</span>
+                    <img src="~/favicon.svg" alt="Logo" class="navbar-logo" style="width:28px;height:28px;" />
                 }
                 <span class="brand-text">PrimeRx</span>
             </a>

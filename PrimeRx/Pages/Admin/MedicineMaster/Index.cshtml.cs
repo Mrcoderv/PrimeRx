@@ -10,37 +10,21 @@ public class IndexModel(MedicineMasterService service) : PageModel
     public List<Models.MedicineMaster> Masters { get; set; } = [];
     public HashSet<string> GenericNamesInStock { get; set; } = [];
     public string? Search { get; set; }
+    public string? Letter { get; set; }
     public string? Message { get; set; }
     public bool IsError { get; set; }
     public bool ShowImportModal { get; set; }
+    public int TotalCount { get; set; }
 
-    public async Task OnGetAsync(string? search, string? message, bool isError = false)
+    public async Task OnGetAsync(string? search, string? letter, string? message, bool isError = false)
     {
         Search = search;
+        Letter = letter;
         Message = message;
         IsError = isError;
-        Masters = await service.GetAllAsync(search);
+        Masters = await service.GetAllAsync(search, letter);
         GenericNamesInStock = await service.GetGenericNamesWithStockAsync();
-    }
-
-    public async Task<IActionResult> OnGetTemplateAsync()
-    {
-        var bytes = service.GenerateTemplate();
-        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "medicine-master-template.xlsx");
-    }
-
-    public async Task<IActionResult> OnGetExportAsync()
-    {
-        var list = await service.GetAllAsync();
-        var bytes = service.ExportToExcel(list);
-        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "medicine-master.xlsx");
-    }
-
-    public async Task<IActionResult> OnGetExportCsvAsync()
-    {
-        var list = await service.GetAllAsync();
-        var bytes = service.ExportToCsv(list);
-        return File(bytes, "text/csv", "medicine-master.csv");
+        TotalCount = await service.GetCountAsync();
     }
 
     public async Task<IActionResult> OnPostImportAsync(IFormFile importFile, bool updateExisting = true)

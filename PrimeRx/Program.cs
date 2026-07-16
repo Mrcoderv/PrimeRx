@@ -126,6 +126,10 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 
     await RoleSeeder.SeedAsync(services.GetRequiredService<RoleManager<IdentityRole>>());
+
+    var masterService = services.GetRequiredService<MedicineMasterService>();
+    var nepalDbPath = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "templates", "Nepal_5K_Medicine_Database.xlsx");
+    await masterService.SeedFromNepalDatabaseAsync(nepalDbPath);
 }
 
 if (app.Environment.IsDevelopment())
