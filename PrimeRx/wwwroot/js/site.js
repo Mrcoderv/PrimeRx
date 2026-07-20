@@ -27,6 +27,8 @@
         { name: 'Ageing Dues',        route: '/Due/AgingDues/Index',     icon: 'bi-clock-history', category: 'Due' },
         { name: 'Reports & Analytics',route: '/Reports/Index',          icon: 'bi-bar-chart-line',category: 'Reports' },
         { name: 'Custom Audit Report',route: '/Reports/Index',          icon: 'bi-journal-text',  category: 'Reports' },
+        { name: 'Audit & Financial Statements', route: '/Reports/AuditFinancial', icon: 'bi-clipboard-data', category: 'Reports' },
+        { name: 'Vendor / Company Report', route: '/Reports/VendorReport', icon: 'bi-building', category: 'Reports' },
         { name: 'Add Expense',        route: '/Expenses/Add',           icon: 'bi-cash-stack',    category: 'Expenses' },
         { name: 'Notifications',      route: '/Notifications/Index',    icon: 'bi-bell',          category: 'Other' },
         // Admin features

@@ -1,0 +1,355 @@
+@page
+@model PrimeRx.Pages.Reports.AuditFinancialModel
+@{
+    ViewData["Title"] = "Audit & Financial Statements";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><i class="bi bi-clipboard-data me-2"></i>Audit & Financial Statements</h1>
+        <p class="page-subtitle">Generate professional, audit-ready financial statements with fiscal year comparison</p>
+    </div>
+</div>
+
+<!-- Fiscal Year Selector & Actions -->
+<div class="panel-card mb-4">
+    <div class="panel-header">
+        <h5><i class="bi bi-calendar3 me-2 text-info"></i>Fiscal Year Selection</h5>
+    </div>
+    <div class="panel-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Select Fiscal Year (Arthik Barsa)</label>
+                <select name="startYear" class="form-select form-select-sm">
+                    @foreach (var fy in Model.FiscalYears)
+                    {
+                        <option value="@fy.StartYear" selected="@(fy.StartYear == Model.SelectedStartYear)">@fy.Label (Shrawan @fy.StartYear — Ashadh @fy.EndYear)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-8">
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-accent btn-sm"><i class="bi bi-eye me-1"></i>View Report</button>
+                    <a asp-page-handler="ExportPdf" asp-route-startYear="@Model.SelectedStartYear" class="btn btn-outline-accent btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i>Full Audit PDF</a>
+                    <a asp-page-handler="ExportExcel" asp-route-startYear="@Model.SelectedStartYear" class="btn btn-outline-accent btn-sm"><i class="bi bi-file-earmark-excel me-1"></i>Full Audit Excel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.ErrorMessage != null)
+{
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>@Model.ErrorMessage</div>
+}
+
+@if (Model.Report != null)
+{
+    var r = Model.Report;
+
+    <!-- Company Header -->
+    <div class="audit-company-header mb-4">
+        <div class="audit-company-logo">
+            @if (!string.IsNullOrEmpty(r.CompanyLogoPath))
+            {
+                <img src="@Url.Content(r.CompanyLogoPath)" alt="Logo" class="audit-logo-img" />
+            }
+            else
+            {
+                <div class="audit-logo-placeholder"><i class="bi bi-building"></i></div>
+            }
+        </div>
+        <div class="audit-company-info">
+            <h2 class="audit-company-name">@r.CompanyName</h2>
+            <p class="audit-company-meta">@r.CompanyAddress</p>
+            <p class="audit-company-meta">PAN: @r.CompanyPAN | Phone: @r.CompanyPhone</p>
+        </div>
+        <div class="audit-report-meta">
+            <div class="audit-fy-badge">FY @r.CurrentYear.Label</div>
+            <div class="audit-date-meta">Generated: @r.GeneratedAt.ToString("dd MMM yyyy HH:mm")</div>
+        </div>
+    </div>
+
+    <!-- Statement Navigation Tabs -->
+    <ul class="nav nav-pills audit-nav mb-4" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#tabBalanceSheet"><i class="bi bi-bank me-1"></i>Balance Sheet</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tabIncome"><i class="bi bi-graph-up me-1"></i>Income Statement</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tabCashFlow"><i class="bi bi-cash-stack me-1"></i>Cash Flow</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tabEquity"><i class="bi bi-shield-check me-1"></i>Equity</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tabNotes"><i class="bi bi-journal-text me-1"></i>Notes</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Balance Sheet -->
+        <div class="tab-pane fade show active" id="tabBalanceSheet">
+            <div class="panel-card">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-bank me-2"></i>Statement of Financial Position (Balance Sheet)</h5>
+                    <a asp-page-handler="ExportStatement" asp-route-startYear="@Model.SelectedStartYear" asp-route-statement="BalanceSheet" class="btn btn-outline-accent btn-sm"><i class="bi bi-file-earmark-excel me-1"></i>Export</a>
+                </div>
+                <div class="p-0 panel-body-flush">
+                    <div class="table-responsive">
+                        <table class="table table-pro mb-0 audit-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:50%">Particulars</th>
+                                    <th class="text-end">FY @r.CurrentYear.Label</th>
+                                    <th class="text-end">FY @r.CurrentYear.Previous.Label</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="audit-section-row"><td colspan="3">ASSETS</td></tr>
+                                <tr class="audit-subsection-row"><td colspan="3">Current Assets</td></tr>
+                                <tr><td class="ps-4">Cash and Bank Balance</td><td class="text-end amount-cell">@r.CurrentBalanceSheet.CashAndBank.ToRs()</td><td class="text-end amount-cell">@r.PreviousBalanceSheet.CashAndBank.ToRs()</td></tr>
+                                <tr><td class="ps-4">Accounts Receivable (Due from Customers)</td><td class="text-end amount-cell">@r.CurrentBalanceSheet.AccountsReceivable.ToRs()</td><td class="text-end amount-cell">@r.PreviousBalanceSheet.AccountsReceivable.ToRs()</td></tr>
+                                <tr><td class="ps-4">Inventory (Medicines at Cost)</td><td class="text-end amount-cell">@r.CurrentBalanceSheet.Inventory.ToRs()</td><td class="text-end amount-cell">@r.PreviousBalanceSheet.Inventory.ToRs()</td></tr>
+                                <tr class="audit-total-row"><td class="ps-4 fw-bold">Total Current Assets</td><td class="text-end fw-bold amount-cell">@r.CurrentBalanceSheet.TotalCurrentAssets.ToRs()</td><td class="text-end fw-bold amount-cell">@r.PreviousBalanceSheet.TotalCurrentAssets.ToRs()</td></tr>
+                                <tr><td class="ps-4">Fixed Assets (Net Book Value)</td><td class="text-end amount-cell">@r.CurrentBalanceSheet.TotalFixedAssets.ToRs()</td><td class="text-end amount-cell">@r.PreviousBalanceSheet.TotalFixedAssets.ToRs()</td></tr>
+                                <tr class="audit-grand-total-row"><td class="fw-bold">TOTAL ASSETS</td><td class="text-end fw-bold amount-cell">@r.CurrentBalanceSheet.TotalAssets.ToRs()</td><td class="text-end fw-bold amount-cell">@r.PreviousBalanceSheet.TotalAssets.ToRs()</td></tr>
+
+                                <tr class="audit-section-row"><td colspan="3">LIABILITIES & EQUITY</td></tr>
+                                <tr class="audit-subsection-row"><td colspan="3">Current Liabilities</td></tr>
+                                <tr><td class="ps-4">Accounts Payable</td><td class="text-end amount-cell">@r.CurrentBalanceSheet.AccountsPayable.ToRs()</td><td class="text-end amount-cell">@r.PreviousBalanceSheet.AccountsPayable.ToRs()</td></tr>
+                                <tr><td class="ps-4">Due to Suppliers</td><td class="text-end amount-cell">@r.CurrentBalanceSheet.DueToSuppliers.ToRs()</td><td class="text-end amount-cell">@r.PreviousBalanceSheet.DueToSuppliers.ToRs()</td></tr>
+                                <tr class="audit-total-row"><td class="ps-4 fw-bold">Total Current Liabilities</td><td class="text-end fw-bold amount-cell">@r.CurrentBalanceSheet.TotalCurrentLiabilities.ToRs()</td><td class="text-end fw-bold amount-cell">@r.PreviousBalanceSheet.TotalCurrentLiabilities.ToRs()</td></tr>
+                                <tr class="audit-total-row"><td class="fw-bold">TOTAL LIABILITIES</td><td class="text-end fw-bold amount-cell">@r.CurrentBalanceSheet.TotalLiabilities.ToRs()</td><td class="text-end fw-bold amount-cell">@r.PreviousBalanceSheet.TotalLiabilities.ToRs()</td></tr>
+
+                                <tr class="audit-subsection-row"><td colspan="3">Owner's Equity</td></tr>
+                                <tr><td class="ps-4">Owner's Capital</td><td class="text-end amount-cell">@r.CurrentBalanceSheet.OwnerEquity.ToRs()</td><td class="text-end amount-cell">@r.PreviousBalanceSheet.OwnerEquity.ToRs()</td></tr>
+                                <tr><td class="ps-4">Retained Earnings</td><td class="text-end amount-cell">@r.CurrentBalanceSheet.RetainedEarnings.ToRs()</td><td class="text-end amount-cell">@r.PreviousBalanceSheet.RetainedEarnings.ToRs()</td></tr>
+                                <tr><td class="ps-4">Net Profit / (Loss)</td><td class="text-end amount-cell @(r.CurrentBalanceSheet.NetProfitLoss >= 0 ? "positive" : "negative")">@r.CurrentBalanceSheet.NetProfitLoss.ToRs()</td><td class="text-end amount-cell @(r.PreviousBalanceSheet.NetProfitLoss >= 0 ? "positive" : "negative")">@r.PreviousBalanceSheet.NetProfitLoss.ToRs()</td></tr>
+                                <tr class="audit-total-row"><td class="ps-4 fw-bold">Total Equity</td><td class="text-end fw-bold amount-cell">@r.CurrentBalanceSheet.TotalEquity.ToRs()</td><td class="text-end fw-bold amount-cell">@r.PreviousBalanceSheet.TotalEquity.ToRs()</td></tr>
+                                <tr class="audit-grand-total-row"><td class="fw-bold">TOTAL LIABILITIES & EQUITY</td><td class="text-end fw-bold amount-cell">@r.CurrentBalanceSheet.TotalLiabilitiesAndEquity.ToRs()</td><td class="text-end fw-bold amount-cell">@r.PreviousBalanceSheet.TotalLiabilitiesAndEquity.ToRs()</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Income Statement -->
+        <div class="tab-pane fade" id="tabIncome">
+            <div class="panel-card">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-graph-up me-2"></i>Statement of Income (Profit & Loss Account)</h5>
+                    <a asp-page-handler="ExportStatement" asp-route-startYear="@Model.SelectedStartYear" asp-route-statement="IncomeStatement" class="btn btn-outline-accent btn-sm"><i class="bi bi-file-earmark-excel me-1"></i>Export</a>
+                </div>
+                <div class="p-0 panel-body-flush">
+                    <div class="table-responsive">
+                        <table class="table table-pro mb-0 audit-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:50%">Particulars</th>
+                                    <th class="text-end">FY @r.CurrentYear.Label</th>
+                                    <th class="text-end">FY @r.CurrentYear.Previous.Label</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="audit-section-row"><td colspan="3">Revenue</td></tr>
+                                <tr><td class="ps-4">Sales Revenue</td><td class="text-end amount-cell">@r.CurrentIncome.SalesRevenue.ToRs()</td><td class="text-end amount-cell">@r.PreviousIncome.SalesRevenue.ToRs()</td></tr>
+                                <tr><td class="ps-4">Less: Returns &amp; Discounts</td><td class="text-end amount-cell">@r.CurrentIncome.SalesReturns.ToRs()</td><td class="text-end amount-cell">@r.PreviousIncome.SalesReturns.ToRs()</td></tr>
+                                <tr class="audit-total-row"><td class="ps-4 fw-bold">Net Sales</td><td class="text-end fw-bold amount-cell">@r.CurrentIncome.NetSales.ToRs()</td><td class="text-end fw-bold amount-cell">@r.PreviousIncome.NetSales.ToRs()</td></tr>
+
+                                <tr class="audit-section-row"><td colspan="3">Cost of Sales</td></tr>
+                                <tr><td class="ps-4">Cost of Goods Sold</td><td class="text-end amount-cell">@r.CurrentIncome.CostOfGoodsSold.ToRs()</td><td class="text-end amount-cell">@r.PreviousIncome.CostOfGoodsSold.ToRs()</td></tr>
+                                <tr class="audit-grand-total-row"><td class="fw-bold">GROSS PROFIT</td><td class="text-end fw-bold amount-cell @(r.CurrentIncome.GrossProfit >= 0 ? "positive" : "negative")">@r.CurrentIncome.GrossProfit.ToRs()</td><td class="text-end fw-bold amount-cell @(r.PreviousIncome.GrossProfit >= 0 ? "positive" : "negative")">@r.PreviousIncome.GrossProfit.ToRs()</td></tr>
+
+                                <tr class="audit-section-row"><td colspan="3">Operating Expenses</td></tr>
+                                <tr><td class="ps-4">Salary Expense</td><td class="text-end amount-cell">@r.CurrentIncome.SalaryExpense.ToRs()</td><td class="text-end amount-cell">@r.PreviousIncome.SalaryExpense.ToRs()</td></tr>
+                                <tr><td class="ps-4">Rent Expense</td><td class="text-end amount-cell">@r.CurrentIncome.RentExpense.ToRs()</td><td class="text-end amount-cell">@r.PreviousIncome.RentExpense.ToRs()</td></tr>
+                                <tr><td class="ps-4">Utilities Expense</td><td class="text-end amount-cell">@r.CurrentIncome.UtilitiesExpense.ToRs()</td><td class="text-end amount-cell">@r.PreviousIncome.UtilitiesExpense.ToRs()</td></tr>
+                                <tr><td class="ps-4">Other Operating Expenses</td><td class="text-end amount-cell">@r.CurrentIncome.OtherExpenses.ToRs()</td><td class="text-end amount-cell">@r.PreviousIncome.OtherExpenses.ToRs()</td></tr>
+                                <tr class="audit-total-row"><td class="ps-4 fw-bold">Total Operating Expenses</td><td class="text-end fw-bold amount-cell">@r.CurrentIncome.TotalOperatingExpenses.ToRs()</td><td class="text-end fw-bold amount-cell">@r.PreviousIncome.TotalOperatingExpenses.ToRs()</td></tr>
+
+                                <tr class="audit-grand-total-row"><td class="fw-bold">NET PROFIT / (LOSS)</td><td class="text-end fw-bold amount-cell @(r.CurrentIncome.NetProfit >= 0 ? "positive" : "negative")">@r.CurrentIncome.NetProfit.ToRs()</td><td class="text-end fw-bold amount-cell @(r.PreviousIncome.NetProfit >= 0 ? "positive" : "negative")">@r.PreviousIncome.NetProfit.ToRs()</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-3 py-2 border-top d-flex gap-4 text-muted small">
+                        <span><i class="bi bi-receipt me-1"></i>@r.CurrentIncome.BillCount bills this year</span>
+                        <span><i class="bi bi-truck me-1"></i>@r.CurrentIncome.PurchaseCount purchases this year</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cash Flow -->
+        <div class="tab-pane fade" id="tabCashFlow">
+            <div class="panel-card">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-cash-stack me-2"></i>Statement of Cash Flow</h5>
+                    <a asp-page-handler="ExportStatement" asp-route-startYear="@Model.SelectedStartYear" asp-route-statement="CashFlow" class="btn btn-outline-accent btn-sm"><i class="bi bi-file-earmark-excel me-1"></i>Export</a>
+                </div>
+                <div class="p-0 panel-body-flush">
+                    <div class="table-responsive">
+                        <table class="table table-pro mb-0 audit-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:50%">Particulars</th>
+                                    <th class="text-end">FY @r.CurrentYear.Label</th>
+                                    <th class="text-end">FY @r.CurrentYear.Previous.Label</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="audit-section-row"><td colspan="3">Cash Flows from Operating Activities</td></tr>
+                                <tr><td class="ps-4">Cash received from Sales</td><td class="text-end amount-cell">@r.CurrentCashFlow.CashFromSales.ToRs()</td><td class="text-end amount-cell">@r.PreviousCashFlow.CashFromSales.ToRs()</td></tr>
+                                <tr><td class="ps-4">Cash received from Receivables</td><td class="text-end amount-cell">@r.CurrentCashFlow.CashFromReceivables.ToRs()</td><td class="text-end amount-cell">@r.PreviousCashFlow.CashFromReceivables.ToRs()</td></tr>
+                                <tr class="audit-total-row"><td class="ps-4 fw-bold">Total Operating Inflow</td><td class="text-end fw-bold amount-cell">@r.CurrentCashFlow.TotalOperatingInflow.ToRs()</td><td class="text-end fw-bold amount-cell">@r.PreviousCashFlow.TotalOperatingInflow.ToRs()</td></tr>
+
+                                <tr><td class="ps-4">Cash paid to Suppliers</td><td class="text-end amount-cell">@r.CurrentCashFlow.CashPaidToSuppliers.ToRs()</td><td class="text-end amount-cell">@r.PreviousCashFlow.CashPaidToSuppliers.ToRs()</td></tr>
+                                <tr><td class="ps-4">Cash paid for Expenses</td><td class="text-end amount-cell">@r.CurrentCashFlow.CashPaidForExpenses.ToRs()</td><td class="text-end amount-cell">@r.PreviousCashFlow.CashPaidForExpenses.ToRs()</td></tr>
+                                <tr><td class="ps-4">Cash paid for Salaries</td><td class="text-end amount-cell">@r.CurrentCashFlow.CashPaidForSalaries.ToRs()</td><td class="text-end amount-cell">@r.PreviousCashFlow.CashPaidForSalaries.ToRs()</td></tr>
+                                <tr class="audit-total-row"><td class="ps-4 fw-bold">Total Operating Outflow</td><td class="text-end fw-bold amount-cell">@r.CurrentCashFlow.TotalOperatingOutflow.ToRs()</td><td class="text-end fw-bold amount-cell">@r.PreviousCashFlow.TotalOperatingOutflow.ToRs()</td></tr>
+
+                                <tr class="audit-grand-total-row"><td class="fw-bold">Net Operating Cash Flow</td><td class="text-end fw-bold amount-cell @(r.CurrentCashFlow.NetOperatingCashFlow >= 0 ? "positive" : "negative")">@r.CurrentCashFlow.NetOperatingCashFlow.ToRs()</td><td class="text-end fw-bold amount-cell @(r.PreviousCashFlow.NetOperatingCashFlow >= 0 ? "positive" : "negative")">@r.PreviousCashFlow.NetOperatingCashFlow.ToRs()</td></tr>
+
+                                <tr><td class="ps-4">Opening Cash Balance</td><td class="text-end amount-cell">@r.CurrentCashFlow.OpeningCashBalance.ToRs()</td><td class="text-end amount-cell">@r.PreviousCashFlow.OpeningCashBalance.ToRs()</td></tr>
+                                <tr class="audit-grand-total-row"><td class="fw-bold">Closing Cash Balance</td><td class="text-end fw-bold amount-cell">@r.CurrentCashFlow.ClosingCashBalance.ToRs()</td><td class="text-end fw-bold amount-cell">@r.PreviousCashFlow.ClosingCashBalance.ToRs()</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Changes in Equity -->
+        <div class="tab-pane fade" id="tabEquity">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h5><i class="bi bi-shield-check me-2"></i>Statement of Changes in Equity</h5>
+                </div>
+                <div class="p-0 panel-body-flush">
+                    <div class="table-responsive">
+                        <table class="table table-pro mb-0 audit-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:50%">Particulars</th>
+                                    <th class="text-end">FY @r.CurrentYear.Label</th>
+                                    <th class="text-end">FY @r.CurrentYear.Previous.Label</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Opening Balance</td><td class="text-end amount-cell">@r.CurrentEquity.OpeningBalance.ToRs()</td><td class="text-end amount-cell">@r.PreviousEquity.OpeningBalance.ToRs()</td></tr>
+                                <tr><td>Add: Additional Capital</td><td class="text-end amount-cell">@r.CurrentEquity.AdditionalCapital.ToRs()</td><td class="text-end amount-cell">@r.PreviousEquity.AdditionalCapital.ToRs()</td></tr>
+                                <tr><td>Add: Net Profit for the Year</td><td class="text-end amount-cell @(r.CurrentEquity.NetProfit >= 0 ? "positive" : "negative")">@r.CurrentEquity.NetProfit.ToRs()</td><td class="text-end amount-cell @(r.PreviousEquity.NetProfit >= 0 ? "positive" : "negative")">@r.PreviousEquity.NetProfit.ToRs()</td></tr>
+                                <tr><td>Less: Owner's Drawings</td><td class="text-end amount-cell">@r.CurrentEquity.OwnerDrawings.ToRs()</td><td class="text-end amount-cell">@r.PreviousEquity.OwnerDrawings.ToRs()</td></tr>
+                                <tr class="audit-grand-total-row"><td class="fw-bold">Closing Balance</td><td class="text-end fw-bold amount-cell">@r.CurrentEquity.ClosingBalance.ToRs()</td><td class="text-end fw-bold amount-cell">@r.PreviousEquity.ClosingBalance.ToRs()</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="tab-pane fade" id="tabNotes">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <h5><i class="bi bi-journal-text me-2"></i>Notes to the Accounts &amp; Significant Accounting Policies</h5>
+                </div>
+                <div class="panel-body">
+                    @foreach (var note in r.Notes)
+                    {
+                        <div class="audit-note mb-3">
+                            <h6 class="audit-note-title">Note @note.NoteNumber: @note.Title</h6>
+                            <p class="audit-note-content">@note.Content</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signature Section -->
+    <div class="panel-card mt-4">
+        <div class="panel-body">
+            <div class="row audit-signatures">
+                <div class="col-md-4 text-center">
+                    <div class="audit-sig-block">
+                        <div class="audit-sig-line"></div>
+                        <div class="audit-sig-label">Prepared by (Accountant)</div>
+                        <div class="audit-sig-name">Name: ____________________</div>
+                        <div class="audit-sig-date">Date: ____________________</div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="audit-sig-block">
+                        <div class="audit-sig-line"></div>
+                        <div class="audit-sig-label">Approved by (Director)</div>
+                        <div class="audit-sig-name">Name: ____________________</div>
+                        <div class="audit-sig-date">Date: ____________________</div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="audit-sig-block">
+                        <div class="audit-sig-line"></div>
+                        <div class="audit-sig-label">Auditor's Report</div>
+                        <div class="audit-sig-name">Firm: ____________________</div>
+                        <div class="audit-sig-date">Date: ____________________</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Styles {
+    <style>
+        .audit-company-header {
+            display: flex; align-items: center; gap: 1.5rem;
+            background: var(--rx-card-bg); border: 1px solid var(--rx-border);
+            border-radius: 16px; padding: 1.5rem 2rem;
+        }
+        .audit-logo-img { width: 72px; height: 72px; border-radius: 12px; object-fit: contain; }
+        .audit-logo-placeholder {
+            width: 72px; height: 72px; border-radius: 12px;
+            background: rgba(37,99,235,0.1); color: #2563EB;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem;
+        }
+        .audit-company-info { flex: 1; }
+        .audit-company-name { font-size: 1.5rem; font-weight: 800; color: var(--rx-heading); margin: 0; }
+        .audit-company-meta { color: var(--rx-text-muted); font-size: 0.85rem; margin: 0.15rem 0; }
+        .audit-report-meta { text-align: right; }
+        .audit-fy-badge {
+            display: inline-block; padding: 0.35rem 1rem; border-radius: 8px;
+            background: rgba(37,99,235,0.12); color: #2563EB; font-weight: 700; font-size: 0.95rem;
+        }
+        .audit-date-meta { font-size: 0.75rem; color: var(--rx-text-muted); margin-top: 0.5rem; }
+        .audit-nav .nav-link {
+            border-radius: 10px; font-weight: 600; font-size: 0.85rem;
+            color: var(--rx-text-muted); padding: 0.5rem 1rem; margin-right: 0.25rem;
+        }
+        .audit-nav .nav-link.active { background: #2563EB; color: #fff; }
+        .audit-table .audit-section-row td {
+            background: rgba(37,99,235,0.06); font-weight: 700; color: #2563EB;
+            padding: 0.5rem 0.75rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .audit-table .audit-subsection-row td {
+            font-weight: 600; color: var(--rx-heading); padding: 0.4rem 0.75rem; font-size: 0.82rem;
+            border-bottom: 1px dashed var(--rx-border);
+        }
+        .audit-table .audit-total-row td {
+            border-top: 1px solid var(--rx-border); font-weight: 600;
+        }
+        .audit-table .audit-grand-total-row td {
+            border-top: 2px solid #2563EB; font-weight: 800; font-size: 0.95rem;
+            background: rgba(37,99,235,0.04);
+        }
+        .audit-note-title { color: #2563EB; font-weight: 700; margin-bottom: 0.35rem; }
+        .audit-note-content { color: var(--rx-text); font-size: 0.88rem; line-height: 1.6; }
+        .audit-sig-block { padding: 2rem 1rem 1rem; }
+        .audit-sig-line {
+            width: 180px; border-bottom: 2px solid var(--rx-text-muted);
+            margin: 0 auto 1rem; height: 1px;
+        }
+        .audit-sig-label { font-weight: 700; color: var(--rx-heading); font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .audit-sig-name, .audit-sig-date { font-size: 0.8rem; color: var(--rx-text-muted); }
+        .positive { color: var(--rx-text-success) !important; }
+        .negative { color: var(--rx-text-danger) !important; }
+
+        @@media (max-width: 768px) {
+            .audit-company-header { flex-direction: column; text-align: center; }
+            .audit-report-meta { text-align: center; }
+        }
+    </style>
+}

@@ -91,6 +91,8 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizeFolder("/Inventory", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Due", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Reports", "StaffAccess");
+    options.Conventions.AuthorizePage("/Reports/AuditFinancial", "AdminOnly");
+    options.Conventions.AuthorizePage("/Reports/VendorReport", "AdminOnly");
     options.Conventions.AuthorizeFolder("/Expenses", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Notifications", "StaffAccess");
     options.Conventions.AuthorizeFolder("/Admin", "AdminOnly");
@@ -112,6 +114,7 @@ builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<BackupService>();
 builder.Services.AddScoped<PayableService>();
 builder.Services.AddScoped<AgingDueService>();
+builder.Services.AddScoped<AuditFinancialService>();
 builder.Services.AddSingleton<PdfGenerator>();
 builder.Services.AddScoped<MedicineMasterService>();
 builder.Services.AddScoped<NotificationService>();

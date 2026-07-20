@@ -101,8 +101,19 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-page="/Due/AgingDues/Index"><i class="bi bi-clock-history me-1"></i>Aging Dues</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-page="/Reports/Index"><i class="bi bi-bar-chart-line me-1"></i>Reports</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                <i class="bi bi-bar-chart-line me-1"></i>Reports
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-page="/Reports/Index"><i class="bi bi-file-earmark-bar-graph me-2"></i>Reports & Analytics</a></li>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" asp-page="/Reports/AuditFinancial"><i class="bi bi-clipboard-data me-2"></i>Audit & Financial Statements</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Reports/VendorReport"><i class="bi bi-building me-2"></i>Vendor / Company Report</a></li>
+                                }
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" asp-page="/Expenses/Add"><i class="bi bi-cash-stack me-1"></i>Add Expense</a>

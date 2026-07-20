@@ -832,7 +832,7 @@
     }
 
     document.addEventListener('keydown', e => {
-        if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+        if (e.altKey && (e.key === 'C' || e.key === 'c')) {
             e.preventDefault();
             const active = document.activeElement;
             if (active && (active.classList.contains('rate-input') || active.classList.contains('qty-input'))) {

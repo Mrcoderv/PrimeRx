@@ -1,6 +1,9 @@
 /**
  * shortcuts.js — Global keyboard shortcuts & help modal for PrimeRx
- * Ctrl+N New Bill, Ctrl+P Print, Ctrl+S Save, F1 Help, F2 Batch, F4 Calculator
+ * Alt+B New Bill, Alt+P New Purchase, Alt+S Save, F1 Help, F2 Batch, F4 Calculator
+ *
+ * NOTE: All shortcuts use Alt+ or F-keys to avoid clashing with browser
+ * defaults (Ctrl+N, Ctrl+S, Ctrl+P, Ctrl+Shift+N, etc.).
  */
 (function () {
     'use strict';
@@ -21,10 +24,11 @@
         <div class="rx-help-group" data-group="global">
           <div class="rx-help-group-title">Global</div>
           <div class="rx-help-row"><span class="rx-help-desc">Open global search</span><span class="rx-help-keys"><kbd>Ctrl</kbd>+<kbd>K</kbd></span></div>
-          <div class="rx-help-row"><span class="rx-help-desc">New bill (POS)</span><span class="rx-help-keys"><kbd>Ctrl</kbd>+<kbd>N</kbd></span></div>
-          <div class="rx-help-row"><span class="rx-help-desc">New purchase</span><span class="rx-help-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd></span></div>
-          <div class="rx-help-row"><span class="rx-help-desc">Save / Submit</span><span class="rx-help-keys"><kbd>Ctrl</kbd>+<kbd>S</kbd></span></div>
-          <div class="rx-help-row"><span class="rx-help-desc">Print page</span><span class="rx-help-keys"><kbd>Ctrl</kbd>+<kbd>P</kbd></span></div>
+          <div class="rx-help-row"><span class="rx-help-desc">New bill (POS)</span><span class="rx-help-keys"><kbd>Alt</kbd>+<kbd>B</kbd></span></div>
+          <div class="rx-help-row"><span class="rx-help-desc">New purchase</span><span class="rx-help-keys"><kbd>Alt</kbd>+<kbd>P</kbd></span></div>
+          <div class="rx-help-row"><span class="rx-help-desc">Go to Dashboard</span><span class="rx-help-keys"><kbd>Alt</kbd>+<kbd>H</kbd></span></div>
+          <div class="rx-help-row"><span class="rx-help-desc">Save / Submit form</span><span class="rx-help-keys"><kbd>Alt</kbd>+<kbd>S</kbd></span></div>
+          <div class="rx-help-row"><span class="rx-help-desc">Print page</span><span class="rx-help-keys"><kbd>Alt</kbd>+<kbd>R</kbd></span></div>
           <div class="rx-help-row"><span class="rx-help-desc">Keyboard shortcuts help</span><span class="rx-help-keys"><kbd>F1</kbd></span></div>
           <div class="rx-help-row"><span class="rx-help-desc">Close popup / modal</span><span class="rx-help-keys"><kbd>Esc</kbd></span></div>
         </div>
@@ -33,7 +37,7 @@
           <div class="rx-help-group-title">Billing (POS)</div>
           <div class="rx-help-row"><span class="rx-help-desc">Quick-set qty (1-9) on last item</span><span class="rx-help-keys"><kbd>1</kbd>-<kbd>9</kbd></span></div>
           <div class="rx-help-row"><span class="rx-help-desc">Open calculator on Rate / Qty / Disc</span><span class="rx-help-keys"><kbd>F4</kbd></span></div>
-          <div class="rx-help-row"><span class="rx-help-desc">Open calculator (alternative)</span><span class="rx-help-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd></span></div>
+          <div class="rx-help-row"><span class="rx-help-desc">Open calculator (alternative)</span><span class="rx-help-keys"><kbd>Alt</kbd>+<kbd>C</kbd></span></div>
           <div class="rx-help-row"><span class="rx-help-desc">Rate &rarr; Qty &rarr; Disc% &rarr; Search</span><span class="rx-help-keys"><kbd>Enter</kbd></span></div>
           <div class="rx-help-row"><span class="rx-help-desc">Navigate search results</span><span class="rx-help-keys"><kbd>&uarr;</kbd><kbd>&darr;</kbd></span></div>
           <div class="rx-help-row"><span class="rx-help-desc">Select medicine from popup</span><span class="rx-help-keys"><kbd>Enter</kbd></span></div>
@@ -62,7 +66,7 @@
           <div class="rx-help-row"><span class="rx-help-desc">Focus search bar</span><span class="rx-help-keys"><kbd>/</kbd></span></div>
           <div class="rx-help-row"><span class="rx-help-desc">Navigate ageing dues tabs</span><span class="rx-help-keys"><kbd>Alt</kbd>+<kbd>1</kbd>/<kbd>2</kbd></span></div>
           <div class="rx-help-row"><span class="rx-help-desc">Focus filter dropdown</span><span class="rx-help-keys"><kbd>Alt</kbd>+<kbd>F</kbd></span></div>
-          <div class="rx-help-row"><span class="rx-help-desc">Clear all filters</span><span class="rx-help-keys"><kbd>Alt</kbd>+<kbd>C</kbd></span></div>
+          <div class="rx-help-row"><span class="rx-help-desc">Clear all filters</span><span class="rx-help-keys"><kbd>Alt</kbd>+<kbd>X</kbd></span></div>
         </div>
 
       </div>
@@ -122,10 +126,7 @@
         const isSearchOpen = document.getElementById('globalSearchOverlay')?.classList.contains('gs-open');
         const isHelpSearch = active && active.id === 'rxHelpSearch';
 
-        // ── ALWAYS PREVENT BROWSER DEFAULTS for F-keys & Ctrl combos ──────
-        // These must fire before any early-returns so the browser never
-        // hijacks them (e.g. F1→browser help, F4→address bar, Ctrl+S→save page).
-
+        // ── ALWAYS PREVENT BROWSER DEFAULTS for F-keys ─────────────────────
         // F1 — Toggle help (works everywhere, even in inputs)
         if (e.key === 'F1') {
             e.preventDefault();
@@ -135,56 +136,52 @@
             return;
         }
 
-        // F2 — Prevent browser default (some browsers focus sidebar/address bar).
-        // Actual batch-info logic lives in billing.js / purchase.js.
+        // F2 — Prevent browser default (batch info in billing/purchase)
         if (e.key === 'F2') {
             e.preventDefault();
         }
 
-        // F4 — Prevent browser default (address bar focus in Chrome/Edge).
-        // Actual calculator toggle lives in billing.js / purchase.js.
+        // F4 — Prevent browser default (address bar focus in Chrome/Edge)
         if (e.key === 'F4') {
             e.preventDefault();
         }
 
-        // Escape — close help modal
-        if (e.key === 'Escape' && isModalOpen) {
-            e.preventDefault();
-            closeHelp();
-            return;
+        // Escape — close help modal or search
+        if (e.key === 'Escape') {
+            if (isModalOpen) {
+                e.preventDefault();
+                closeHelp();
+                return;
+            }
         }
 
-        // ── Don't intercept further shortcuts when typing in inputs ───────
-        if (isInput && !e.ctrlKey && !e.altKey && !e.metaKey) return;
+        // ── Alt+ shortcuts (browser-safe, no conflicts) ────────────────────
+        // These use Alt instead of Ctrl to avoid clashing with browser defaults
+        // (Ctrl+N, Ctrl+S, Ctrl+Shift+N, etc.)
 
-        // Don't intercept when search overlay or help modal is open
-        if (isSearchOpen || isModalOpen) return;
-
-        // Ctrl+K — Global search (also handled in site.js; preventDefault here
-        // as a safety net in case site.js loads late)
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && !e.shiftKey) {
-            e.preventDefault();
-            const trigger = document.querySelector('[data-search-trigger]');
-            if (trigger) trigger.click();
-            return;
-        }
-
-        // Ctrl+N — New Bill
-        if ((e.ctrlKey || e.metaKey) && e.key === 'n' && !e.shiftKey) {
+        // Alt+B — New Bill (POS)
+        if (e.altKey && !e.ctrlKey && e.key.toLowerCase() === 'b') {
             e.preventDefault();
             window.location.href = '/Billing/Index';
             return;
         }
 
-        // Ctrl+Shift+N — New Purchase
-        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
+        // Alt+P — New Purchase
+        if (e.altKey && !e.ctrlKey && e.key.toLowerCase() === 'p') {
             e.preventDefault();
             window.location.href = '/Purchase/Create';
             return;
         }
 
-        // Ctrl+S — Save (trigger form submit)
-        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        // Alt+H — Go to Dashboard
+        if (e.altKey && !e.ctrlKey && e.key.toLowerCase() === 'h') {
+            e.preventDefault();
+            window.location.href = '/Dashboard/Index';
+            return;
+        }
+
+        // Alt+S — Save / Submit form
+        if (e.altKey && !e.ctrlKey && e.key.toLowerCase() === 's') {
             e.preventDefault();
             const form = document.querySelector('form[method="post"]');
             if (form) {
@@ -194,10 +191,35 @@
             return;
         }
 
-        // Ctrl+P — Print
-        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        // Alt+R — Print page
+        if (e.altKey && !e.ctrlKey && e.key.toLowerCase() === 'r') {
             e.preventDefault();
             window.print();
+            return;
+        }
+
+        // Alt+C — Open calculator (on billing/purchase pages)
+        if (e.altKey && !e.ctrlKey && e.key.toLowerCase() === 'c') {
+            e.preventDefault();
+            if (typeof window.RxCalculator !== 'undefined' && window.RxCalculator.open) {
+                window.RxCalculator.open();
+            }
+            return;
+        }
+
+        // Alt+X — Clear all filters
+        if (e.altKey && !e.ctrlKey && e.key.toLowerCase() === 'x') {
+            e.preventDefault();
+            const clearBtn = document.querySelector('[data-clear-filters]');
+            if (clearBtn) clearBtn.click();
+            return;
+        }
+
+        // ── Ctrl+K — Global search (safe to keep, preventDefault works) ──
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && !e.shiftKey) {
+            e.preventDefault();
+            const trigger = document.querySelector('[data-search-trigger]');
+            if (trigger) trigger.click();
             return;
         }
 

@@ -1,0 +1,296 @@
+@page
+@model PrimeRx.Pages.Reports.VendorReportModel
+@{
+    ViewData["Title"] = "Vendor / Company Report";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><i class="bi bi-building me-2"></i>Vendor / Company Report</h1>
+        <p class="page-subtitle">Detailed transaction report for each supplier / vendor with purchase, payment, and due summaries</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="panel-card mb-4">
+    <div class="panel-header">
+        <h5><i class="bi bi-funnel me-2 text-info"></i>Filters</h5>
+    </div>
+    <div class="panel-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Vendor / Company Name</label>
+                <select name="vendor" class="form-select form-select-sm">
+                    <option value="">All Vendors</option>
+                    @if (Model.Report?.AllVendorNames != null)
+                    {
+                        @foreach (var v in Model.Report.AllVendorNames)
+                        {
+                            <option value="@v" selected="@(v == Model.Report.SelectedVendor)">@v</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">From Date</label>
+                <input type="date" name="from" value="@(Model.Report?.FilterFrom?.ToString("yyyy-MM-dd") ?? DateTime.Today.AddMonths(-12).ToString("yyyy-MM-dd"))" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">To Date</label>
+                <input type="date" name="to" value="@(Model.Report?.FilterTo?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-2">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-accent btn-sm flex-fill"><i class="bi bi-search me-1"></i>Filter</button>
+                </div>
+            </div>
+        </form>
+        <div class="d-flex gap-2 mt-3 flex-wrap">
+            <a asp-page-handler="ExportPdf"
+               asp-route-vendor="@(Model.Report?.SelectedVendor)"
+               asp-route-from="@(Model.Report?.FilterFrom?.ToString("yyyy-MM-dd"))"
+               asp-route-to="@(Model.Report?.FilterTo?.ToString("yyyy-MM-dd"))"
+               class="btn btn-outline-accent btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i>Export PDF</a>
+            <a asp-page-handler="ExportExcel"
+               asp-route-vendor="@(Model.Report?.SelectedVendor)"
+               asp-route-from="@(Model.Report?.FilterFrom?.ToString("yyyy-MM-dd"))"
+               asp-route-to="@(Model.Report?.FilterTo?.ToString("yyyy-MM-dd"))"
+               class="btn btn-outline-accent btn-sm"><i class="bi bi-file-earmark-excel me-1"></i>Export Excel</a>
+        </div>
+    </div>
+</div>
+
+@if (Model.ErrorMessage != null)
+{
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>@Model.ErrorMessage</div>
+}
+
+@if (Model.Report != null)
+{
+    <!-- Summary Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-primary">
+                <div class="stat-label">Total Purchase</div>
+                <div class="stat-value">@(Model.Report.TotalPurchaseAmount.ToRs())</div>
+                <div class="stat-foot">@Model.Report.Transactions.Count transaction(s)</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-success">
+                <div class="stat-label">Total Paid</div>
+                <div class="stat-value">@(Model.Report.TotalPaidAmount.ToRs())</div>
+                <div class="stat-foot">Payments recorded</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-warning">
+                <div class="stat-label">Outstanding Due</div>
+                <div class="stat-value">@(Model.Report.TotalDueBalance.ToRs())</div>
+                <div class="stat-foot">Pending payments</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-info">
+                <div class="stat-label">Vendors</div>
+                <div class="stat-value">@Model.Report.VendorSummaries.Count</div>
+                <div class="stat-foot">Active suppliers</div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Report.VendorSummaries.Count > 1)
+    {
+        <!-- Vendor-wise Summary -->
+        <div class="panel-card mb-4">
+            <div class="panel-header">
+                <h5><i class="bi bi-bar-chart-line me-2"></i>Vendor-wise Summary</h5>
+            </div>
+            <div class="p-0 panel-body-flush">
+                <div class="table-responsive">
+                    <table class="table table-pro mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Vendor / Company</th>
+                                <th class="text-center">Transactions</th>
+                                <th class="text-end">Total Purchase</th>
+                                <th class="text-end">Total Paid</th>
+                                <th class="text-end">Total Due</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ var si = 1; }
+                            @foreach (var s in Model.Report.VendorSummaries)
+                            {
+                                <tr>
+                                    <td>@si</td>
+                                    <td class="fw-semibold">
+                                        <a asp-page-handler="" asp-route-vendor="@s.VendorName"
+                                           asp-route-from="@(Model.Report.FilterFrom?.ToString("yyyy-MM-dd"))"
+                                           asp-route-to="@(Model.Report.FilterTo?.ToString("yyyy-MM-dd"))"
+                                           class="text-decoration-none">@s.VendorName</a>
+                                    </td>
+                                    <td class="text-center"><span class="badge bg-secondary">@s.TransactionCount</span></td>
+                                    <td class="text-end amount-cell">@(s.TotalPurchase.ToRs())</td>
+                                    <td class="text-end amount-cell positive">@(s.TotalPaid.ToRs())</td>
+                                    <td class="text-end amount-cell @(s.TotalDue > 0 ? "negative" : "")">@(s.TotalDue.ToRs())</td>
+                                    <td class="text-center">
+                                        @if (s.TotalDue <= 0)
+                                        {
+                                            <span class="badge-status paid">Paid</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-status due">Due</span>
+                                        }
+                                    </td>
+                                </tr>
+                                si++;
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="report-total-row">
+                                <td colspan="2"><strong>Total</strong></td>
+                                <td class="text-center"><strong>@Model.Report.Transactions.Count</strong></td>
+                                <td class="text-end amount-cell"><strong>@(Model.Report.TotalPurchaseAmount.ToRs())</strong></td>
+                                <td class="text-end amount-cell positive"><strong>@(Model.Report.TotalPaidAmount.ToRs())</strong></td>
+                                <td class="text-end amount-cell @(Model.Report.TotalDueBalance > 0 ? "negative" : "")"><strong>@(Model.Report.TotalDueBalance.ToRs())</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Detailed Transactions -->
+    <div class="panel-card">
+        <div class="panel-header d-flex justify-content-between align-items-center">
+            <h5><i class="bi bi-list-columns me-2"></i>Transaction Details @(Model.Report.SelectedVendor != null ? $"— {Model.Report.SelectedVendor}" : "")</h5>
+            <span class="report-chip">@Model.Report.Transactions.Count transaction(s)</span>
+        </div>
+        <div class="p-0 panel-body-flush">
+            @if (!Model.Report.Transactions.Any())
+            {
+                <div class="report-empty">No transactions found for the selected filters.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-pro mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Vendor / Company</th>
+                                <th>Invoice No</th>
+                                <th>GRN No</th>
+                                <th>Date</th>
+                                <th class="text-end">Purchase Amount</th>
+                                <th class="text-end">Paid Amount</th>
+                                <th class="text-end">Due / Balance</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Items</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ var ti = 1; }
+                            @foreach (var t in Model.Report.Transactions)
+                            {
+                                <tr>
+                                    <td>@ti</td>
+                                    <td class="fw-semibold">@t.VendorName</td>
+                                    <td>@(t.InvoiceNumber ?? "—")</td>
+                                    <td><small class="text-muted">@(t.GRNNumber ?? "—")</small></td>
+                                    <td>@t.Date.ToString("dd MMM yyyy")</td>
+                                    <td class="text-end amount-cell">@(t.PurchaseAmount.ToRs())</td>
+                                    <td class="text-end amount-cell positive">@(t.PaidAmount.ToRs())</td>
+                                    <td class="text-end amount-cell @(t.DueBalance > 0 ? "negative" : "")">@(t.DueBalance.ToRs())</td>
+                                    <td class="text-center">
+                                        @if (t.PaymentStatus == "Paid")
+                                        {
+                                            <span class="badge-status paid">Paid</span>
+                                        }
+                                        else if (t.PaymentStatus == "Partial")
+                                        {
+                                            <span class="badge-status partial">Partial</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-status due">Due</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-secondary vendor-meds-toggle" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#meds-@ti"
+                                                title="Show medicines">
+                                            <i class="bi bi-box-seam"></i> @t.Medicines.Count
+                                        </button>
+                                    </td>
+                                </tr>
+                                @if (t.Medicines.Any())
+                                {
+                                    <tr class="collapse" id="meds-@ti">
+                                        <td colspan="10" class="p-0">
+                                            <div class="vendor-meds-detail">
+                                                <table class="table table-sm mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Medicine</th>
+                                                            <th>Batch</th>
+                                                            <th class="text-center">Qty</th>
+                                                            <th class="text-end">Purchase Price</th>
+                                                            <th class="text-end">MRP</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var m in t.Medicines)
+                                                        {
+                                                            <tr>
+                                                                <td>@m.MedicineName</td>
+                                                                <td><small class="text-muted">@(m.BatchNumber ?? "—")</small></td>
+                                                                <td class="text-center">@m.Quantity</td>
+                                                                <td class="text-end amount-cell">@m.PurchasePrice.ToRs()</td>
+                                                                <td class="text-end amount-cell">@m.MRP.ToRs()</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                                ti++;
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="report-total-row">
+                                <td colspan="5" class="text-end"><strong>Total</strong></td>
+                                <td class="text-end amount-cell"><strong>@(Model.Report.TotalPurchaseAmount.ToRs())</strong></td>
+                                <td class="text-end amount-cell positive"><strong>@(Model.Report.TotalPaidAmount.ToRs())</strong></td>
+                                <td class="text-end amount-cell @(Model.Report.TotalDueBalance > 0 ? "negative" : "")"><strong>@(Model.Report.TotalDueBalance.ToRs())</strong></td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@section Styles {
+    <style>
+        .vendor-meds-detail {
+            background: var(--rx-table-light-bg);
+            padding: 0.5rem 1rem;
+            border-top: 1px dashed var(--rx-border);
+        }
+        .vendor-meds-detail .table { font-size: 0.82rem; }
+        .vendor-meds-toggle { font-size: 0.78rem; padding: 0.15rem 0.5rem; }
+        .positive { color: var(--rx-text-success) !important; }
+        .negative { color: var(--rx-text-danger) !important; }
+    </style>
+}

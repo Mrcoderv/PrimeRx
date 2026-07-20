@@ -131,22 +131,28 @@
 
         const frag = document.createDocumentFragment();
         searchResults.forEach((m, i) => {
-            const isLow = m.stockQuantity <= (m.lowStockThreshold ?? 10);
-            const isOut = m.stockQuantity === 0;
-            const stockBadge = isOut
-                ? `<span class="purchase-stock-badge out-of-stock">Out</span>`
-                : isLow
-                    ? `<span class="purchase-stock-badge low-stock">⚠ ${m.stockQuantity}</span>`
-                    : `<span class="purchase-stock-ok">${m.stockQuantity}</span>`;
+            const isLow = !m.isMaster && m.stockQuantity <= (m.lowStockThreshold ?? 10);
+            const isOut = !m.isMaster && m.stockQuantity === 0;
+            const stockBadge = m.isMaster
+                ? `<span class="purchase-stock-badge master-badge" style="background:#e0e7ff;color:#3730a3;font-weight:600;padding:2px 6px;border-radius:4px;font-size:0.72rem">Master Catalog</span>`
+                : isOut
+                    ? `<span class="purchase-stock-badge out-of-stock">Out</span>`
+                    : isLow
+                        ? `<span class="purchase-stock-badge low-stock">⚠ ${m.stockQuantity}</span>`
+                        : `<span class="purchase-stock-ok">Stock: ${m.stockQuantity}</span>`;
+
+            const metaParts = [];
+            if (m.genericName) metaParts.push(`<span style="color:#4b5563;font-weight:500">${esc(m.genericName)}</span>`);
+            if (m.manufacturer) metaParts.push(`<span style="color:#0284c7;font-weight:500">🏢 ${esc(m.manufacturer)}</span>`);
+            if (m.formType) metaParts.push(`<span style="color:#6b7280">💊 ${esc(m.formType)}</span>`);
 
             const row = document.createElement('div');
             row.className = 'medicine-popup-row' + (isLow && !isOut ? ' low-stock-row' : '');
             row.dataset.idx = i;
             row.innerHTML = `
                 <div style="flex:1;min-width:0">
-                    <div class="fw-semibold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name)}</div>
-                    ${m.genericName ? `<div style="font-size:0.78rem;opacity:0.65">${esc(m.genericName)}${m.formType ? ' · ' + esc(m.formType) : ''}</div>` : ''}
-                    ${m.manufacturer ? `<div style="font-size:0.72rem;opacity:0.5">${esc(m.manufacturer)}</div>` : ''}
+                    <div class="fw-semibold" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.92rem">${esc(m.name)}</div>
+                    ${metaParts.length ? `<div style="font-size:0.78rem;margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">${metaParts.join(' <span style="opacity:0.4">•</span> ')}</div>` : ''}
                 </div>
                 <div style="text-align:right;flex-shrink:0;padding-left:0.5rem">
                     <div style="font-size:0.8rem;opacity:0.75">${m.purchasePrice > 0 ? 'Rs.' + m.purchasePrice.toFixed(2) : '—'}</div>
@@ -271,8 +277,23 @@
             return `<tr data-idx="${item._idx}">
                 <td>
                     <div class="purchase-med-info">
-                        <div class="purchase-med-name">${esc(item.medicineName)}</div>
-                        ${masterInfo ? `<div class="purchase-med-master">${masterInfo}</div>` : ''}
+                        <div class="purchase-med-name" style="font-weight:600;font-size:0.9rem">${esc(item.medicineName)}</div>
+                        ${item.genericName ? `<div style="font-size:0.75rem;color:#6b7280;margin-bottom:2px">${esc(item.genericName)}</div>` : ''}
+                        <div class="d-flex gap-1 align-items-center mt-1">
+                            <input type="text" class="form-control form-control-sm mfg-input"
+                                   value="${esc(item.manufacturer ?? '')}"
+                                   placeholder="Company / Mfg"
+                                   title="Manufacturer / Company"
+                                   data-idx="${item._idx}"
+                                   style="font-size:0.75rem;padding:2px 6px;height:24px;flex:1;min-width:85px;" />
+                            <input type="text" class="form-control form-control-sm formtype-input"
+                                   list="commonFormTypes"
+                                   value="${esc(item.formType ?? '')}"
+                                   placeholder="Type (Tablet)"
+                                   title="Form / Type (e.g. Tablet, Syrup)"
+                                   data-idx="${item._idx}"
+                                   style="font-size:0.75rem;padding:2px 6px;height:24px;width:95px;" />
+                        </div>
                     </div>
                 </td>
                 <td>
@@ -320,6 +341,8 @@
         }).join('');
 
         // ── Wire up events ──────────────────────────────────────────────────
+        itemsBody.querySelectorAll('.mfg-input').forEach(el => bindInput(el, 'manufacturer'));
+        itemsBody.querySelectorAll('.formtype-input').forEach(el => bindInput(el, 'formType'));
         itemsBody.querySelectorAll('.batch-input').forEach(el => bindInput(el, 'batchNumber'));
         itemsBody.querySelectorAll('.expiry-input').forEach(el => bindInput(el, 'expiryDate'));
         itemsBody.querySelectorAll('.free-input').forEach(el => bindInput(el, 'freeQty', v => Math.max(0, +v || 0)));
@@ -562,7 +585,7 @@
     }
 
     document.addEventListener('keydown', e => {
-        if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+        if (e.altKey && (e.key === 'C' || e.key === 'c')) {
             e.preventDefault();
             const active = document.activeElement;
             if (active && (active.classList.contains('qty-input') || active.classList.contains('rate-input') || active.classList.contains('cc-input'))) {

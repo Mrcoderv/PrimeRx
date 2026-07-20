@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using PrimeRx.Data;
 using PrimeRx.Models;
+using PrimeRx.Models.ViewModels;
 
 namespace PrimeRx.Services;
 
@@ -735,6 +737,603 @@ public class ReportService(ApplicationDbContext context, ExpenseService expenseS
                 page.Footer().AlignRight().Text($"Total: {report.TotalAmount.ToRs()}");
             });
         }).GeneratePdf();
+    }
+
+    public async Task<VendorReportData> GetVendorReportAsync(string? vendor, DateTime? from, DateTime? to)
+    {
+        var query = context.Purchases
+            .Include(p => p.Items)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(vendor))
+            query = query.Where(p => p.SupplierName == vendor);
+        if (from.HasValue)
+            query = query.Where(p => p.PurchaseDate >= from.Value.Date);
+        if (to.HasValue)
+            query = query.Where(p => p.PurchaseDate < to.Value.Date.AddDays(1));
+
+        var purchases = await query.OrderBy(p => p.PurchaseDate).ToListAsync();
+
+        var allVendorNames = await context.Purchases
+            .Select(p => p.SupplierName)
+            .Distinct()
+            .OrderBy(n => n)
+            .ToListAsync();
+
+        var payables = await context.Payables
+            .Where(pv => string.IsNullOrEmpty(vendor) || pv.SupplierName == vendor)
+            .ToListAsync();
+
+        var creditNotes = await context.CreditNotes
+            .Where(cn => string.IsNullOrEmpty(vendor) || cn.SupplierName == vendor)
+            .ToListAsync();
+
+        var transactions = purchases.Select(p =>
+        {
+            var supplierPayables = payables.Where(pv => pv.SupplierName == p.SupplierName
+                && pv.InvoiceNo == p.InvoiceNumber).ToList();
+            var supplierCredits = creditNotes.Where(cn => cn.SupplierName == p.SupplierName
+                && cn.PurchaseReturn != null && cn.PurchaseReturn.PurchaseId == p.Id).ToList();
+
+            var paid = supplierPayables.Sum(pv => pv.PaidAmount)
+                + supplierCredits.Sum(cn => cn.Amount);
+            var due = p.TotalAmount - paid;
+
+            return new VendorTransactionRow
+            {
+                VendorName = p.SupplierName,
+                InvoiceNumber = p.InvoiceNumber ?? $"PO-{p.Id}",
+                GRNNumber = $"GRN-{p.Id:D5}",
+                Date = p.PurchaseDate,
+                PurchaseAmount = p.TotalAmount,
+                PaidAmount = Math.Min(paid, p.TotalAmount),
+                DueBalance = Math.Max(0, due),
+                PaymentStatus = due <= 0 ? "Paid" : paid > 0 ? "Partial" : "Due",
+                Medicines = p.Items.Select(i => new VendorMedicineDetail
+                {
+                    MedicineName = i.MedicineName,
+                    BatchNumber = i.BatchNumber,
+                    Quantity = i.Quantity,
+                    PurchasePrice = i.PurchasePrice,
+                    MRP = i.MRP
+                }).ToList()
+            };
+        }).OrderBy(t => t.Date).ToList();
+
+        var vendorGroups = transactions
+            .GroupBy(t => t.VendorName)
+            .Select(g => new VendorSummaryRow
+            {
+                VendorName = g.Key,
+                TransactionCount = g.Count(),
+                TotalPurchase = g.Sum(t => t.PurchaseAmount),
+                TotalPaid = g.Sum(t => t.PaidAmount),
+                TotalDue = g.Sum(t => t.DueBalance)
+            })
+            .OrderByDescending(s => s.TotalPurchase)
+            .ToList();
+
+        return new VendorReportData
+        {
+            VendorName = vendor ?? "All Vendors",
+            FilterFrom = from,
+            FilterTo = to,
+            SelectedVendor = vendor,
+            Transactions = transactions,
+            TotalPurchaseAmount = transactions.Sum(t => t.PurchaseAmount),
+            TotalPaidAmount = transactions.Sum(t => t.PaidAmount),
+            TotalDueBalance = transactions.Sum(t => t.DueBalance),
+            VendorSummaries = vendorGroups,
+            AllVendorNames = allVendorNames
+        };
+    }
+
+    public byte[] ExportVendorReportToPdf(VendorReportData report)
+    {
+        var title = !string.IsNullOrEmpty(report.SelectedVendor)
+            ? $"Vendor Report — {report.SelectedVendor}"
+            : "Vendor / Company Report";
+
+        return Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(40);
+                page.Header().Column(col =>
+                {
+                    col.Item().Text(title).Bold().FontSize(16);
+                    if (report.FilterFrom.HasValue || report.FilterTo.HasValue)
+                    {
+                        var period = $"{report.FilterFrom:dd MMM yyyy} — {(report.FilterTo.HasValue ? report.FilterTo.Value.ToString("dd MMM yyyy") : "Present")}";
+                        col.Item().Text(period).FontSize(10).FontColor(Colors.Grey.Medium);
+                    }
+                });
+                page.Content().PaddingVertical(10).Table(table =>
+                {
+                    table.ColumnsDefinition(c =>
+                    {
+                        c.RelativeColumn(2);
+                        c.RelativeColumn(1);
+                        c.RelativeColumn(1);
+                        c.RelativeColumn(1);
+                        c.RelativeColumn(1);
+                        c.RelativeColumn(1);
+                    });
+                    table.Header(h =>
+                    {
+                        h.Cell().Text("Vendor").Bold();
+                        h.Cell().Text("Invoice").Bold();
+                        h.Cell().Text("Date").Bold();
+                        h.Cell().Text("Amount").Bold().AlignRight();
+                        h.Cell().Text("Paid").Bold().AlignRight();
+                        h.Cell().Text("Due").Bold().AlignRight();
+                    });
+                    foreach (var t in report.Transactions)
+                    {
+                        table.Cell().Text(t.VendorName);
+                        table.Cell().Text(t.InvoiceNumber ?? "—");
+                        table.Cell().Text(t.Date.ToString("dd-MM-yyyy"));
+                        table.Cell().Text(t.PurchaseAmount.ToString("N2")).AlignRight();
+                        table.Cell().Text(t.PaidAmount.ToString("N2")).AlignRight();
+                        table.Cell().Text(t.DueBalance.ToString("N2")).AlignRight();
+                    }
+                });
+                page.Footer().AlignRight().Text($"Total Purchase: Rs. {report.TotalPurchaseAmount:N2} | Due: Rs. {report.TotalDueBalance:N2}");
+            });
+        }).GeneratePdf();
+    }
+
+    public byte[] ExportVendorReportToExcel(VendorReportData report)
+    {
+        using var package = new ExcelPackage();
+
+        var txSheet = package.Workbook.Worksheets.Add("Transactions");
+        txSheet.Cells[1, 1].Value = !string.IsNullOrEmpty(report.SelectedVendor)
+            ? $"Vendor Report — {report.SelectedVendor}"
+            : "Vendor / Company Report — All";
+
+        if (report.FilterFrom.HasValue || report.FilterTo.HasValue)
+        {
+            txSheet.Cells[2, 1].Value = $"Period: {report.FilterFrom:dd MMM yyyy} — {(report.FilterTo.HasValue ? report.FilterTo.Value.ToString("dd MMM yyyy") : "Present")}";
+        }
+
+        var headers = new[] { "Vendor", "Invoice No", "GRN No", "Date", "Purchase (Rs.)", "Paid (Rs.)", "Due (Rs.)", "Status" };
+        for (var c = 0; c < headers.Length; c++)
+        {
+            txSheet.Cells[4, c + 1].Value = headers[c];
+            txSheet.Cells[4, c + 1].Style.Font.Bold = true;
+        }
+
+        var row = 5;
+        foreach (var t in report.Transactions)
+        {
+            txSheet.Cells[row, 1].Value = t.VendorName;
+            txSheet.Cells[row, 2].Value = t.InvoiceNumber ?? "—";
+            txSheet.Cells[row, 3].Value = t.GRNNumber ?? "—";
+            txSheet.Cells[row, 4].Value = t.Date.ToString("dd-MM-yyyy");
+            txSheet.Cells[row, 5].Value = t.PurchaseAmount;
+            txSheet.Cells[row, 6].Value = t.PaidAmount;
+            txSheet.Cells[row, 7].Value = t.DueBalance;
+            txSheet.Cells[row, 8].Value = t.PaymentStatus;
+            row++;
+        }
+
+        txSheet.Cells[row + 1, 4].Value = "Total:";
+        txSheet.Cells[row + 1, 5].Value = report.TotalPurchaseAmount;
+        txSheet.Cells[row + 1, 6].Value = report.TotalPaidAmount;
+        txSheet.Cells[row, 7].Value = report.TotalDueBalance;
+        txSheet.Cells[row + 1, 5].Style.Font.Bold = true;
+        txSheet.Cells[row + 1, 6].Style.Font.Bold = true;
+        txSheet.Cells[row + 1, 7].Style.Font.Bold = true;
+
+        txSheet.Cells.AutoFitColumns();
+
+        var sumSheet = package.Workbook.Worksheets.Add("Summary");
+        sumSheet.Cells[1, 1].Value = "Vendor";
+        sumSheet.Cells[1, 2].Value = "Transactions";
+        sumSheet.Cells[1, 3].Value = "Total Purchase (Rs.)";
+        sumSheet.Cells[1, 4].Value = "Total Paid (Rs.)";
+        sumSheet.Cells[1, 5].Value = "Total Due (Rs.)";
+        sumSheet.Cells[1, 1].Style.Font.Bold = true;
+        sumSheet.Cells[1, 2].Style.Font.Bold = true;
+        sumSheet.Cells[1, 3].Style.Font.Bold = true;
+        sumSheet.Cells[1, 4].Style.Font.Bold = true;
+        sumSheet.Cells[1, 5].Style.Font.Bold = true;
+
+        row = 2;
+        foreach (var s in report.VendorSummaries)
+        {
+            sumSheet.Cells[row, 1].Value = s.VendorName;
+            sumSheet.Cells[row, 2].Value = s.TransactionCount;
+            sumSheet.Cells[row, 3].Value = s.TotalPurchase;
+            sumSheet.Cells[row, 4].Value = s.TotalPaid;
+            sumSheet.Cells[row, 5].Value = s.TotalDue;
+            row++;
+        }
+        sumSheet.Cells[row + 1, 2].Value = "Total:";
+        sumSheet.Cells[row + 1, 3].Value = report.TotalPurchaseAmount;
+        sumSheet.Cells[row + 1, 4].Value = report.TotalPaidAmount;
+        sumSheet.Cells[row + 1, 5].Value = report.TotalDueBalance;
+        sumSheet.Cells.AutoFitColumns();
+
+        if (report.Transactions.Any() && report.Transactions.First().Medicines.Any())
+        {
+            var medSheet = package.Workbook.Worksheets.Add("Medicines");
+            medSheet.Cells[1, 1].Value = "Invoice";
+            medSheet.Cells[1, 2].Value = "Medicine";
+            medSheet.Cells[1, 3].Value = "Batch";
+            medSheet.Cells[1, 4].Value = "Qty";
+            medSheet.Cells[1, 5].Value = "Purchase Price";
+            medSheet.Cells[1, 6].Value = "MRP";
+            medSheet.Cells[1, 1].Style.Font.Bold = true;
+            medSheet.Cells[1, 2].Style.Font.Bold = true;
+            medSheet.Cells[1, 3].Style.Font.Bold = true;
+            medSheet.Cells[1, 4].Style.Font.Bold = true;
+            medSheet.Cells[1, 5].Style.Font.Bold = true;
+            medSheet.Cells[1, 6].Style.Font.Bold = true;
+
+            row = 2;
+            foreach (var t in report.Transactions)
+            {
+                foreach (var m in t.Medicines)
+                {
+                    medSheet.Cells[row, 1].Value = t.InvoiceNumber ?? "—";
+                    medSheet.Cells[row, 2].Value = m.MedicineName;
+                    medSheet.Cells[row, 3].Value = m.BatchNumber ?? "—";
+                    medSheet.Cells[row, 4].Value = m.Quantity;
+                    medSheet.Cells[row, 5].Value = m.PurchasePrice;
+                    medSheet.Cells[row, 6].Value = m.MRP;
+                    row++;
+                }
+            }
+            medSheet.Cells.AutoFitColumns();
+        }
+
+        return package.GetAsByteArray();
+    }
+
+    public byte[] ExportAuditFinancialToPdf(AuditFinancialData report)
+    {
+        return Document.Create(container =>
+        {
+            foreach (var section in BuildAuditPdfSections(report))
+            {
+                container.Page(page =>
+                {
+                    page.Margin(40);
+                    page.Header().Column(col =>
+                    {
+                        col.Item().Text(report.CompanyName).Bold().FontSize(14).FontColor(Colors.Blue.Medium);
+                        col.Item().Text(report.CompanyAddress).FontSize(8).FontColor(Colors.Grey.Medium);
+                        col.Item().Text($"PAN: {report.CompanyPAN} | Phone: {report.CompanyPhone}").FontSize(8).FontColor(Colors.Grey.Medium);
+                    });
+                    page.Content().PaddingVertical(10).Column(col =>
+                    {
+                        col.Item().Text(section.Title).Bold().FontSize(13).Underline();
+                        col.Item().PaddingTop(8).Table(section.Table);
+                    });
+                    page.Footer().AlignCenter().Text($"Audit Report — {report.CurrentYear.Label} | Generated: {report.GeneratedAt:dd MMM yyyy HH:mm}").FontSize(8).FontColor(Colors.Grey.Medium);
+                });
+            }
+        }).GeneratePdf();
+    }
+
+    public byte[] ExportAuditFinancialToExcel(AuditFinancialData report)
+    {
+        using var package = new ExcelPackage();
+        BuildAuditExcelSheets(package, report);
+        return package.GetAsByteArray();
+    }
+
+    public byte[] ExportBalanceSheetToExcel(AuditFinancialData report)
+    {
+        using var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("Balance Sheet");
+        BuildBalanceSheetExcel(sheet, report);
+        return package.GetAsByteArray();
+    }
+
+    public byte[] ExportIncomeStatementToExcel(AuditFinancialData report)
+    {
+        using var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("Income Statement");
+        BuildIncomeStatementExcel(sheet, report);
+        return package.GetAsByteArray();
+    }
+
+    public byte[] ExportCashFlowToExcel(AuditFinancialData report)
+    {
+        using var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("Cash Flow");
+        BuildCashFlowExcel(sheet, report);
+        return package.GetAsByteArray();
+    }
+
+    private static void BuildAuditExcelSheets(ExcelPackage package, AuditFinancialData report)
+    {
+        var bsSheet = package.Workbook.Worksheets.Add("Balance Sheet");
+        BuildBalanceSheetExcel(bsSheet, report);
+
+        var isSheet = package.Workbook.Worksheets.Add("Income Statement");
+        BuildIncomeStatementExcel(isSheet, report);
+
+        var cfSheet = package.Workbook.Worksheets.Add("Cash Flow");
+        BuildCashFlowExcel(cfSheet, report);
+
+        var notesSheet = package.Workbook.Worksheets.Add("Notes");
+        notesSheet.Cells[1, 1].Value = "Notes to the Accounts";
+        notesSheet.Cells[1, 1].Style.Font.Bold = true;
+        notesSheet.Cells[1, 1].Style.Font.Size = 14;
+        var nr = 3;
+        foreach (var note in report.Notes)
+        {
+            notesSheet.Cells[nr, 1].Value = $"Note {note.NoteNumber}: {note.Title}";
+            notesSheet.Cells[nr, 1].Style.Font.Bold = true;
+            nr++;
+            notesSheet.Cells[nr, 1].Value = note.Content;
+            notesSheet.Cells[nr, 1].Style.WrapText = true;
+            nr += 2;
+        }
+        notesSheet.Cells.AutoFitColumns();
+    }
+
+    private static void BuildBalanceSheetExcel(ExcelWorksheet sheet, AuditFinancialData report)
+    {
+        var cur = report.CurrentBalanceSheet;
+        var prev = report.PreviousBalanceSheet;
+        sheet.Cells[1, 1].Value = $"Statement of Financial Position (Balance Sheet)";
+        sheet.Cells[2, 1].Value = $"Fiscal Year: {report.CurrentYear.Label}";
+        sheet.Cells[3, 1].Value = "Particulars";
+        sheet.Cells[3, 2].Value = $"Current Year ({report.CurrentYear.Label})";
+        sheet.Cells[3, 3].Value = $"Previous Year ({report.CurrentYear.Previous.Label})";
+        sheet.Cells[3, 1].Style.Font.Bold = true;
+        sheet.Cells[3, 2].Style.Font.Bold = true;
+        sheet.Cells[3, 3].Style.Font.Bold = true;
+
+        var r = 5;
+        void AddRow(string label, decimal current, decimal previous, bool bold = false)
+        {
+            sheet.Cells[r, 1].Value = label;
+            sheet.Cells[r, 2].Value = current;
+            sheet.Cells[r, 3].Value = previous;
+            sheet.Cells[r, 2].Style.Numberformat.Format = "#,##0.00";
+            sheet.Cells[r, 3].Style.Numberformat.Format = "#,##0.00";
+            if (bold) { sheet.Cells[r, 1].Style.Font.Bold = true; sheet.Cells[r, 2].Style.Font.Bold = true; sheet.Cells[r, 3].Style.Font.Bold = true; }
+            r++;
+        }
+
+        AddRow("ASSETS", 0, 0, true);
+        AddRow("  Current Assets", 0, 0, true);
+        AddRow("    Cash and Bank", cur.CashAndBank, prev.CashAndBank);
+        AddRow("    Accounts Receivable", cur.AccountsReceivable, prev.AccountsReceivable);
+        AddRow("    Inventory", cur.Inventory, prev.Inventory);
+        AddRow("    Other Current Assets", cur.OtherCurrentAssets, prev.OtherCurrentAssets);
+        AddRow("  Total Current Assets", cur.TotalCurrentAssets, prev.TotalCurrentAssets, true);
+        AddRow("  Fixed Assets (Net)", cur.TotalFixedAssets, prev.TotalFixedAssets);
+        AddRow("TOTAL ASSETS", cur.TotalAssets, prev.TotalAssets, true);
+        r++;
+        AddRow("LIABILITIES & EQUITY", 0, 0, true);
+        AddRow("  Current Liabilities", 0, 0, true);
+        AddRow("    Accounts Payable", cur.AccountsPayable, prev.AccountsPayable);
+        AddRow("    Due to Suppliers", cur.DueToSuppliers, prev.DueToSuppliers);
+        AddRow("  Total Current Liabilities", cur.TotalCurrentLiabilities, prev.TotalCurrentLiabilities, true);
+        AddRow("  Total Long-term Liabilities", cur.TotalLongTermLiabilities, prev.TotalLongTermLiabilities);
+        AddRow("TOTAL LIABILITIES", cur.TotalLiabilities, prev.TotalLiabilities, true);
+        r++;
+        AddRow("  Owner's Equity", cur.OwnerEquity, prev.OwnerEquity);
+        AddRow("  Retained Earnings", cur.RetainedEarnings, prev.RetainedEarnings);
+        AddRow("  Net Profit / (Loss)", cur.NetProfitLoss, prev.NetProfitLoss);
+        AddRow("TOTAL EQUITY", cur.TotalEquity, prev.TotalEquity, true);
+        AddRow("TOTAL LIABILITIES & EQUITY", cur.TotalLiabilitiesAndEquity, prev.TotalLiabilitiesAndEquity, true);
+        sheet.Cells.AutoFitColumns();
+    }
+
+    private static void BuildIncomeStatementExcel(ExcelWorksheet sheet, AuditFinancialData report)
+    {
+        var cur = report.CurrentIncome;
+        var prev = report.PreviousIncome;
+        sheet.Cells[1, 1].Value = $"Statement of Income (Profit & Loss)";
+        sheet.Cells[2, 1].Value = $"Fiscal Year: {report.CurrentYear.Label}";
+        sheet.Cells[3, 1].Value = "Particulars";
+        sheet.Cells[3, 2].Value = $"Current Year ({report.CurrentYear.Label})";
+        sheet.Cells[3, 3].Value = $"Previous Year ({report.CurrentYear.Previous.Label})";
+        sheet.Cells[3, 1].Style.Font.Bold = true;
+        sheet.Cells[3, 2].Style.Font.Bold = true;
+        sheet.Cells[3, 3].Style.Font.Bold = true;
+
+        var r = 5;
+        void AddRow(string label, decimal current, decimal previous, bool bold = false)
+        {
+            sheet.Cells[r, 1].Value = label;
+            sheet.Cells[r, 2].Value = current;
+            sheet.Cells[r, 3].Value = previous;
+            sheet.Cells[r, 2].Style.Numberformat.Format = "#,##0.00";
+            sheet.Cells[r, 3].Style.Numberformat.Format = "#,##0.00";
+            if (bold) { sheet.Cells[r, 1].Style.Font.Bold = true; sheet.Cells[r, 2].Style.Font.Bold = true; sheet.Cells[r, 3].Style.Font.Bold = true; }
+            r++;
+        }
+
+        AddRow("REVENUE", 0, 0, true);
+        AddRow("  Sales Revenue", cur.SalesRevenue, prev.SalesRevenue);
+        AddRow("  Less: Returns & Discounts", cur.SalesReturns, prev.SalesReturns);
+        AddRow("  Net Sales", cur.NetSales, prev.NetSales, true);
+        r++;
+        AddRow("COST OF GOODS SOLD", cur.CostOfGoodsSold, prev.CostOfGoodsSold, true);
+        AddRow("GROSS PROFIT", cur.GrossProfit, prev.GrossProfit, true);
+        r++;
+        AddRow("OPERATING EXPENSES", 0, 0, true);
+        AddRow("  Salary Expense", cur.SalaryExpense, prev.SalaryExpense);
+        AddRow("  Rent Expense", cur.RentExpense, prev.RentExpense);
+        AddRow("  Utilities Expense", cur.UtilitiesExpense, prev.UtilitiesExpense);
+        AddRow("  Other Expenses", cur.OtherExpenses, prev.OtherExpenses);
+        AddRow("  Total Operating Expenses", cur.TotalOperatingExpenses, prev.TotalOperatingExpenses, true);
+        r++;
+        AddRow("OPERATING PROFIT", cur.OperatingProfit, prev.OperatingProfit, true);
+        AddRow("NET PROFIT", cur.NetProfit, prev.NetProfit, true);
+        r++;
+        AddRow($"Bills: {cur.BillCount} | Purchases: {cur.PurchaseCount}", 0, 0);
+        sheet.Cells.AutoFitColumns();
+    }
+
+    private static void BuildCashFlowExcel(ExcelWorksheet sheet, AuditFinancialData report)
+    {
+        var cur = report.CurrentCashFlow;
+        var prev = report.PreviousCashFlow;
+        sheet.Cells[1, 1].Value = $"Statement of Cash Flow";
+        sheet.Cells[2, 1].Value = $"Fiscal Year: {report.CurrentYear.Label}";
+        sheet.Cells[3, 1].Value = "Particulars";
+        sheet.Cells[3, 2].Value = $"Current Year ({report.CurrentYear.Label})";
+        sheet.Cells[3, 3].Value = $"Previous Year ({report.CurrentYear.Previous.Label})";
+        sheet.Cells[3, 1].Style.Font.Bold = true;
+        sheet.Cells[3, 2].Style.Font.Bold = true;
+        sheet.Cells[3, 3].Style.Font.Bold = true;
+
+        var r = 5;
+        void AddRow(string label, decimal current, decimal previous, bool bold = false)
+        {
+            sheet.Cells[r, 1].Value = label;
+            sheet.Cells[r, 2].Value = current;
+            sheet.Cells[r, 3].Value = previous;
+            sheet.Cells[r, 2].Style.Numberformat.Format = "#,##0.00";
+            sheet.Cells[r, 3].Style.Numberformat.Format = "#,##0.00";
+            if (bold) { sheet.Cells[r, 1].Style.Font.Bold = true; sheet.Cells[r, 2].Style.Font.Bold = true; sheet.Cells[r, 3].Style.Font.Bold = true; }
+            r++;
+        }
+
+        AddRow("CASH FLOWS FROM OPERATING ACTIVITIES", 0, 0, true);
+        AddRow("  Cash received from sales", cur.CashFromSales, prev.CashFromSales);
+        AddRow("  Cash received from receivables", cur.CashFromReceivables, prev.CashFromReceivables);
+        AddRow("  Total Operating Inflow", cur.TotalOperatingInflow, prev.TotalOperatingInflow, true);
+        r++;
+        AddRow("  Cash paid to suppliers", cur.CashPaidToSuppliers, prev.CashPaidToSuppliers);
+        AddRow("  Cash paid for expenses", cur.CashPaidForExpenses, prev.CashPaidForExpenses);
+        AddRow("  Cash paid for salaries", cur.CashPaidForSalaries, prev.CashPaidForSalaries);
+        AddRow("  Total Operating Outflow", cur.TotalOperatingOutflow, prev.TotalOperatingOutflow, true);
+        r++;
+        AddRow("NET OPERATING CASH FLOW", cur.NetOperatingCashFlow, prev.NetOperatingCashFlow, true);
+        r++;
+        AddRow("Opening Cash Balance", cur.OpeningCashBalance, prev.OpeningCashBalance);
+        AddRow("CLOSING CASH BALANCE", cur.ClosingCashBalance, prev.ClosingCashBalance, true);
+        sheet.Cells.AutoFitColumns();
+    }
+
+    private List<(string Title, Action<TableDescriptor> Table)> BuildAuditPdfSections(AuditFinancialData report)
+    {
+        var sections = new List<(string, Action<TableDescriptor>)>();
+        sections.Add(("Statement of Financial Position (Balance Sheet)", table => BuildBalanceSheetPdfTable(table, report)));
+        sections.Add(("Statement of Income (Profit & Loss Account)", table => BuildIncomeStatementPdfTable(table, report)));
+        sections.Add(("Statement of Cash Flow", table => BuildCashFlowPdfTable(table, report)));
+        sections.Add(("Notes to the Accounts & Significant Accounting Policies", table => BuildNotesPdfTable(table, report)));
+        return sections;
+    }
+
+    private static void BuildBalanceSheetPdfTable(TableDescriptor table, AuditFinancialData report)
+    {
+        var cur = report.CurrentBalanceSheet;
+        var prev = report.PreviousBalanceSheet;
+        table.ColumnsDefinition(c => { c.RelativeColumn(4); c.RelativeColumn(2); c.RelativeColumn(2); });
+        table.Header(h =>
+        {
+            h.Cell().Text("Particulars").Bold();
+            h.Cell().Text($"FY {report.CurrentYear.Label}").Bold().AlignRight();
+            h.Cell().Text($"FY {report.CurrentYear.Previous.Label}").Bold().AlignRight();
+        });
+        void AddRow(string label, decimal curVal, decimal prevVal, bool bold = false)
+        {
+            var cellLabel = bold ? table.Cell().Text(label).Bold() : table.Cell().Text(label);
+            var cellCur = bold ? table.Cell().Text(curVal.ToString("N2")).AlignRight().Bold() : table.Cell().Text(curVal.ToString("N2")).AlignRight();
+            var cellPrev = bold ? table.Cell().Text(prevVal.ToString("N2")).AlignRight().Bold() : table.Cell().Text(prevVal.ToString("N2")).AlignRight();
+        }
+        AddRow("ASSETS", 0, 0, true);
+        AddRow("  Cash and Bank", cur.CashAndBank, prev.CashAndBank);
+        AddRow("  Accounts Receivable", cur.AccountsReceivable, prev.AccountsReceivable);
+        AddRow("  Inventory", cur.Inventory, prev.Inventory);
+        AddRow("  Total Current Assets", cur.TotalCurrentAssets, prev.TotalCurrentAssets, true);
+        AddRow("  Fixed Assets (Net)", cur.TotalFixedAssets, prev.TotalFixedAssets);
+        AddRow("TOTAL ASSETS", cur.TotalAssets, prev.TotalAssets, true);
+        AddRow("LIABILITIES & EQUITY", 0, 0, true);
+        AddRow("  Accounts Payable", cur.AccountsPayable, prev.AccountsPayable);
+        AddRow("  Due to Suppliers", cur.DueToSuppliers, prev.DueToSuppliers);
+        AddRow("  Total Current Liabilities", cur.TotalCurrentLiabilities, prev.TotalCurrentLiabilities, true);
+        AddRow("TOTAL LIABILITIES", cur.TotalLiabilities, prev.TotalLiabilities, true);
+        AddRow("  Owner's Equity", cur.OwnerEquity, prev.OwnerEquity);
+        AddRow("  Net Profit / (Loss)", cur.NetProfitLoss, prev.NetProfitLoss);
+        AddRow("TOTAL EQUITY", cur.TotalEquity, prev.TotalEquity, true);
+        AddRow("TOTAL LIABILITIES & EQUITY", cur.TotalLiabilitiesAndEquity, prev.TotalLiabilitiesAndEquity, true);
+    }
+
+    private static void BuildIncomeStatementPdfTable(TableDescriptor table, AuditFinancialData report)
+    {
+        var cur = report.CurrentIncome;
+        var prev = report.PreviousIncome;
+        table.ColumnsDefinition(c => { c.RelativeColumn(4); c.RelativeColumn(2); c.RelativeColumn(2); });
+        table.Header(h =>
+        {
+            h.Cell().Text("Particulars").Bold();
+            h.Cell().Text($"FY {report.CurrentYear.Label}").Bold().AlignRight();
+            h.Cell().Text($"FY {report.CurrentYear.Previous.Label}").Bold().AlignRight();
+        });
+        void AddRow(string label, decimal curVal, decimal prevVal, bool bold = false)
+        {
+            var cellLabel = bold ? table.Cell().Text(label).Bold() : table.Cell().Text(label);
+            var cellCur = bold ? table.Cell().Text(curVal.ToString("N2")).AlignRight().Bold() : table.Cell().Text(curVal.ToString("N2")).AlignRight();
+            var cellPrev = bold ? table.Cell().Text(prevVal.ToString("N2")).AlignRight().Bold() : table.Cell().Text(prevVal.ToString("N2")).AlignRight();
+        }
+        AddRow("Sales Revenue", cur.SalesRevenue, prev.SalesRevenue);
+        AddRow("Less: Returns & Discounts", cur.SalesReturns, prev.SalesReturns);
+        AddRow("Net Sales", cur.NetSales, prev.NetSales, true);
+        AddRow("Cost of Goods Sold", cur.CostOfGoodsSold, prev.CostOfGoodsSold);
+        AddRow("GROSS PROFIT", cur.GrossProfit, prev.GrossProfit, true);
+        AddRow("Salary Expense", cur.SalaryExpense, prev.SalaryExpense);
+        AddRow("Rent Expense", cur.RentExpense, prev.RentExpense);
+        AddRow("Utilities Expense", cur.UtilitiesExpense, prev.UtilitiesExpense);
+        AddRow("Other Expenses", cur.OtherExpenses, prev.OtherExpenses);
+        AddRow("Total Operating Expenses", cur.TotalOperatingExpenses, prev.TotalOperatingExpenses, true);
+        AddRow("NET PROFIT", cur.NetProfit, prev.NetProfit, true);
+    }
+
+    private static void BuildCashFlowPdfTable(TableDescriptor table, AuditFinancialData report)
+    {
+        var cur = report.CurrentCashFlow;
+        var prev = report.PreviousCashFlow;
+        table.ColumnsDefinition(c => { c.RelativeColumn(4); c.RelativeColumn(2); c.RelativeColumn(2); });
+        table.Header(h =>
+        {
+            h.Cell().Text("Particulars").Bold();
+            h.Cell().Text($"FY {report.CurrentYear.Label}").Bold().AlignRight();
+            h.Cell().Text($"FY {report.CurrentYear.Previous.Label}").Bold().AlignRight();
+        });
+        void AddRow(string label, decimal curVal, decimal prevVal, bool bold = false)
+        {
+            var cellLabel = bold ? table.Cell().Text(label).Bold() : table.Cell().Text(label);
+            var cellCur = bold ? table.Cell().Text(curVal.ToString("N2")).AlignRight().Bold() : table.Cell().Text(curVal.ToString("N2")).AlignRight();
+            var cellPrev = bold ? table.Cell().Text(prevVal.ToString("N2")).AlignRight().Bold() : table.Cell().Text(prevVal.ToString("N2")).AlignRight();
+        }
+        AddRow("Cash from Sales", cur.CashFromSales, prev.CashFromSales);
+        AddRow("Cash from Receivables", cur.CashFromReceivables, prev.CashFromReceivables);
+        AddRow("Total Operating Inflow", cur.TotalOperatingInflow, prev.TotalOperatingInflow, true);
+        AddRow("Cash paid to Suppliers", cur.CashPaidToSuppliers, prev.CashPaidToSuppliers);
+        AddRow("Cash paid for Expenses", cur.CashPaidForExpenses, prev.CashPaidForExpenses);
+        AddRow("Cash paid for Salaries", cur.CashPaidForSalaries, prev.CashPaidForSalaries);
+        AddRow("Total Operating Outflow", cur.TotalOperatingOutflow, prev.TotalOperatingOutflow, true);
+        AddRow("Net Operating Cash Flow", cur.NetOperatingCashFlow, prev.NetOperatingCashFlow, true);
+        AddRow("Opening Cash Balance", cur.OpeningCashBalance, prev.OpeningCashBalance);
+        AddRow("Closing Cash Balance", cur.ClosingCashBalance, prev.ClosingCashBalance, true);
+    }
+
+    private static void BuildNotesPdfTable(TableDescriptor table, AuditFinancialData report)
+    {
+        table.ColumnsDefinition(c => { c.RelativeColumn(1); c.RelativeColumn(6); });
+        table.Header(h =>
+        {
+            h.Cell().Text("Note").Bold();
+            h.Cell().Text("Description").Bold();
+        });
+        foreach (var note in report.Notes)
+        {
+            table.Cell().Text(note.NoteNumber.ToString()).Bold();
+            table.Cell().ColumnSpan(1).Text($"{note.Title}\n{note.Content}");
+        }
     }
 
     private async Task<List<Bill>> GetBillsInRangeAsync(DateTime start, DateTime end)
